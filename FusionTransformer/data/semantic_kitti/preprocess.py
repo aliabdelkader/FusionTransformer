@@ -8,7 +8,7 @@ import torch
 from torch.utils.data import Dataset
 from torch.utils.data.dataloader import DataLoader
 
-from xmuda.data.semantic_kitti import splits
+from FusionTransformer.data.semantic_kitti import splits
 
 # prevent "RuntimeError: received 0 items of ancdata"
 torch.multiprocessing.set_sharing_strategy('file_system')
@@ -110,10 +110,7 @@ class DummyDataset(Dataset):
         keep_idx[keep_idx] = keep_idx_img_pts
         # fliplr so that indexing is row, col and not col, row
         img_points = np.fliplr(img_points)
-        # debug
-        # from xmuda.data.utils.visualize import draw_points_image, draw_bird_eye_view
-        # draw_points_image(np.array(image), img_points[keep_idx_img_pts].astype(int), label[keep_idx],
-        #                   color_palette_type='SemanticKITTI_long')
+
 
         data_dict['seg_label'] = label[keep_idx].astype(np.int16)
         data_dict['points'] = points[keep_idx]

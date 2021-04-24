@@ -1,5 +1,5 @@
 import torch
-from xmuda.common.utils.metric_logger import AverageMeter
+from FusionTransformer.common.utils.metric_logger import AverageMeter
 
 
 class SegAccuracy(AverageMeter):

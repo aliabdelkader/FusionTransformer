@@ -36,10 +36,10 @@ TRAIN:
   CHECKPOINT_PERIOD: 5000
   CLASS_WEIGHTS: [1.89090012, 2.0585112, 3.1970535, 3.1111633, 1., 2.93751704, 1.92053733,
                   1.47886874, 1.04654198, 1.78266561]
-  XMUDA:
+  FusionTransformer:
     lambda_xm_src: 0.1
     lambda_xm_trg: 0.01
 VAL:
   BATCH_SIZE: 2
   PERIOD: 5000
-#OUTPUT_DIR: "path/to/output/directory/@"  #  @ will be replaced with config path, e.g. nuscenes/usa_singapore/xmuda
+#OUTPUT_DIR: "path/to/output/directory/@"  #  @ will be replaced with config path, e.g. nuscenes/usa_singapore/FusionTransformer

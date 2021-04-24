@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
-from xmuda.data.utils.turbo_cmap import interpolate_or_clip, turbo_colormap_data
+from FusionTransformer.data.utils.turbo_cmap import interpolate_or_clip, turbo_colormap_data
 
 
 # all classes
@@ -18,7 +18,7 @@ NUSCENES_COLOR_PALETTE = [
     (200, 200, 200),  # background
 ]
 
-# classes after merging (as used in xMUDA)
+# classes after merging (as used in FusionTransformer)
 NUSCENES_COLOR_PALETTE_SHORT = [
     (255, 158, 0),  # vehicle
     (0, 0, 230),  # pedestrian
@@ -83,7 +83,7 @@ SEMANTIC_KITTI_COLOR_PALETTE = [SEMANTIC_KITTI_ID_TO_BGR[id] if id in SEMANTIC_K
                                 for id in range(list(SEMANTIC_KITTI_ID_TO_BGR.keys())[-1] + 1)]
 
 
-# classes after merging (as used in xMUDA)
+# classes after merging (as used in FusionTransformer)
 SEMANTIC_KITTI_COLOR_PALETTE_SHORT_BGR = [
     [245, 150, 100],  # car
     [180, 30, 80],  # truck

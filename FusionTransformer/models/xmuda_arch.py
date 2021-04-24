@@ -1,8 +1,8 @@
 import torch
 import torch.nn as nn
 
-from xmuda.models.resnet34_unet import UNetResNet34
-from xmuda.models.scn_unet import UNetSCN
+from FusionTransformer.models.resnet34_unet import UNetResNet34
+from FusionTransformer.models.scn_unet import UNetSCN
 
 
 class Net2DSeg(nn.Module):

@@ -5,16 +5,16 @@ import time
 import torch
 import torch.nn.functional as F
 
-from xmuda.data.utils.evaluate import Evaluator
+from FusionTransformer.data.utils.evaluate import Evaluator
 
 
 def validate(cfg,
-             model_2d,
-             model_3d,
+             model,
              dataloader,
              val_metric_logger,
-             pselab_path=None):
-    logger = logging.getLogger('xmuda.validate')
+            #  pselab_path=None
+             ):
+    logger = logging.getLogger('FusionTransformer.validate')
     logger.info('Validation')
 
     # evaluator

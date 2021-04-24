@@ -4,9 +4,8 @@ from PIL import Image
 import numpy as np
 from torch.utils.data import Dataset
 from torchvision import transforms as T
-
-from xmuda.data.utils.refine_pseudo_labels import refine_pseudo_labels
-from xmuda.data.utils.augmentation_3d import augment_and_scale_3d
+from torchsparse.sparse_tensor import SparseTensor
+from FusionTransformer.data.utils.augmentation_3d import augment_and_scale_3d
 
 
 class SemanticKITTIBase(Dataset):
@@ -70,8 +69,8 @@ class SemanticKITTIBase(Dataset):
     def __init__(self,
                  split,
                  preprocess_dir,
-                 merge_classes=False,
-                 pselab_paths=None
+                #  merge_classes=False,
+                #  pselab_paths=None
                  ):
 
         self.split = split
@@ -86,53 +85,53 @@ class SemanticKITTIBase(Dataset):
             with open(osp.join(self.preprocess_dir, curr_split + '.pkl'), 'rb') as f:
                 self.data.extend(pickle.load(f))
 
-        self.pselab_data = None
-        if pselab_paths:
-            assert isinstance(pselab_paths, tuple)
-            print('Load pseudo label data ', pselab_paths)
-            self.pselab_data = []
-            for curr_split in pselab_paths:
-                self.pselab_data.extend(np.load(curr_split, allow_pickle=True))
+        # self.pselab_data = None
+        # if pselab_paths:
+        #     assert isinstance(pselab_paths, tuple)
+        #     print('Load pseudo label data ', pselab_paths)
+        #     self.pselab_data = []
+        #     for curr_split in pselab_paths:
+        #         self.pselab_data.extend(np.load(curr_split, allow_pickle=True))
 
-            # check consistency of data and pseudo labels
-            assert len(self.pselab_data) == len(self.data)
-            for i in range(len(self.pselab_data)):
-                assert len(self.pselab_data[i]['pseudo_label_2d']) == len(self.data[i]['seg_labels'])
+        #     # check consistency of data and pseudo labels
+        #     assert len(self.pselab_data) == len(self.data)
+        #     for i in range(len(self.pselab_data)):
+        #         assert len(self.pselab_data[i]['pseudo_label_2d']) == len(self.data[i]['seg_labels'])
 
-            # refine 2d pseudo labels
-            probs2d = np.concatenate([data['probs_2d'] for data in self.pselab_data])
-            pseudo_label_2d = np.concatenate([data['pseudo_label_2d'] for data in self.pselab_data]).astype(np.int)
-            pseudo_label_2d = refine_pseudo_labels(probs2d, pseudo_label_2d)
+        #     # refine 2d pseudo labels
+        #     probs2d = np.concatenate([data['probs_2d'] for data in self.pselab_data])
+        #     pseudo_label_2d = np.concatenate([data['pseudo_label_2d'] for data in self.pselab_data]).astype(np.int)
+        #     pseudo_label_2d = refine_pseudo_labels(probs2d, pseudo_label_2d)
 
-            # refine 3d pseudo labels
-            # fusion model has only one final prediction saved in probs_2d
-            if 'probs_3d' in self.pselab_data[0].keys():
-                probs3d = np.concatenate([data['probs_3d'] for data in self.pselab_data])
-                pseudo_label_3d = np.concatenate([data['pseudo_label_3d'] for data in self.pselab_data]).astype(np.int)
-                pseudo_label_3d = refine_pseudo_labels(probs3d, pseudo_label_3d)
-            else:
-                pseudo_label_3d = None
+        #     # refine 3d pseudo labels
+        #     # fusion model has only one final prediction saved in probs_2d
+        #     if 'probs_3d' in self.pselab_data[0].keys():
+        #         probs3d = np.concatenate([data['probs_3d'] for data in self.pselab_data])
+        #         pseudo_label_3d = np.concatenate([data['pseudo_label_3d'] for data in self.pselab_data]).astype(np.int)
+        #         pseudo_label_3d = refine_pseudo_labels(probs3d, pseudo_label_3d)
+        #     else:
+        #         pseudo_label_3d = None
 
-            # undo concat
-            left_idx = 0
-            for data_idx in range(len(self.pselab_data)):
-                right_idx = left_idx + len(self.pselab_data[data_idx]['probs_2d'])
-                self.pselab_data[data_idx]['pseudo_label_2d'] = pseudo_label_2d[left_idx:right_idx]
-                if pseudo_label_3d is not None:
-                    self.pselab_data[data_idx]['pseudo_label_3d'] = pseudo_label_3d[left_idx:right_idx]
-                else:
-                    self.pselab_data[data_idx]['pseudo_label_3d'] = None
-                left_idx = right_idx
+        #     # undo concat
+        #     left_idx = 0
+        #     for data_idx in range(len(self.pselab_data)):
+        #         right_idx = left_idx + len(self.pselab_data[data_idx]['probs_2d'])
+        #         self.pselab_data[data_idx]['pseudo_label_2d'] = pseudo_label_2d[left_idx:right_idx]
+        #         if pseudo_label_3d is not None:
+        #             self.pselab_data[data_idx]['pseudo_label_3d'] = pseudo_label_3d[left_idx:right_idx]
+        #         else:
+        #             self.pselab_data[data_idx]['pseudo_label_3d'] = None
+        #         left_idx = right_idx
 
-        if merge_classes:
-            highest_id = list(self.id_to_class_name.keys())[-1]
-            self.label_mapping = -100 * np.ones(highest_id + 2, dtype=int)
-            for cat_idx, cat_list in enumerate(self.categories.values()):
-                for class_name in cat_list:
-                    self.label_mapping[self.class_name_to_id[class_name]] = cat_idx
-            self.class_names = list(self.categories.keys())
-        else:
-            self.label_mapping = None
+        # if merge_classes:
+        #     highest_id = list(self.id_to_class_name.keys())[-1]
+        #     self.label_mapping = -100 * np.ones(highest_id + 2, dtype=int)
+        #     for cat_idx, cat_list in enumerate(self.categories.values()):
+        #         for class_name in cat_list:
+        #             self.label_mapping[self.class_name_to_id[class_name]] = cat_idx
+        #     self.class_names = list(self.categories.keys())
+        # else:
+        self.label_mapping = None
 
     def __getitem__(self, index):
         raise NotImplementedError
@@ -146,8 +145,8 @@ class SemanticKITTISCN(SemanticKITTIBase):
                  split,
                  preprocess_dir,
                  semantic_kitti_dir='',
-                 pselab_paths=None,
-                 merge_classes=False,
+                #  pselab_paths=None,
+                #  merge_classes=False,
                  scale=20,
                  full_scale=4096,
                  image_normalizer=None,
@@ -162,8 +161,10 @@ class SemanticKITTISCN(SemanticKITTIBase):
                  ):
         super().__init__(split,
                          preprocess_dir,
-                         merge_classes=merge_classes,
-                         pselab_paths=pselab_paths)
+                        #  merge_classes=merge_classes,
+                        #  pselab_paths=pselab_paths
+                         )
+
 
         self.semantic_kitti_dir = semantic_kitti_dir
         self.output_orig = output_orig
@@ -256,16 +257,19 @@ class SemanticKITTISCN(SemanticKITTIBase):
         # only use voxels inside receptive field
         idxs = (coords.min(1) >= 0) * (coords.max(1) < self.full_scale)
 
-        out_dict['coords'] = coords[idxs]
-        out_dict['feats'] = np.ones([len(idxs), 1], np.float32)  # simply use 1 as feature
+        coords = coords[idx]
+        feats = points[idxs]
+        # out_dict['coords'] = coords[idxs]
+        # out_dict['feats'] = np.ones([len(idxs), 1], np.float32)  # simply use 1 as feature
+        out_dict["lidar"] = SparseTensor(coords=coords, feats=feats)
         out_dict['seg_label'] = seg_label[idxs]
         out_dict['img_indices'] = out_dict['img_indices'][idxs]
 
-        if self.pselab_data is not None:
-            out_dict.update({
-                'pseudo_label_2d': self.pselab_data[index]['pseudo_label_2d'][keep_idx][idxs],
-                'pseudo_label_3d': self.pselab_data[index]['pseudo_label_3d'][keep_idx][idxs]
-            })
+        # if self.pselab_data is not None:
+        #     out_dict.update({
+        #         'pseudo_label_2d': self.pselab_data[index]['pseudo_label_2d'][keep_idx][idxs],
+        #         'pseudo_label_3d': self.pselab_data[index]['pseudo_label_3d'][keep_idx][idxs]
+        #     })
 
         if self.output_orig:
             out_dict.update({
@@ -277,10 +281,10 @@ class SemanticKITTISCN(SemanticKITTIBase):
 
 
 def test_SemanticKITTISCN():
-    from xmuda.data.utils.visualize import draw_points_image_labels, draw_bird_eye_view
+    from FusionTransformer.data.utils.visualize import draw_points_image_labels, draw_bird_eye_view
     preprocess_dir = '/datasets_local/datasets_mjaritz/semantic_kitti_preprocess/preprocess'
     semantic_kitti_dir = '/datasets_local/datasets_mjaritz/semantic_kitti_preprocess'
-    # pselab_paths = ("/home/docker_user/workspace/outputs/xmuda/a2d2_semantic_kitti/xmuda_crop_resize/pselab_data/train.npy",)
+    # pselab_paths = ("/home/docker_user/workspace/outputs/FusionTransformer/a2d2_semantic_kitti/FusionTransformer_crop_resize/pselab_data/train.npy",)
     # split = ('train',)
     split = ('val',)
     dataset = SemanticKITTISCN(split=split,

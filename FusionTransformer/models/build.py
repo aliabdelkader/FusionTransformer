@@ -1,5 +1,5 @@
-from xmuda.models.xmuda_arch import Net2DSeg, Net3DSeg
-from xmuda.models.metric import SegIoU
+from FusionTransformer.models.baseline_late import LateFusionTransformer
+from FusionTransformer.models.metric import SegIoU
 
 
 def build_model_2d(cfg):
@@ -20,3 +20,19 @@ def build_model_3d(cfg):
                      )
     train_metric = SegIoU(cfg.MODEL_3D.NUM_CLASSES, name='seg_iou_3d')
     return model, train_metric
+
+def build_late_fusion_model(cfg):
+    model = LateFusionTransformer(
+        num_class=cfg.MODEL.NUM_CLASSES,
+        dual_head=cfg.MODEL.DUAL_HEAD,
+        backbone_2d_kwargs=cfg.MODEL_2D,
+        backbone_3d_kwargs=cfg.MODEL_3D)
+    
+    train_3d_metric = SegIoU(cfg.MODEL.NUM_CLASSES, name='seg_iou_3d')
+    train_2d_metric = SegIoU(cfg.MODEL.NUM_CLASSES, name='seg_iou_2d')
+    return model, train_2d_metric, train_3d_metric
+
+
+def build_model(cfg):
+    if cfg.MODEL.TYPE == "LateFusionTransformer":
+        return build_late_fusion_model(cfg=cfg)

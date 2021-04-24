@@ -6,10 +6,10 @@ exclude_dirs = ("configs",)
 # for install, do: pip install -ve .
 
 setup(
-    name='xmuda',
+    name='FusionTransformer',
     version="0.0.1",
-    url="https://github.com/maxjaritz/xmuda",
-    description="xMUDA: Cross-Modal Unsupervised Domain Adaptation for 3D Semantic Segmentation",
+    url="https://github.com/aliabdelkader/FusionTransformer",
+    description="Transformer and Lidar fusion for semantic segmentation",
     install_requires=['yacs', 'nuscenes-devkit', 'tabulate'],
     packages=find_packages(exclude=exclude_dirs),
 )

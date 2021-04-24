@@ -5,8 +5,8 @@ import numpy as np
 from torch.utils.data import Dataset
 from torchvision import transforms as T
 
-from xmuda.data.utils.refine_pseudo_labels import refine_pseudo_labels
-from xmuda.data.utils.augmentation_3d import augment_and_scale_3d
+from FusionTransformer.data.utils.refine_pseudo_labels import refine_pseudo_labels
+from FusionTransformer.data.utils.augmentation_3d import augment_and_scale_3d
 
 
 class NuScenesBase(Dataset):
@@ -245,13 +245,13 @@ class NuScenesSCN(NuScenesBase):
 
 
 def test_NuScenesSCN():
-    from xmuda.data.utils.visualize import draw_points_image_labels, draw_points_image_depth, draw_bird_eye_view
+    from FusionTransformer.data.utils.visualize import draw_points_image_labels, draw_points_image_depth, draw_bird_eye_view
     preprocess_dir = '/datasets_local/datasets_mjaritz/nuscenes_preprocess/preprocess'
     nuscenes_dir = '/datasets_local/datasets_mjaritz/nuscenes_preprocess'
     # split = ('train_singapore',)
-    # pselab_paths = ('/home/docker_user/workspace/outputs/xmuda/nuscenes/usa_singapore/xmuda/pselab_data/train_singapore.npy',)
+    # pselab_paths = ('/home/docker_user/workspace/outputs/FusionTransformer/nuscenes/usa_singapore/FusionTransformer/pselab_data/train_singapore.npy',)
     split = ('train_night',)
-    # pselab_paths = ('/home/docker_user/workspace/outputs/xmuda/nuscenes/day_night/xmuda/pselab_data/train_night.npy',)
+    # pselab_paths = ('/home/docker_user/workspace/outputs/FusionTransformer/nuscenes/day_night/FusionTransformer/pselab_data/train_night.npy',)
     dataset = NuScenesSCN(split=split,
                           preprocess_dir=preprocess_dir,
                           nuscenes_dir=nuscenes_dir,

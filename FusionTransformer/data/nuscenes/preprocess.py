@@ -7,9 +7,9 @@ from nuscenes.nuscenes import NuScenes
 from nuscenes.utils.geometry_utils import points_in_box
 from nuscenes.eval.detection.utils import category_to_detection_name
 
-from xmuda.data.nuscenes.nuscenes_dataloader import NuScenesBase
-from xmuda.data.nuscenes.projection import map_pointcloud_to_image
-from xmuda.data.nuscenes import splits
+from FusionTransformer.data.nuscenes.nuscenes_dataloader import NuScenesBase
+from FusionTransformer.data.nuscenes.projection import map_pointcloud_to_image
+from FusionTransformer.data.nuscenes import splits
 
 class_names_to_id = dict(zip(NuScenesBase.class_names, range(len(NuScenesBase.class_names))))
 if 'background' in class_names_to_id:
