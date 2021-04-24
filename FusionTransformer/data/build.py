@@ -3,11 +3,10 @@ from torch.utils.data.dataloader import DataLoader, default_collate
 from yacs.config import CfgNode as CN
 
 from FusionTransformer.common.utils.torch_util import worker_init_fn
-from FusionTransformer.data.collate import get_collate_scn
 from FusionTransformer.common.utils.sampler import IterationBasedBatchSampler
 from FusionTransformer.data.nuscenes.nuscenes_dataloader import NuScenesSCN
 from FusionTransformer.data.semantic_kitti.semantic_kitti_dataloader import SemanticKITTISCN
-
+from torchsparse.utils import sparse_collate_fn
 
 def build_dataloader(cfg, mode='train', start_iteration=0, halve_batch_size=False):
     assert mode in ['train', 'val', 'test']
@@ -38,7 +37,7 @@ def build_dataloader(cfg, mode='train', start_iteration=0, halve_batch_size=Fals
         raise ValueError('Unsupported type of dataset: {}.'.format(dataset_cfg.TYPE))
 
 
-    collate_fn = default_collate
+    collate_fn = sparse_collate_fn
 
     if is_train:
         sampler = RandomSampler(dataset)

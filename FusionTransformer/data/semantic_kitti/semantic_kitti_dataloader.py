@@ -5,8 +5,10 @@ import numpy as np
 from torch.utils.data import Dataset
 from torchvision import transforms as T
 from torchsparse.sparse_tensor import SparseTensor
-from FusionTransformer.data.utils.augmentation_3d import augment_and_scale_3d
+from torchsparse.point_tensor import PointTensor
 
+from FusionTransformer.data.utils.augmentation_3d import augment_and_scale_3d
+from torchsparse.utils import sparse_quantize
 
 class SemanticKITTIBase(Dataset):
     """SemanticKITTI dataset"""
@@ -51,20 +53,20 @@ class SemanticKITTIBase(Dataset):
 
     class_name_to_id = {v: k for k, v in id_to_class_name.items()}
 
-    # use those categories if merge_classes == True (common with A2D2)
-    categories = {
-        'car': ['car', 'moving-car'],
-        'truck': ['truck', 'moving-truck'],
-        'bike': ['bicycle', 'motorcycle', 'bicyclist', 'motorcyclist',
-                 'moving-bicyclist', 'moving-motorcyclist'],  # riders are labeled as bikes in Audi dataset
-        'person': ['person', 'moving-person'],
-        'road': ['road', 'lane-marking'],
-        'parking': ['parking'],
-        'sidewalk': ['sidewalk'],
-        'building': ['building'],
-        'nature': ['vegetation', 'trunk', 'terrain'],
-        'other-objects': ['fence', 'pole', 'traffic-sign', 'other-object'],
-    }
+    # # use those categories if merge_classes == True (common with A2D2)
+    # categories = {
+    #     'car': ['car', 'moving-car'],
+    #     'truck': ['truck', 'moving-truck'],
+    #     'bike': ['bicycle', 'motorcycle', 'bicyclist', 'motorcyclist',
+    #              'moving-bicyclist', 'moving-motorcyclist'],  # riders are labeled as bikes in Audi dataset
+    #     'person': ['person', 'moving-person'],
+    #     'road': ['road', 'lane-marking'],
+    #     'parking': ['parking'],
+    #     'sidewalk': ['sidewalk'],
+    #     'building': ['building'],
+    #     'nature': ['vegetation', 'trunk', 'terrain'],
+    #     'other-objects': ['fence', 'pole', 'traffic-sign', 'other-object'],
+    # }
 
     def __init__(self,
                  split,
@@ -191,8 +193,8 @@ class SemanticKITTISCN(SemanticKITTIBase):
         points = data_dict['points'].copy()
         seg_label = data_dict['seg_labels'].astype(np.int64)
 
-        if self.label_mapping is not None:
-            seg_label = self.label_mapping[seg_label]
+        # if self.label_mapping is not None:
+        #     seg_label = self.label_mapping[seg_label]
 
         out_dict = {}
 
@@ -254,17 +256,22 @@ class SemanticKITTISCN(SemanticKITTIBase):
         # cast to integer
         coords = coords.astype(np.int64)
 
-        # only use voxels inside receptive field
-        idxs = (coords.min(1) >= 0) * (coords.max(1) < self.full_scale)
+        # # only use voxels inside receptive field
+        # idxs = (coords.min(1) >= 0) * (coords.max(1) < self.full_scale)
 
-        coords = coords[idx]
-        feats = points[idxs]
+        # coords = coords[idx]
+        # feats = points[idxs]
+        # seg_label = seg_label[idxs]
+
+        inds, _, inverse_map = sparse_quantize(coords, points, seg_label, return_index=True, return_invs=True)
+
         # out_dict['coords'] = coords[idxs]
         # out_dict['feats'] = np.ones([len(idxs), 1], np.float32)  # simply use 1 as feature
-        out_dict["lidar"] = SparseTensor(coords=coords, feats=feats)
-        out_dict['seg_label'] = seg_label[idxs]
-        out_dict['img_indices'] = out_dict['img_indices'][idxs]
+        out_dict["lidar"] = SparseTensor(coords=coords[inds], feats=points[inds])
 
+        out_dict['seg_label'] = PointTensor(coords=coords, feat=seg_label)
+        out_dict['img_indices'] = PointTensor(coords=coords, feat=img_indices)
+        out_dict["inverse_map"] = inverse_map
         # if self.pselab_data is not None:
         #     out_dict.update({
         #         'pseudo_label_2d': self.pselab_data[index]['pseudo_label_2d'][keep_idx][idxs],
@@ -274,43 +281,43 @@ class SemanticKITTISCN(SemanticKITTIBase):
         if self.output_orig:
             out_dict.update({
                 'orig_seg_label': seg_label,
-                'orig_points_idx': idxs,
+                # 'orig_points_idx': idxs,
             })
 
         return out_dict
 
 
-def test_SemanticKITTISCN():
-    from FusionTransformer.data.utils.visualize import draw_points_image_labels, draw_bird_eye_view
-    preprocess_dir = '/datasets_local/datasets_mjaritz/semantic_kitti_preprocess/preprocess'
-    semantic_kitti_dir = '/datasets_local/datasets_mjaritz/semantic_kitti_preprocess'
-    # pselab_paths = ("/home/docker_user/workspace/outputs/FusionTransformer/a2d2_semantic_kitti/FusionTransformer_crop_resize/pselab_data/train.npy",)
-    # split = ('train',)
-    split = ('val',)
-    dataset = SemanticKITTISCN(split=split,
-                               preprocess_dir=preprocess_dir,
-                               semantic_kitti_dir=semantic_kitti_dir,
-                               # pselab_paths=pselab_paths,
-                               merge_classes=True,
-                               noisy_rot=0.1,
-                               flip_y=0.5,
-                               rot_z=2*np.pi,
-                               transl=True,
-                               bottom_crop=(480, 302),
-                               fliplr=0.5,
-                               color_jitter=(0.4, 0.4, 0.4)
-                               )
-    for i in [10, 20, 30, 40, 50, 60]:
-        data = dataset[i]
-        coords = data['coords']
-        seg_label = data['seg_label']
-        img = np.moveaxis(data['img'], 0, 2)
-        img_indices = data['img_indices']
-        # pseudo_label_2d = data['pseudo_label_2d']
-        draw_points_image_labels(img, img_indices, seg_label, color_palette_type='SemanticKITTI', point_size=1)
-        # draw_points_image_labels(img, img_indices, pseudo_label_2d, color_palette_type='SemanticKITTI', point_size=1)
-        # assert len(pseudo_label_2d) == len(seg_label)
-        draw_bird_eye_view(coords)
+# def test_SemanticKITTISCN():
+#     from FusionTransformer.data.utils.visualize import draw_points_image_labels, draw_bird_eye_view
+#     preprocess_dir = '/datasets_local/datasets_mjaritz/semantic_kitti_preprocess/preprocess'
+#     semantic_kitti_dir = '/datasets_local/datasets_mjaritz/semantic_kitti_preprocess'
+#     # pselab_paths = ("/home/docker_user/workspace/outputs/FusionTransformer/a2d2_semantic_kitti/FusionTransformer_crop_resize/pselab_data/train.npy",)
+#     # split = ('train',)
+#     split = ('val',)
+#     dataset = SemanticKITTISCN(split=split,
+#                                preprocess_dir=preprocess_dir,
+#                                semantic_kitti_dir=semantic_kitti_dir,
+#                                # pselab_paths=pselab_paths,
+#                             #    merge_classes=True,
+#                                noisy_rot=0.1,
+#                                flip_y=0.5,
+#                                rot_z=2*np.pi,
+#                                transl=True,
+#                                bottom_crop=(480, 302),
+#                                fliplr=0.5,
+#                                color_jitter=(0.4, 0.4, 0.4)
+#                                )
+#     for i in [10, 20, 30, 40, 50, 60]:
+#         data = dataset[i]
+#         coords = data['coords']
+#         seg_label = data['seg_label']
+#         img = np.moveaxis(data['img'], 0, 2)
+#         img_indices = data['img_indices']
+#         # pseudo_label_2d = data['pseudo_label_2d']
+#         draw_points_image_labels(img, img_indices, seg_label, color_palette_type='SemanticKITTI', point_size=1)
+#         # draw_points_image_labels(img, img_indices, pseudo_label_2d, color_palette_type='SemanticKITTI', point_size=1)
+#         # assert len(pseudo_label_2d) == len(seg_label)
+#         draw_bird_eye_view(coords)
 
 
 def compute_class_weights():
@@ -318,7 +325,7 @@ def compute_class_weights():
     split = ('train',)
     dataset = SemanticKITTIBase(split,
                                 preprocess_dir,
-                                merge_classes=True
+                                # merge_classes=True
                                 )
     # compute points per class over whole dataset
     num_classes = len(dataset.class_names)
@@ -334,5 +341,5 @@ def compute_class_weights():
 
 
 if __name__ == '__main__':
-    test_SemanticKITTISCN()
-    # compute_class_weights()
+    # test_SemanticKITTISCN()
+    compute_class_weights()
