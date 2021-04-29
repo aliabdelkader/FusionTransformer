@@ -103,7 +103,7 @@ class DummyDataset(Dataset):
 
         # project points into image
         keep_idx = points[:, 0] > 0  # only keep point in front of the vehicle
-        points_hcoords = np.concatenate([points[keep_idx], np.ones([keep_idx.sum(), 1], dtype=np.float32)], axis=1)
+        points_hcoords = np.concatenate([points[keep_idx], np.ones([keep_idx.sum(), 1], dtype=np.float32)], axis=1) # homogeneous
         img_points = (data_dict['proj_matrix'] @ points_hcoords.T).T
         img_points = img_points[:, :2] / np.expand_dims(img_points[:, 2], axis=1)  # scale 2D points
         keep_idx_img_pts = self.select_points_in_frustum(img_points, 0, 0, *image_size)

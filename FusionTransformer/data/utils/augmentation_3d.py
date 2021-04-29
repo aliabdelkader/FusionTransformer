@@ -43,7 +43,7 @@ def augment_and_scale_3d(points, scale, full_scale,
     coords = points * scale
     # print(points.shape, coords.shape)
     # translate points to positive octant (receptive field of SCN in x, y, z coords is in interval [0, full_scale])
-    coords -= coords.min(0)
+    coords -= coords.min(0) # get min in every col, subtract it from points
 
     if transl:
         # random translation inside receptive field of SCN

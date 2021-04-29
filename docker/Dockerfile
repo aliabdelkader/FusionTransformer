@@ -1,4 +1,4 @@
-FROM nvidia/cuda:10.2-base-ubuntu18.04
+FROM nvidia/cuda:10.2-devel-ubuntu18.04
 # Install some basic utilities
 RUN apt-get update && apt-get install -y \
     curl \
@@ -11,21 +11,20 @@ RUN apt-get update && apt-get install -y \
     g++ \
     make \
     cmake \
- && rm -rf /var/lib/apt/lists/*
+    libsparsehash-dev
 
-# Create a working directory
-RUN mkdir /app
-WORKDIR /app
+ENV HOME=/home/user
 
+# All users can use /home/user as their home directory
 # Create a non-root user and switch to it
 RUN adduser --disabled-password --gecos '' --shell /bin/bash user \
- && chown -R user:user /app
+ && chown -R user:user ${HOME}
 RUN echo "user ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/90-user
 USER user
 
-# All users can use /home/user as their home directory
-ENV HOME=/home/user
-RUN chmod 777 /home/user
+# Create a working directory
+RUN chmod 777 ${HOME}
+WORKDIR ${HOME}
 
 # Install Miniconda and Python 3.8
 ENV CONDA_AUTO_UPDATE_CONDA=false
@@ -38,14 +37,13 @@ RUN curl -sLo ~/miniconda.sh https://repo.continuum.io/miniconda/Miniconda3-py38
  && conda clean -ya
 
 RUN conda install pytorch==1.6.0 torchvision==0.7.0 cudatoolkit=10.2 -c pytorch && conda clean -ya
-
-
-COPY ./ /home/user/FusionTransformer
-RUN sudo chown user /home/user/FusionTransformer
-WORKDIR /home/user/FusionTransformer
-RUN pip install --no-cache-dir -e .
-RUN sudo apt-get update && sudo apt-get install libsparsehash-dev
 RUN python -m pip install --no-cache-dir --upgrade git+https://github.com/mit-han-lab/torchsparse.git
+COPY ./ ${HOME}/FusionTransformer
+RUN ls ${HOME}
+RUN sudo chown user -R ${HOME}/FusionTransformer
+WORKDIR ${HOME}/FusionTransformer
+RUN python -m pip install --no-cache-dir -e .
+
 #RUN sudo apt-get autoremove -y && sudo apt-get clean && \
  #   sudo rm -rf /var/lib/apt/lists/*
 

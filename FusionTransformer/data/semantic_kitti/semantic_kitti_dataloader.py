@@ -9,64 +9,50 @@ from torchsparse.point_tensor import PointTensor
 
 from FusionTransformer.data.utils.augmentation_3d import augment_and_scale_3d
 from torchsparse.utils import sparse_quantize
-
+import yaml
+from os.path import dirname, realpath
 class SemanticKITTIBase(Dataset):
     """SemanticKITTI dataset"""
 
-    # https://github.com/PRBonn/semantic-kitti-api/blob/master/config/semantic-kitti.yaml
-    id_to_class_name = {
-        0: "unlabeled",
-        1: "outlier",
-        10: "car",
-        11: "bicycle",
-        13: "bus",
-        15: "motorcycle",
-        16: "on-rails",
-        18: "truck",
-        20: "other-vehicle",
-        30: "person",
-        31: "bicyclist",
-        32: "motorcyclist",
-        40: "road",
-        44: "parking",
-        48: "sidewalk",
-        49: "other-ground",
-        50: "building",
-        51: "fence",
-        52: "other-structure",
-        60: "lane-marking",
-        70: "vegetation",
-        71: "trunk",
-        72: "terrain",
-        80: "pole",
-        81: "traffic-sign",
-        99: "other-object",
-        252: "moving-car",
-        253: "moving-bicyclist",
-        254: "moving-person",
-        255: "moving-motorcyclist",
-        256: "moving-on-rails",
-        257: "moving-bus",
-        258: "moving-truck",
-        259: "moving-other-vehicle",
-    }
-
-    class_name_to_id = {v: k for k, v in id_to_class_name.items()}
-
-    # # use those categories if merge_classes == True (common with A2D2)
-    # categories = {
-    #     'car': ['car', 'moving-car'],
-    #     'truck': ['truck', 'moving-truck'],
-    #     'bike': ['bicycle', 'motorcycle', 'bicyclist', 'motorcyclist',
-    #              'moving-bicyclist', 'moving-motorcyclist'],  # riders are labeled as bikes in Audi dataset
-    #     'person': ['person', 'moving-person'],
-    #     'road': ['road', 'lane-marking'],
-    #     'parking': ['parking'],
-    #     'sidewalk': ['sidewalk'],
-    #     'building': ['building'],
-    #     'nature': ['vegetation', 'trunk', 'terrain'],
-    #     'other-objects': ['fence', 'pole', 'traffic-sign', 'other-object'],
+    # # https://github.com/PRBonn/semantic-kitti-api/blob/master/config/semantic-kitti.yaml
+    # id_to_class_name = {
+    #     0: "unlabeled",
+    #     1: "outlier",
+    #     10: "car",
+    #     11: "bicycle",
+    #     13: "bus",
+    #     15: "motorcycle",
+    #     16: "on-rails",
+    #     18: "truck",
+    #     20: "other-vehicle",
+    #     30: "person",
+    #     31: "bicyclist",
+    #     32: "motorcyclist",
+    #     40: "road",
+    #     44: "parking",
+    #     48: "sidewalk",
+    #     49: "other-ground",
+    #     50: "building",
+    #     51: "fence",
+    #     52: "other-structure",
+    #     60: "lane-marking",
+    #     70: "vegetation",
+    #     71: "trunk",
+    #     72: "terrain",
+    #     80: "pole",
+    #     81: "traffic-sign",
+    #     99: "other-object",
+    #     252: "moving-car",
+    #     253: "moving-bicyclist",
+    #     254: "moving-person",
+    #     255: "moving-motorcyclist",
+    #     256: "moving-on-rails",
+    #     257: "moving-bus",
+    #     258: "moving-truck",
+    #     259: "moving-other-vehicle",
     # }
+
+    # class_name_to_id = {v: k for k, v in id_to_class_name.items()}
 
     def __init__(self,
                  split,
@@ -87,53 +73,9 @@ class SemanticKITTIBase(Dataset):
             with open(osp.join(self.preprocess_dir, curr_split + '.pkl'), 'rb') as f:
                 self.data.extend(pickle.load(f))
 
-        # self.pselab_data = None
-        # if pselab_paths:
-        #     assert isinstance(pselab_paths, tuple)
-        #     print('Load pseudo label data ', pselab_paths)
-        #     self.pselab_data = []
-        #     for curr_split in pselab_paths:
-        #         self.pselab_data.extend(np.load(curr_split, allow_pickle=True))
-
-        #     # check consistency of data and pseudo labels
-        #     assert len(self.pselab_data) == len(self.data)
-        #     for i in range(len(self.pselab_data)):
-        #         assert len(self.pselab_data[i]['pseudo_label_2d']) == len(self.data[i]['seg_labels'])
-
-        #     # refine 2d pseudo labels
-        #     probs2d = np.concatenate([data['probs_2d'] for data in self.pselab_data])
-        #     pseudo_label_2d = np.concatenate([data['pseudo_label_2d'] for data in self.pselab_data]).astype(np.int)
-        #     pseudo_label_2d = refine_pseudo_labels(probs2d, pseudo_label_2d)
-
-        #     # refine 3d pseudo labels
-        #     # fusion model has only one final prediction saved in probs_2d
-        #     if 'probs_3d' in self.pselab_data[0].keys():
-        #         probs3d = np.concatenate([data['probs_3d'] for data in self.pselab_data])
-        #         pseudo_label_3d = np.concatenate([data['pseudo_label_3d'] for data in self.pselab_data]).astype(np.int)
-        #         pseudo_label_3d = refine_pseudo_labels(probs3d, pseudo_label_3d)
-        #     else:
-        #         pseudo_label_3d = None
-
-        #     # undo concat
-        #     left_idx = 0
-        #     for data_idx in range(len(self.pselab_data)):
-        #         right_idx = left_idx + len(self.pselab_data[data_idx]['probs_2d'])
-        #         self.pselab_data[data_idx]['pseudo_label_2d'] = pseudo_label_2d[left_idx:right_idx]
-        #         if pseudo_label_3d is not None:
-        #             self.pselab_data[data_idx]['pseudo_label_3d'] = pseudo_label_3d[left_idx:right_idx]
-        #         else:
-        #             self.pselab_data[data_idx]['pseudo_label_3d'] = None
-        #         left_idx = right_idx
-
-        # if merge_classes:
-        #     highest_id = list(self.id_to_class_name.keys())[-1]
-        #     self.label_mapping = -100 * np.ones(highest_id + 2, dtype=int)
-        #     for cat_idx, cat_list in enumerate(self.categories.values()):
-        #         for class_name in cat_list:
-        #             self.label_mapping[self.class_name_to_id[class_name]] = cat_idx
-        #     self.class_names = list(self.categories.keys())
-        # else:
-        self.label_mapping = None
+        self.semantic_kitti_config_dict = yaml.safe_load(open(dirname(realpath(__file__)) + "/semantic_kitti_label.yaml", 'r'))
+        self.map_label = np.vectorize(lambda org_label: self.semantic_kitti_config_dict["learning_map"][org_label])
+        self.map_inverse_label = np.vectorize(lambda learning_labeld: self.semantic_kitti_config_dict["learning_map_inv"][learning_label])
 
     def __getitem__(self, index):
         raise NotImplementedError
@@ -194,8 +136,8 @@ class SemanticKITTISCN(SemanticKITTIBase):
         feats = data_dict['feats'].copy()
         seg_label = data_dict['seg_labels'].astype(np.int64)
 
-        # if self.label_mapping is not None:
-        #     seg_label = self.label_mapping[seg_label]
+        if self.map_label is not None:
+            seg_label = self.map_label(seg_label)
 
         out_dict = {}
 
@@ -247,7 +189,7 @@ class SemanticKITTISCN(SemanticKITTIBase):
             std = np.asarray(std, dtype=np.float32)
             image = (image - mean) / std
 
-        out_dict['img'] = np.moveaxis(image, -1, 0)
+        out_dict['img'] = np.moveaxis(image, -1, 0) # shape C, H, W
 
         # 3D data augmentation and scaling from points to voxel indices
         # Kitti lidar coordinates: x (front), y (left), z (up)
@@ -257,68 +199,30 @@ class SemanticKITTISCN(SemanticKITTIBase):
         # cast to integer
         coords = coords.astype(np.int64)
     
-        # # only use voxels inside receptive field
-        # idxs = (coords.min(1) >= 0) * (coords.max(1) < self.full_scale)
-        # coords = coords[idx]
-        # feats = points[idxs]
-        # seg_label = seg_label[idxs]
+        # coords.min(1) -> minimum coordinate for each point, shape (N,)
+        # coords.max(1) -> max coordinate for each point. shape (N,)
+        # only use voxels inside receptive field
+        valid_idxs = (coords.min(1) >= 0) * (coords.max(1) < self.full_scale)
+        coords = coords[valid_idxs]
+        feats = feats[valid_idxs]
+        seg_label = seg_label[valid_idxs]
+        img_indices = img_indices[valid_idxs]
 
         inds, _, inverse_map = sparse_quantize(coords, points, seg_label, return_index=True, return_invs=True)
 
-        # out_dict['coords'] = coords[idxs]
-        # out_dict['feats'] = np.ones([len(idxs), 1], np.float32)  # simply use 1 as feature
-        out_dict["lidar"] = SparseTensor(coords=coords[inds], feats=feats[inds])
 
+        out_dict["lidar"] = SparseTensor(coords=coords[inds], feats=feats[inds])
         out_dict['seg_label'] = SparseTensor(coords=coords[inds], feats=seg_label[inds])
         out_dict['img_indices'] = img_indices[inds].tolist()#SparseTensor(coords=coords[inds], feats=img_indices[inds])
-        # print(out_dict['img_indices'].F.shape)
         out_dict["inverse_map"] = SparseTensor(coords=coords[inds], feats=inverse_map) 
-        # if self.pselab_data is not None:
+
+        # if self.output_orig:
         #     out_dict.update({
-        #         'pseudo_label_2d': self.pselab_data[index]['pseudo_label_2d'][keep_idx][idxs],
-        #         'pseudo_label_3d': self.pselab_data[index]['pseudo_label_3d'][keep_idx][idxs]
+        #         'orig_seg_label': seg_label,
+        #         # 'orig_points_idx': idxs,
         #     })
 
-        if self.output_orig:
-            out_dict.update({
-                'orig_seg_label': seg_label,
-                # 'orig_points_idx': idxs,
-            })
-
         return out_dict
-
-
-# def test_SemanticKITTISCN():
-#     from FusionTransformer.data.utils.visualize import draw_points_image_labels, draw_bird_eye_view
-#     preprocess_dir = '/datasets_local/datasets_mjaritz/semantic_kitti_preprocess/preprocess'
-#     semantic_kitti_dir = '/datasets_local/datasets_mjaritz/semantic_kitti_preprocess'
-#     # pselab_paths = ("/home/docker_user/workspace/outputs/FusionTransformer/a2d2_semantic_kitti/FusionTransformer_crop_resize/pselab_data/train.npy",)
-#     # split = ('train',)
-#     split = ('val',)
-#     dataset = SemanticKITTISCN(split=split,
-#                                preprocess_dir=preprocess_dir,
-#                                semantic_kitti_dir=semantic_kitti_dir,
-#                                # pselab_paths=pselab_paths,
-#                             #    merge_classes=True,
-#                                noisy_rot=0.1,
-#                                flip_y=0.5,
-#                                rot_z=2*np.pi,
-#                                transl=True,
-#                                bottom_crop=(480, 302),
-#                                fliplr=0.5,
-#                                color_jitter=(0.4, 0.4, 0.4)
-#                                )
-#     for i in [10, 20, 30, 40, 50, 60]:
-#         data = dataset[i]
-#         coords = data['coords']
-#         seg_label = data['seg_label']
-#         img = np.moveaxis(data['img'], 0, 2)
-#         img_indices = data['img_indices']
-#         # pseudo_label_2d = data['pseudo_label_2d']
-#         draw_points_image_labels(img, img_indices, seg_label, color_palette_type='SemanticKITTI', point_size=1)
-#         # draw_points_image_labels(img, img_indices, pseudo_label_2d, color_palette_type='SemanticKITTI', point_size=1)
-#         # assert len(pseudo_label_2d) == len(seg_label)
-#         draw_bird_eye_view(coords)
 
 
 def compute_class_weights():
@@ -326,14 +230,14 @@ def compute_class_weights():
     split = ('train',)
     dataset = SemanticKITTIBase(split,
                                 preprocess_dir,
-                                # merge_classes=True
                                 )
     # compute points per class over whole dataset
-    num_classes = len(dataset.class_names)
+    num_classes = len(dataset.semantic_kitti_config_dict["learning_map"])
     points_per_class = np.zeros(num_classes, int)
     for i, data in enumerate(dataset.data):
         print('{}/{}'.format(i, len(dataset)))
-        labels = dataset.label_mapping[data['seg_labels']]
+        # labels = dataset.label_mapping[data['seg_labels']]
+        labels = dataset.map_label(data['seg_labels'])
         points_per_class += np.bincount(labels[labels != -100], minlength=num_classes)
 
     # compute log smoothed class weights

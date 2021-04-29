@@ -81,7 +81,7 @@ _C.DATASET.SemanticKITTISCN.augmentation.color_jitter = (0.4, 0.4, 0.4)
 _C.MODEL = CN()
 _C.MODEL.TYPE = ''
 _C.MODEL.CKPT_PATH = ''
-_C.MODEL.NUM_CLASSES = 5
+_C.MODEL.NUM_CLASSES = 20
 _C.MODEL.DUAL_HEAD = False
 # ----------------------------------------------------------------------------- #
 # SCN options
@@ -91,4 +91,4 @@ _C.MODEL.block_number = 11
 # Misc options
 # ---------------------------------------------------------------------------- #
 # @ will be replaced by config path
-_C.OUTPUT_DIR = osp.expanduser('~/AliThesis/logs/FusionTransformer/@')
+_C.OUTPUT_DIR = osp.expanduser('../logs/FusionTransformer/@')

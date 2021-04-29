@@ -1,1 +1,1 @@
-python -m pdb FusionTransformer/train.py --cfg /home/ubuntu/FusionTransformer/configs/semantic_kitti/latefusion.yaml
+python -m pdb FusionTransformer/train.py --cfg configs/semantic_kitti/latefusion.yaml

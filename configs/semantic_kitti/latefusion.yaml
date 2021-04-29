@@ -1,7 +1,7 @@
 MODEL:
   TYPE: "LateFusionTransformer"
   DUAL_HEAD: True
-  NUM_CLASSES: 259
+  NUM_CLASSES: 20
   block_number: 11
 DATASET:
   TYPE: "SemanticKITTISCN"
@@ -9,8 +9,8 @@ DATASET:
   VAL: ("val",)
   TEST: ("test",)
   SemanticKITTISCN:
-    preprocess_dir: "/home/ubuntu/SemanticKitti/semantic_kitti_preprocess/preprocess"
-    semantic_kitti_dir: "/home/ubuntu/SemanticKitti"
+    preprocess_dir: "/home/user/SemanticKitti/semantic_kitti_preprocess/preprocess"
+    semantic_kitti_dir: "/home/user/SemanticKitti"
 DATALOADER:
   NUM_WORKERS: 4
 OPTIMIZER:

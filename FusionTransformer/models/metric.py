@@ -28,7 +28,7 @@ class SegIoU(object):
     References: https://github.com/pytorch/vision/blob/master/references/segmentation/utils.py
     """
 
-    def __init__(self, num_classes, ignore_index=-100, name='seg_iou'):
+    def __init__(self, num_classes, ignore_index=0, name='seg_iou'):
         self.num_classes = num_classes
         self.ignore_index = ignore_index
         self.mat = None
@@ -54,7 +54,8 @@ class SegIoU(object):
             if self.mat is None:
                 self.mat = seg_label.new_zeros((n, n))
             inds = n * seg_label + pred_label
-            self.mat += torch.bincount(inds, minlength=n ** 2).reshape(n, n)
+            bincount = torch.bincount(inds, minlength=n ** 2).reshape(n, n)
+            self.mat += bincount
 
     def reset(self):
         self.mat = None
