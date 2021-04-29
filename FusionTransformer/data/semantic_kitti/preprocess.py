@@ -170,8 +170,8 @@ def preprocess(split_name, root_dir, out_dir):
 
 
 if __name__ == '__main__':
-    root_dir = '/home/ubuntu/SemanticKitti'
-    out_dir = '/home/ubuntu/SemanticKitti/semantic_kitti_preprocess'
+    root_dir = '/home/user/SemanticKitti'
+    out_dir = '/home/user/SemanticKitti/semantic_kitti_preprocess'
     preprocess('val', root_dir, out_dir)
     preprocess('train', root_dir, out_dir)
     preprocess('test', root_dir, out_dir)
