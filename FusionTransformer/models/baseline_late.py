@@ -100,12 +100,12 @@ class Net2DSeg(nn.Module):
         x= x.transpose(1, 2).reshape(B, EMBED_DIM, 384//16, 384//16)
         x = self.up(x) 
         x = self.stn_up(x, (96, H, W)) # shape B, C, H, 
-        W
+        
         # # 2D-3D feature lifting
         img_feats = []
         # print("*************************", img_indices.F.shape)
         for i in range(x.shape[0]):
-            img_indices_i = np.array(img_indices[i])
+            img_indices_i = img_indices[i]
             img_feats.append(
                 x.permute(0, 2, 3, 1)[i][img_indices_i[:, 0], img_indices_i[:, 1]]
             )

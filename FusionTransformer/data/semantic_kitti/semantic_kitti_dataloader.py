@@ -210,11 +210,15 @@ class SemanticKITTISCN(SemanticKITTIBase):
 
         inds, _, inverse_map = sparse_quantize(coords, points, seg_label, return_index=True, return_invs=True)
 
-
-        out_dict["lidar"] = SparseTensor(coords=coords[inds], feats=feats[inds])
-        out_dict['seg_label'] = SparseTensor(coords=coords[inds], feats=seg_label[inds])
-        out_dict['img_indices'] = img_indices[inds].tolist()#SparseTensor(coords=coords[inds], feats=img_indices[inds])
-        out_dict["inverse_map"] = SparseTensor(coords=coords[inds], feats=inverse_map) 
+        out_dict["coords"] = coords[inds]
+        out_dict['feats'] = feats[inds]
+        out_dict['seg_label'] = seg_label[inds]
+        out_dict['img_indices'] = img_indices[inds]
+        out_dict["inverse_map"] = inverse_map
+        # out_dict["lidar"] = SparseTensor(coords=coords[inds], feats=feats[inds])
+        # out_dict['seg_label'] = SparseTensor(coords=coords[inds], feats=seg_label[inds])
+        # out_dict['img_indices'] = img_indices[inds].tolist()#SparseTensor(coords=coords[inds], feats=img_indices[inds])
+        # out_dict["inverse_map"] = SparseTensor(coords=coords[inds], feats=inverse_map) 
 
         # if self.output_orig:
         #     out_dict.update({
@@ -226,7 +230,7 @@ class SemanticKITTISCN(SemanticKITTIBase):
 
 
 def compute_class_weights():
-    preprocess_dir = '/datasets_local/datasets_mjaritz/semantic_kitti_preprocess/preprocess'
+    preprocess_dir = '/home/user/SemanticKitti/semantic_kitti_preprocess/preprocess'
     split = ('train',)
     dataset = SemanticKITTIBase(split,
                                 preprocess_dir,
@@ -238,8 +242,8 @@ def compute_class_weights():
         print('{}/{}'.format(i, len(dataset)))
         # labels = dataset.label_mapping[data['seg_labels']]
         labels = dataset.map_label(data['seg_labels'])
-        points_per_class += np.bincount(labels[labels != -100], minlength=num_classes)
-
+        points_per_class += np.bincount(labels[labels != 0], minlength=num_classes)
+    print(points_per_class)
     # compute log smoothed class weights
     class_weights = np.log(5 * points_per_class.sum() / points_per_class)
     print('log smoothed class weights: ', class_weights / class_weights.min())

@@ -40,7 +40,7 @@ class SegIoU(object):
         if "2d" in self.name:
             seg_logit = preds['img_seg_logit']  # (batch_size, num_classes, num_points)
 
-        seg_label = labels['seg_label'].F.cpu().long()  # (batch_size, num_points)
+        seg_label = labels['seg_label'].cpu().long()  # (batch_size, num_points)
         pred_label = seg_logit.cpu().argmax(1)
 
         mask = (seg_label != self.ignore_index)

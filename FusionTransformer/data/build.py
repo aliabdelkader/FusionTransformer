@@ -6,7 +6,7 @@ from FusionTransformer.common.utils.torch_util import worker_init_fn
 from FusionTransformer.common.utils.sampler import IterationBasedBatchSampler
 from FusionTransformer.data.nuscenes.nuscenes_dataloader import NuScenesSCN
 from FusionTransformer.data.semantic_kitti.semantic_kitti_dataloader import SemanticKITTISCN
-from torchsparse.utils import sparse_collate_fn
+from FusionTransformer.data.collate import get_collate_scn
 
 def build_dataloader(cfg, mode='train', start_iteration=0, halve_batch_size=False):
     assert mode in ['train', 'val', 'test']
@@ -37,9 +37,7 @@ def build_dataloader(cfg, mode='train', start_iteration=0, halve_batch_size=Fals
         raise ValueError('Unsupported type of dataset: {}.'.format(dataset_cfg.TYPE))
 
 
-    collate_fn = sparse_collate_fn
-    is_train = False
-    batch_size = 1
+    collate_fn = get_collate_scn(is_train=is_train)
     if is_train:
         sampler = RandomSampler(dataset)
         batch_sampler = BatchSampler(sampler, batch_size=batch_size, drop_last=cfg.DATALOADER.DROP_LAST)
@@ -47,7 +45,7 @@ def build_dataloader(cfg, mode='train', start_iteration=0, halve_batch_size=Fals
         dataloader = DataLoader(
             dataset,
             batch_sampler=batch_sampler,
-            num_workers=1,#cfg.DATALOADER.NUM_WORKERS,
+            num_workers=cfg.DATALOADER.NUM_WORKERS,
             worker_init_fn=worker_init_fn,
             collate_fn=collate_fn
         )
@@ -56,7 +54,7 @@ def build_dataloader(cfg, mode='train', start_iteration=0, halve_batch_size=Fals
             dataset,
             batch_size=batch_size,
             drop_last=False,
-            num_workers=1,#cfg.DATALOADER.NUM_WORKERS,
+            num_workers=cfg.DATALOADER.NUM_WORKERS,
             worker_init_fn=worker_init_fn,
             collate_fn=collate_fn
         )
