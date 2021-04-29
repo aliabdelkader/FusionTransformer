@@ -191,6 +191,7 @@ class SemanticKITTISCN(SemanticKITTIBase):
         data_dict = self.data[index]
 
         points = data_dict['points'].copy()
+        feats = data_dict['feats'].copy()
         seg_label = data_dict['seg_labels'].astype(np.int64)
 
         # if self.label_mapping is not None:
@@ -225,6 +226,7 @@ class SemanticKITTISCN(SemanticKITTIBase):
             # update point cloud
             points = points[keep_idx]
             seg_label = seg_label[keep_idx]
+            feats = feats[keep_idx]
 
         img_indices = points_img.astype(np.int64)
 
@@ -246,7 +248,6 @@ class SemanticKITTISCN(SemanticKITTIBase):
             image = (image - mean) / std
 
         out_dict['img'] = np.moveaxis(image, -1, 0)
-        out_dict['img_indices'] = img_indices
 
         # 3D data augmentation and scaling from points to voxel indices
         # Kitti lidar coordinates: x (front), y (left), z (up)
@@ -255,10 +256,9 @@ class SemanticKITTISCN(SemanticKITTIBase):
 
         # cast to integer
         coords = coords.astype(np.int64)
-
+    
         # # only use voxels inside receptive field
         # idxs = (coords.min(1) >= 0) * (coords.max(1) < self.full_scale)
-
         # coords = coords[idx]
         # feats = points[idxs]
         # seg_label = seg_label[idxs]
@@ -267,11 +267,12 @@ class SemanticKITTISCN(SemanticKITTIBase):
 
         # out_dict['coords'] = coords[idxs]
         # out_dict['feats'] = np.ones([len(idxs), 1], np.float32)  # simply use 1 as feature
-        out_dict["lidar"] = SparseTensor(coords=coords[inds], feats=points[inds])
+        out_dict["lidar"] = SparseTensor(coords=coords[inds], feats=feats[inds])
 
-        out_dict['seg_label'] = PointTensor(coords=coords, feat=seg_label)
-        out_dict['img_indices'] = PointTensor(coords=coords, feat=img_indices)
-        out_dict["inverse_map"] = inverse_map
+        out_dict['seg_label'] = SparseTensor(coords=coords[inds], feats=seg_label[inds])
+        out_dict['img_indices'] = img_indices[inds].tolist()#SparseTensor(coords=coords[inds], feats=img_indices[inds])
+        # print(out_dict['img_indices'].F.shape)
+        out_dict["inverse_map"] = SparseTensor(coords=coords[inds], feats=inverse_map) 
         # if self.pselab_data is not None:
         #     out_dict.update({
         #         'pseudo_label_2d': self.pselab_data[index]['pseudo_label_2d'][keep_idx][idxs],

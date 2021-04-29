@@ -1,9 +1,45 @@
 import torch
 import torch.nn as nn
-
+import torch.nn.functional as F
 import timm
 from FusionTransformer.models.spvcnn import SPVCNN
 from torchsparse.sparse_tensor import SparseTensor
+import numpy as np
+class STN(nn.Module):
+    def __init__(self, in_channels):
+        super(STN, self).__init__()
+        # Spatial transformer localization-network
+        self.localization = nn.Sequential(
+            nn.Conv2d(in_channels, 8, kernel_size=7),
+            nn.MaxPool2d(2, stride=2),
+            nn.ReLU(True),
+            nn.Conv2d(8, 10 * 3 * 3, kernel_size=5),
+            nn.MaxPool2d(2, stride=2),
+            nn.ReLU(True),
+            nn.AdaptiveAvgPool2d(1)
+        )
+
+        # Regressor for the 3 * 2 affine matrix
+        self.fc_loc = nn.Sequential(
+            nn.Linear(10 * 3 * 3, 32),
+            nn.ReLU(True),
+            nn.Linear(32, 3 * 2)
+        )
+        # Initialize the weights/bias with identity transformation
+        self.fc_loc[2].weight.data.zero_()
+        self.fc_loc[2].bias.data.copy_(torch.tensor([1, 0, 0, 0, 1, 0], dtype=torch.float))
+    
+    def forward(self, x, output_shape):
+        B, C, H, W = x.shape
+        xs = self.localization(x)
+        xs = xs.view(-1, 10 * 3 * 3)
+        theta = self.fc_loc(xs)
+        theta = theta.view(-1, 2, 3)
+
+        grid = F.affine_grid(theta, (B, *output_shape))
+        x = F.grid_sample(x, grid)
+        return x
+    
 
 class Net2DSeg(nn.Module):
     def __init__(self,
@@ -13,24 +49,25 @@ class Net2DSeg(nn.Module):
         super(Net2DSeg, self).__init__()
 
         self.registered_hook_output = None
-        feat_channels = 96
+        self.feat_channels = 96
 
-        self.backbone = timm.create_model("vit_deit_base_distilled_patch16_224", pretrained=False)
+        self.backbone = timm.create_model("vit_deit_base_patch16_384", pretrained=False)
         self.backbone.reset_classifier(0)
 
         self.backbone_block_number = backbone_2d_kwargs["block_number"]
         block_layer_name = f"blocks.{self.backbone_block_number}.mlp.drop"
         self.register_hook_in_layer(self.backbone, block_layer_name)
-        self.up = nn.ConvTranspose2d(768, feat_channels, kernel_size=(16, 16), stride=(16, 16))
+        self.up = nn.ConvTranspose2d(768, self.feat_channels, kernel_size=(16, 16), stride=(16, 16))
 
+        self.stn_down = STN(in_channels=3)
+        self.stn_up = STN(in_channels=self.feat_channels)
         # segmentation head
-        self.linear = nn.Linear(feat_channels, num_classes)
+        self.linear = nn.Linear(self.feat_channels, num_classes)
 
         # 2nd segmentation head
         self.dual_head = dual_head
         if dual_head:
-            self.linear2 = nn.Linear(feat_channels, num_classes)
-    
+            self.linear2 = nn.Linear(self.feat_channels, num_classes)
     def hook_fn(self, module, input, output):
         self.registered_hook_output = output
     
@@ -44,26 +81,35 @@ class Net2DSeg(nn.Module):
             assert module is not None, f"not module found in model with name {layer_name}"
             module.register_forward_hook(self.hook_fn)
 
+
     def forward(self, img, img_indices):
-        # (batch_size, 3, H, W)
-        # img = data_batch['img']
-        # img_indices = data_batch['img_indices']
-
         # 2D network
-        # we do not care about transformer classification decisions
-        _ = self.backbone(img)
-        # registered_hook_output: features from transformer
-        B, N, EMBED = self.registered_hook_output.shape
-        # remove features from class token, distilation token
-        x = self.registered_hook_output[:, 2:, :]
-        # reshape so that deconvolution can restore img shae
-        x= x.transpose(1, 2).reshape(B, EMBED, 14, 14)
-        x = self.up(x) # shape C, H, W
+        B, C, H, W = img.shape
+        # sptial attention to convert shape into EMBED_DIM, 384, 384
+        x = self.stn_down(img, (self.feat_channels, 384, 384))
 
+        # we do not care about transformer classification decisions, just features
+        _ = self.backbone(x)
+
+        # registered_hook_output: features from transformer
+        B, N, EMBED_DIM = self.registered_hook_output.shape
+        
+        # remove features from class token
+        x = self.registered_hook_output[:, 1:, :]
+        # reshape so that deconvolution can be performed
+        x= x.transpose(1, 2).reshape(B, EMBED_DIM, 384//16, 384//16)
+        x = self.up(x) 
+        x = self.stn_up(x, (96, H, W)) # shape B, C, H, 
+        W
         # # 2D-3D feature lifting
         img_feats = []
+        # print("*************************", img_indices.F.shape)
         for i in range(x.shape[0]):
-            img_feats.append(x.permute(0, 2, 3, 1)[i][img_indices[i][:, 0], img_indices[i][:, 1]])
+            img_indices_i = np.array(img_indices[i])
+            img_feats.append(
+                x.permute(0, 2, 3, 1)[i][img_indices_i[:, 0], img_indices_i[:, 1]]
+            )
+        
         img_feats = torch.cat(img_feats, 0)
 
         # linear
@@ -129,9 +175,9 @@ class LateFusionTransformer(nn.Module):
 
 def test_Net2DSeg():
     # 2D
-    batch_size = 2
-    img_width = 224
-    img_height = 224
+    batch_size = 1
+    img_width = 1200
+    img_height = 384
 
     # 3D
     num_coords = 2000
@@ -183,9 +229,9 @@ def test_Net3DSeg():
 
 def test_LateFusion():
     # 2D
-    batch_size = 2
-    img_width = 224
-    img_height = 224
+    batch_size = 1
+    img_width = 1200
+    img_height = 384
 
     # 3D
     num_coords = 2000
@@ -195,7 +241,7 @@ def test_LateFusion():
     u = torch.randint(high=img_height, size=(batch_size, num_coords // batch_size, 1))
     v = torch.randint(high=img_width, size=(batch_size, num_coords // batch_size, 1))
     img_indices = torch.cat([u, v], 2)
-
+    print(img_indices.shape)
     # to cuda
     img = img.cuda()
 
@@ -222,6 +268,5 @@ def test_LateFusion():
         print('Fusion:', k, v.shape)
 
 if __name__ == '__main__':
-    import pdb; pdb.set_trace()
     # test_Net2DSeg()
     test_LateFusion()

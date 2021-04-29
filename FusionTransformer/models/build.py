@@ -25,8 +25,8 @@ def build_late_fusion_model(cfg):
     model = LateFusionTransformer(
         num_class=cfg.MODEL.NUM_CLASSES,
         dual_head=cfg.MODEL.DUAL_HEAD,
-        backbone_2d_kwargs=cfg.MODEL_2D,
-        backbone_3d_kwargs=cfg.MODEL_3D)
+        backbone_2d_kwargs=cfg.MODEL,
+        backbone_3d_kwargs=cfg.MODEL)
     
     train_3d_metric = SegIoU(cfg.MODEL.NUM_CLASSES, name='seg_iou_3d')
     train_2d_metric = SegIoU(cfg.MODEL.NUM_CLASSES, name='seg_iou_2d')

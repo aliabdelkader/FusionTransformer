@@ -1,23 +1,25 @@
 # official split defined in https://github.com/PRBonn/semantic-kitti-api/blob/master/config/semantic-kitti.yaml
 
 train = [
-    '00',
-    '01',
-    '02',
-    '03',
+    # '00',
+    # '01',
+    # '02',
+    # '03',
     '04',
-    '05',
-    '06',
-    '09',
-    '10',
+    # '05',
+    # '06',
+    # '09',
+    # '10',
 ]
 
 val = [
-    '07'
+    # '07'
+    '04'
 ]
 
 test = [
-    '08'
+    # '08'
+    '04'
 ]
 
 # not used

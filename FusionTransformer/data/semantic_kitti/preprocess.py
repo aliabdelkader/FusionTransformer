@@ -114,6 +114,8 @@ class DummyDataset(Dataset):
 
         data_dict['seg_label'] = label[keep_idx].astype(np.int16)
         data_dict['points'] = points[keep_idx]
+        data_dict['feats'] = scan[keep_idx]
+
         data_dict['points_img'] = img_points[keep_idx_img_pts]
         data_dict['image_size'] = np.array(image_size)
 
@@ -127,7 +129,7 @@ def preprocess(split_name, root_dir, out_dir):
     pkl_data = []
     split = getattr(splits, split_name)
 
-    dataloader = DataLoader(DummyDataset(root_dir, split), num_workers=8)
+    dataloader = DataLoader(DummyDataset(root_dir, split), num_workers=1)
 
     num_skips = 0
     for i, data_dict in enumerate(dataloader):
@@ -147,6 +149,7 @@ def preprocess(split_name, root_dir, out_dir):
         # append data
         out_dict = {
             'points': data_dict['points'].numpy(),
+            'feats':  data_dict['feats'].numpy(),
             'seg_labels': data_dict['seg_label'].numpy(),
             'points_img': data_dict['points_img'].numpy(),  # row, col format, shape: (num_points, 2)
             'lidar_path': lidar_path,
@@ -167,8 +170,8 @@ def preprocess(split_name, root_dir, out_dir):
 
 
 if __name__ == '__main__':
-    root_dir = '/datasets_master/semantic_kitti'
-    out_dir = '/datasets_local/datasets_mjaritz/semantic_kitti_preprocess'
+    root_dir = '/home/ubuntu/SemanticKitti'
+    out_dir = '/home/ubuntu/SemanticKitti/semantic_kitti_preprocess'
     preprocess('val', root_dir, out_dir)
     preprocess('train', root_dir, out_dir)
     preprocess('test', root_dir, out_dir)

@@ -41,6 +41,7 @@ def augment_and_scale_3d(points, scale, full_scale,
 
     # scale with inverse voxel size (e.g. 20 corresponds to 5cm)
     coords = points * scale
+    # print(points.shape, coords.shape)
     # translate points to positive octant (receptive field of SCN in x, y, z coords is in interval [0, full_scale])
     coords -= coords.min(0)
 

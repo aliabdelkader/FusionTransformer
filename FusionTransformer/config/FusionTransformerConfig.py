@@ -58,7 +58,7 @@ _C.DATASET.NuScenesSCN.augmentation.color_jitter = (0.4, 0.4, 0.4)
 _C.DATASET.SemanticKITTISCN = CN()
 _C.DATASET.SemanticKITTISCN.preprocess_dir = ''
 _C.DATASET.SemanticKITTISCN.semantic_kitti_dir = ''
-_C.DATASET.SemanticKITTISCN.merge_classes = True
+# _C.DATASET.SemanticKITTISCN.merge_classes = True
 # 3D
 _C.DATASET.SemanticKITTISCN.scale = 20
 _C.DATASET.SemanticKITTISCN.full_scale = 4096
@@ -86,10 +86,7 @@ _C.MODEL.DUAL_HEAD = False
 # ----------------------------------------------------------------------------- #
 # SCN options
 # ----------------------------------------------------------------------------- #
-_C.MODEL.2D.block_number = 11
-_C.MODEL.3D.pres = 0.2
-_C.MODEL.3D.vres = 0.2
-
+_C.MODEL.block_number = 11
 # ---------------------------------------------------------------------------- #
 # Misc options
 # ---------------------------------------------------------------------------- #

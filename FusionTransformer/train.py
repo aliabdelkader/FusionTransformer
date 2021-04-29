@@ -87,7 +87,7 @@ def train(cfg, output_dir='', run_name=''):
                                      logger=logger,
                                      postfix='',
                                      max_to_keep=cfg.TRAIN.MAX_TO_KEEP)
-    checkpoint_data = checkpointerload(cfg.RESUME_PATH, resume=cfg.AUTO_RESUME, resume_states=cfg.RESUME_STATES)
+    checkpoint_data = checkpointer.load(cfg.RESUME_PATH, resume=cfg.AUTO_RESUME, resume_states=cfg.RESUME_STATES)
     ckpt_period = cfg.TRAIN.CHECKPOINT_PERIOD
 
     # build tensorboard logger (optionally by comment)
@@ -112,8 +112,8 @@ def train(cfg, output_dir='', run_name=''):
 
     best_metric_name = 'best_{}'.format(cfg.VAL.METRIC)
     best_metric = {
-        '2d': checkpoint_data_2d.get(best_metric_name, None),
-        '3d': checkpoint_data_3d.get(best_metric_name, None)
+        '2d': checkpoint_data.get(best_metric_name, None),
+        '3d': checkpoint_data.get(best_metric_name, None)
     }
     best_metric_iter = {'2d': -1, '3d': -1}
     logger.info('Start training from iteration {}'.format(start_iteration))
@@ -145,16 +145,15 @@ def train(cfg, output_dir='', run_name=''):
 
     for iteration in range(start_iteration, max_iteration):
         # fetch data_batches
-        _, data_batch = train_iter_src.__next__()
+        _, data_batch = train_iter.__next__()
 
         data_time = time.time() - end
         # copy data from cpu to gpu
-        if 'SCN' in cfg.DATASET_SOURCE.TYPE:
+        if 'SCN' in cfg.DATASET.TYPE:
         
             data_batch['lidar'] = data_batch['lidar'].cuda()
             data_batch['seg_label'] = data_batch['seg_label'].cuda()
             data_batch['img'] = data_batch['img'].cuda()
-
             # if cfg.TRAIN.FusionTransformer.lambda_pl > 0:
             #     data_batch_trg['pseudo_label_2d'] = data_batch_trg['pseudo_label_2d'].cuda()
             #     data_batch_trg['pseudo_label_3d'] = data_batch_trg['pseudo_label_3d'].cuda()
@@ -170,8 +169,12 @@ def train(cfg, output_dir='', run_name=''):
         preds = model(data_batch)
 
         # segmentation loss: cross entropy
-        seg_loss_2d = F.cross_entropy(preds['img_seg_logit'], data_batch_src['seg_label'], weight=class_weights)
-        seg_loss_3d = F.cross_entropy(preds_3d['lidar_seg_logit'], data_batch_src['seg_label'], weight=class_weights)
+        print(data_batch['lidar'].F.shape)
+        print(preds['img_seg_logit'].shape)
+        print(data_batch['seg_label'].F.shape)
+        print(data_batch['seg_label'].F.min(), data_batch['seg_label'].F.max())
+        seg_loss_2d = F.cross_entropy(preds['img_seg_logit'], data_batch['seg_label'].F.long())#, weight=class_weights)
+        seg_loss_3d = F.cross_entropy(preds['lidar_seg_logit'], data_batch['seg_label'].F.long())#, weight=class_weights)
         train_metric_logger.update(seg_loss_src_2d=seg_loss_2d, seg_loss_src_3d=seg_loss_3d)
         loss_2d = seg_loss_2d
         loss_3d = seg_loss_3d
@@ -193,8 +196,8 @@ def train(cfg, output_dir='', run_name=''):
 
         # update metric (e.g. IoU)
         with torch.no_grad():
-            train_2d_metric.update_dict(preds_2d, data_batch_src)
-            train_3d_metric.update_dict(preds_3d, data_batch_src)
+            train_2d_metric.update_dict(preds, data_batch)
+            train_3d_metric.update_dict(preds, data_batch)
 
         # backward
         loss_2d.backward()
@@ -219,7 +222,7 @@ def train(cfg, output_dir='', run_name=''):
                 ).format(
                     iter=cur_iter,
                     meters=str(train_metric_logger),
-                    lr=optimizer_2d.param_groups[0]['lr'],
+                    lr=optimizer.param_groups[0]['lr'],
                     memory=torch.cuda.max_memory_allocated() / (1024.0 ** 2),
                 )
             )
@@ -291,7 +294,7 @@ def main():
     # load the configuration
     # import on-the-fly to avoid overwriting cfg
     from FusionTransformer.common.config import purge_cfg
-    from FusionTransformer.config.FusionTransformer import cfg
+    from FusionTransformer.config.FusionTransformerConfig import cfg
     cfg.merge_from_file(args.config_file)
     cfg.merge_from_list(args.opts)
     purge_cfg(cfg)
@@ -322,4 +325,10 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    import sys, traceback, pdb
+    try:
+        main()
+    except:
+        extype, value, tb = sys.exc_info()
+        traceback.print_exc()
+        pdb.post_mortem(tb)

@@ -91,6 +91,9 @@ class SPVCNN(nn.Module):
         if 'pres' in kwargs and 'vres' in kwargs:
             self.pres = kwargs['pres']
             self.vres = kwargs['vres']
+        else:
+            self.pres = 1
+            self.vres = self.pres
 
         self.stem = nn.Sequential(
             spnn.Conv3d(4, cs[0], kernel_size=3, stride=1),

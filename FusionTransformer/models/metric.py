@@ -35,9 +35,13 @@ class SegIoU(object):
         self.name = name
 
     def update_dict(self, preds, labels):
-        seg_logit = preds['seg_logit']  # (batch_size, num_classes, num_points)
-        seg_label = labels['seg_label']  # (batch_size, num_points)
-        pred_label = seg_logit.argmax(1)
+        if "3d" in self.name:
+            seg_logit = preds['lidar_seg_logit']  # (batch_size, num_classes, num_points)
+        if "2d" in self.name:
+            seg_logit = preds['img_seg_logit']  # (batch_size, num_classes, num_points)
+
+        seg_label = labels['seg_label'].F.cpu().long()  # (batch_size, num_points)
+        pred_label = seg_logit.cpu().argmax(1)
 
         mask = (seg_label != self.ignore_index)
         seg_label = seg_label[mask]

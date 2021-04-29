@@ -1,16 +1,16 @@
 MODEL:
   TYPE: "LateFusionTransformer"
   DUAL_HEAD: True
-  NUM_CLASSES: 16
+  NUM_CLASSES: 259
+  block_number: 11
 DATASET:
   TYPE: "SemanticKITTISCN"
   TRAIN: ("train",)
   VAL: ("val",)
   TEST: ("test",)
   SemanticKITTISCN:
-    preprocess_dir: "/datasets_local/datasets_mjaritz/semantic_kitti_preprocess/preprocess"
-    semantic_kitti_dir: "/datasets_local/datasets_mjaritz/semantic_kitti_preprocess"
-    pselab_paths: ("/home/docker_user/workspace/outputs/FusionTransformer/a2d2_semantic_kitti/FusionTransformer/pselab_data/train.npy",)
+    preprocess_dir: "/home/ubuntu/SemanticKitti/semantic_kitti_preprocess/preprocess"
+    semantic_kitti_dir: "/home/ubuntu/SemanticKitti"
 DATALOADER:
   NUM_WORKERS: 4
 OPTIMIZER:
@@ -23,7 +23,7 @@ SCHEDULER:
     milestones: (80000, 90000)
   MAX_ITERATION: 100000
 TRAIN:
-  BATCH_SIZE: 16
+  BATCH_SIZE: 1
   SUMMARY_PERIOD: 50
   CHECKPOINT_PERIOD: 5000
   # CLASS_WEIGHTS: [1.89090012, 2.0585112, 3.1970535, 3.1111633, 1., 2.93751704, 1.92053733,

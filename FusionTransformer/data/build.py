@@ -38,7 +38,8 @@ def build_dataloader(cfg, mode='train', start_iteration=0, halve_batch_size=Fals
 
 
     collate_fn = sparse_collate_fn
-
+    is_train = False
+    batch_size = 1
     if is_train:
         sampler = RandomSampler(dataset)
         batch_sampler = BatchSampler(sampler, batch_size=batch_size, drop_last=cfg.DATALOADER.DROP_LAST)
@@ -46,7 +47,7 @@ def build_dataloader(cfg, mode='train', start_iteration=0, halve_batch_size=Fals
         dataloader = DataLoader(
             dataset,
             batch_sampler=batch_sampler,
-            num_workers=cfg.DATALOADER.NUM_WORKERS,
+            num_workers=1,#cfg.DATALOADER.NUM_WORKERS,
             worker_init_fn=worker_init_fn,
             collate_fn=collate_fn
         )
@@ -55,7 +56,7 @@ def build_dataloader(cfg, mode='train', start_iteration=0, halve_batch_size=Fals
             dataset,
             batch_size=batch_size,
             drop_last=False,
-            num_workers=cfg.DATALOADER.NUM_WORKERS,
+            num_workers=1,#cfg.DATALOADER.NUM_WORKERS,
             worker_init_fn=worker_init_fn,
             collate_fn=collate_fn
         )
