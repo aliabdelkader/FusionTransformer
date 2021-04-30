@@ -9,7 +9,7 @@ DATASET:
   VAL: ("val",)
   TEST: ("test",)
   SemanticKITTISCN:
-    preprocess_dir: "/home/user/SemanticKitti/semantic_kitti_preprocess/preprocess"
+    preprocess_dir: "/home/user/SemanticKitti/preprocessed"
     semantic_kitti_dir: "/home/user/SemanticKitti"
 DATALOADER:
   NUM_WORKERS: 4
@@ -29,6 +29,6 @@ TRAIN:
   # CLASS_WEIGHTS: [1.89090012, 2.0585112, 3.1970535, 3.1111633, 1., 2.93751704, 1.92053733,
   #                 1.47886874, 1.04654198, 1.78266561]
 VAL:
-  BATCH_SIZE: 2
+  BATCH_SIZE: 1
   PERIOD: 5000
 #OUTPUT_DIR: "path/to/output/directory/@"  #  @ will be replaced with config path, e.g. nuscenes/usa_singapore/FusionTransformer

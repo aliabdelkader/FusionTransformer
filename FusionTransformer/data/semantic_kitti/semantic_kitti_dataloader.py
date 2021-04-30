@@ -11,6 +11,7 @@ from FusionTransformer.data.utils.augmentation_3d import augment_and_scale_3d
 from torchsparse.utils import sparse_quantize
 import yaml
 from os.path import dirname, realpath
+from pathlib import Path
 class SemanticKITTIBase(Dataset):
     """SemanticKITTI dataset"""
 
@@ -68,10 +69,12 @@ class SemanticKITTIBase(Dataset):
 
         assert isinstance(split, tuple)
         print('Load', split)
-        self.data = []
-        for curr_split in split:
-            with open(osp.join(self.preprocess_dir, curr_split + '.pkl'), 'rb') as f:
-                self.data.extend(pickle.load(f))
+        
+        split_path = Path(self.preprocess_dir) / str(split[0])
+        self.data_paths = sorted(list(split_path.rglob("*.pkl"))) 
+        # for curr_split in split:
+        #     with open(osp.join(self.preprocess_dir, curr_split + '.pkl'), 'rb') as f:
+        #         self.data.extend(pickle.load(f))
 
         self.semantic_kitti_config_dict = yaml.safe_load(open(dirname(realpath(__file__)) + "/semantic_kitti_label.yaml", 'r'))
         self.map_label = np.vectorize(lambda org_label: self.semantic_kitti_config_dict["learning_map"][org_label])
@@ -81,7 +84,7 @@ class SemanticKITTIBase(Dataset):
         raise NotImplementedError
 
     def __len__(self):
-        return len(self.data)
+        return len(self.data_paths)
 
 
 class SemanticKITTISCN(SemanticKITTIBase):
@@ -130,7 +133,9 @@ class SemanticKITTISCN(SemanticKITTIBase):
         self.color_jitter = T.ColorJitter(*color_jitter) if color_jitter else None
 
     def __getitem__(self, index):
-        data_dict = self.data[index]
+        data_path = str(self.data_paths[index])
+        with open(data_path, 'rb') as data_file:
+            data_dict = pickle.load(data_file)
 
         points = data_dict['points'].copy()
         feats = data_dict['feats'].copy()

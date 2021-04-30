@@ -126,52 +126,58 @@ class DummyDataset(Dataset):
 
 
 def preprocess(split_name, root_dir, out_dir):
-    pkl_data = []
-    split = getattr(splits, split_name)
+    # pkl_data = []
+    sequences = getattr(splits, split_name)
 
-    dataloader = DataLoader(DummyDataset(root_dir, split), num_workers=1)
+    for seq in sequences:
+        dataloader = DataLoader(DummyDataset(root_dir, [seq]), num_workers=5)
+        num_skips = 0
+        for i, data_dict in enumerate(dataloader):
+            # data error leads to returning empty dict
+            if not data_dict:
+                print('empty dict, continue')
+                num_skips += 1
+                continue
+            for k, v in data_dict.items():
+                data_dict[k] = v[0]
+            print('{}/{} {}'.format(i, len(dataloader), data_dict['lidar_path']))
 
-    num_skips = 0
-    for i, data_dict in enumerate(dataloader):
-        # data error leads to returning empty dict
-        if not data_dict:
-            print('empty dict, continue')
-            num_skips += 1
-            continue
-        for k, v in data_dict.items():
-            data_dict[k] = v[0]
-        print('{}/{} {}'.format(i, len(dataloader), data_dict['lidar_path']))
+            # convert to relative path
+            lidar_path = data_dict['lidar_path'].replace(root_dir + '/', '')
+            cam_path = data_dict['camera_path'].replace(root_dir + '/', '')
 
-        # convert to relative path
-        lidar_path = data_dict['lidar_path'].replace(root_dir + '/', '')
-        cam_path = data_dict['camera_path'].replace(root_dir + '/', '')
-
-        # append data
-        out_dict = {
-            'points': data_dict['points'].numpy(),
-            'feats':  data_dict['feats'].numpy(),
-            'seg_labels': data_dict['seg_label'].numpy(),
-            'points_img': data_dict['points_img'].numpy(),  # row, col format, shape: (num_points, 2)
-            'lidar_path': lidar_path,
-            'camera_path': cam_path,
-            'image_size': tuple(data_dict['image_size'].numpy())
-        }
-        pkl_data.append(out_dict)
+            # append data
+            scan_data = {
+                'points': data_dict['points'].numpy(),
+                'feats':  data_dict['feats'].numpy(),
+                'seg_labels': data_dict['seg_label'].numpy(),
+                'points_img': data_dict['points_img'].numpy(),  # row, col format, shape: (num_points, 2)
+                'lidar_path': lidar_path,
+                'camera_path': cam_path,
+                'image_size': tuple(data_dict['image_size'].numpy())
+            }
+            save_dir = osp.join(out_dir, split_name, str(seq))
+            os.makedirs(save_dir, exist_ok=True)
+            save_path = osp.join(save_dir, 'scan_data_{}.pkl'.format(i))
+            with open(save_path, 'wb') as f:
+                pickle.dump(scan_data, f)
+                print('Wrote preprocessed data to ' + save_path)
+        # pkl_data.append(out_dict)
 
     print('Skipped {} files'.format(num_skips))
 
-    # save to pickle file
-    save_dir = osp.join(out_dir, 'preprocess')
-    os.makedirs(save_dir, exist_ok=True)
-    save_path = osp.join(save_dir, '{}.pkl'.format(split_name))
-    with open(save_path, 'wb') as f:
-        pickle.dump(pkl_data, f)
-        print('Wrote preprocessed data to ' + save_path)
+    # # save to pickle file
+    # save_dir = osp.join(out_dir, 'preprocess')
+    # os.makedirs(save_dir, exist_ok=True)
+    # save_path = osp.join(save_dir, '{}.pkl'.format(split_name))
+    # with open(save_path, 'wb') as f:
+    #     pickle.dump(pkl_data, f)
+    #     print('Wrote preprocessed data to ' + save_path)
 
 
 if __name__ == '__main__':
     root_dir = '/home/user/SemanticKitti'
-    out_dir = '/home/user/SemanticKitti/semantic_kitti_preprocess'
+    out_dir = '/home/user/SemanticKitti/preprocessed'
     preprocess('val', root_dir, out_dir)
     preprocess('train', root_dir, out_dir)
     preprocess('test', root_dir, out_dir)
