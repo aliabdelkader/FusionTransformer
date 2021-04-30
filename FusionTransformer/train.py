@@ -242,38 +242,35 @@ def train(cfg, output_dir='', run_name=''):
             checkpoint_data_3d["3d_" +best_metric_name] = best_metric['3d']
             checkpointer_3d.save('model{:06d}'.format(cur_iter), **checkpoint_data)
 
-        # # ---------------------------------------------------------------------------- #
-        # # validate for one epoch
-        # # ---------------------------------------------------------------------------- #
-        # if val_period > 0 and (cur_iter % val_period == 0 or cur_iter == max_iteration):
-        #     start_time_val = time.time()
-        #     setup_validate()
+        # ---------------------------------------------------------------------------- #
+        # validate for one epoch
+        # ---------------------------------------------------------------------------- #
+        if val_period > 0 and (cur_iter % val_period == 0 or cur_iter == max_iteration):
+            start_time_val = time.time()
+            setup_validate()
 
-        #     validate(cfg,
-        #              model
-        #              val_dataloader,
-        #              val_metric_logger)
+            validate(cfg, model, val_dataloader, val_metric_logger)
 
-        #     epoch_time_val = time.time() - start_time_val
-        #     logger.info('Iteration[{}]-Val {}  total_time: {:.2f}s'.format(
-        #         cur_iter, val_metric_logger.summary_str, epoch_time_val))
+            epoch_time_val = time.time() - start_time_val
+            logger.info('Iteration[{}]-Val {}  total_time: {:.2f}s'.format(
+                cur_iter, val_metric_logger.summary_str, epoch_time_val))
 
-        #     # summary
-        #     if summary_writer is not None:
-        #         keywords = ('loss', 'acc', 'iou')
-        #         for name, meter in val_metric_logger.meters.items():
-        #             if all(k not in name for k in keywords):
-        #                 continue
-        #             summary_writer.add_scalar('val/' + name, meter.avg, global_step=cur_iter)
+            # summary
+            if summary_writer is not None:
+                keywords = ('loss', 'acc', 'iou')
+                for name, meter in val_metric_logger.meters.items():
+                    if all(k not in name for k in keywords):
+                        continue
+                    summary_writer.add_scalar('val/' + name, meter.avg, global_step=cur_iter)
 
-        #     # best validation
-        #     for modality in ['2d', '3d']:
-        #         cur_metric_name = cfg.VAL.METRIC + '_' + modality
-        #         if cur_metric_name in val_metric_logger.meters:
-        #             cur_metric = val_metric_logger.meters[cur_metric_name].global_avg
-        #             if best_metric[modality] is None or best_metric[modality] < cur_metric:
-        #                 best_metric[modality] = cur_metric
-        #                 best_metric_iter[modality] = cur_iter
+            # best validation
+            for modality in ['2d', '3d']:
+                cur_metric_name = cfg.VAL.METRIC + '_' + modality
+                if cur_metric_name in val_metric_logger.meters:
+                    cur_metric = val_metric_logger.meters[cur_metric_name].global_avg
+                    if best_metric[modality] is None or best_metric[modality] < cur_metric:
+                        best_metric[modality] = cur_metric
+                        best_metric_iter[modality] = cur_iter
 
             # restore training
             setup_train()

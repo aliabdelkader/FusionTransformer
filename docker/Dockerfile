@@ -11,6 +11,7 @@ RUN apt-get update && apt-get install -y \
     g++ \
     make \
     cmake \
+    nano \
     libsparsehash-dev
 
 ENV HOME=/home/user
@@ -33,13 +34,18 @@ RUN curl -sLo ~/miniconda.sh https://repo.continuum.io/miniconda/Miniconda3-py38
  && chmod +x ~/miniconda.sh \
  && ~/miniconda.sh -b -p ~/miniconda \
  && rm ~/miniconda.sh \
- && conda install -y python==3.8.1 \
+ && conda install -y python=3.6 \
  && conda clean -ya
 
+ENV CUDA_HOME=/usr/local/cuda
 RUN conda install pytorch==1.6.0 torchvision==0.7.0 cudatoolkit=10.2 -c pytorch && conda clean -ya
-RUN python -m pip install --no-cache-dir --upgrade git+https://github.com/mit-han-lab/torchsparse.git
+
+RUN git clone https://github.com/mit-han-lab/torchsparse.git \ 
+    && cd torchsparse \
+    && export CUDA_HOME="/usr/local/cuda" \
+    && python setup.py install
+
 COPY ./ ${HOME}/FusionTransformer
-RUN ls ${HOME}
 RUN sudo chown user -R ${HOME}/FusionTransformer
 WORKDIR ${HOME}/FusionTransformer
 RUN python -m pip install --no-cache-dir -e .

@@ -19,7 +19,7 @@ class Evaluator(object):
         """
         # convert ignore_label to num_classes
         # refer to sklearn.metrics.confusion_matrix
-        gt_label[gt_label == -100] = self.num_classes
+        gt_label[gt_label == 0] = self.num_classes
         confusion_matrix = CM(gt_label.flatten(),
                               pred_label.flatten(),
                               labels=self.labels)
