@@ -20,15 +20,15 @@ SCHEDULER:
   TYPE: "MultiStepLR"
   MultiStepLR:
     gamma: 0.1
-    milestones: (80000, 90000)
+    # milestones: (80000, 90000)
   MAX_ITERATION: 100000
 TRAIN:
-  BATCH_SIZE: 1
-  SUMMARY_PERIOD: 50
+  BATCH_SIZE: 10
+  SUMMARY_PERIOD: 1
   CHECKPOINT_PERIOD: 5000
   # CLASS_WEIGHTS: [1.89090012, 2.0585112, 3.1970535, 3.1111633, 1., 2.93751704, 1.92053733,
   #                 1.47886874, 1.04654198, 1.78266561]
 VAL:
-  BATCH_SIZE: 1
-  PERIOD: 5000
+  BATCH_SIZE: 10
+  PERIOD: 1
 #OUTPUT_DIR: "path/to/output/directory/@"  #  @ will be replaced with config path, e.g. nuscenes/usa_singapore/FusionTransformer
