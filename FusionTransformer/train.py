@@ -169,10 +169,6 @@ def train(cfg, output_dir='', run_name=''):
         preds = model(data_batch)
 
         # segmentation loss: cross entropy
-        print(data_batch['lidar'].F.shape)
-        print(preds['img_seg_logit'].shape)
-        print(data_batch['seg_label'].shape)
-        print(data_batch['seg_label'].min(), data_batch['seg_label'].max())
         seg_loss_2d = F.cross_entropy(preds['img_seg_logit'], data_batch['seg_label'].long())#, weight=class_weights)
         seg_loss_3d = F.cross_entropy(preds['lidar_seg_logit'], data_batch['seg_label'].long())#, weight=class_weights)
         train_metric_logger.update(seg_loss_src_2d=seg_loss_2d, seg_loss_src_3d=seg_loss_3d)
