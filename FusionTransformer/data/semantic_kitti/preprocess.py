@@ -156,7 +156,7 @@ def preprocess(split_name, root_dir, out_dir):
                 'camera_path': cam_path,
                 'image_size': tuple(data_dict['image_size'].numpy())
             }
-            save_dir = osp.join(out_dir, split_name, str(seq))
+            save_dir = osp.join(out_dir, str(seq))
             os.makedirs(save_dir, exist_ok=True)
             save_path = osp.join(save_dir, 'scan_data_{}.pkl'.format(i))
             with open(save_path, 'wb') as f:
