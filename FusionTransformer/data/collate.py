@@ -1,6 +1,7 @@
 import torch
 from functools import partial
 from torchsparse.sparse_tensor import SparseTensor
+import numpy as np
 
 def collate_scn_base(input_dict_list, output_orig, output_image=True):
     """
@@ -19,9 +20,10 @@ def collate_scn_base(input_dict_list, output_orig, output_image=True):
         imgs = []
         img_idxs = []
 
-    # if output_orig:
-    #     orig_seg_label = []
-    #     orig_points_idx = []
+    if output_orig:
+        orig_seg_label = []
+        sparse_orig_points_idx = []
+        inverse_maps = []
 
     # output_pselab = 'pseudo_label_2d' in input_dict_list[0].keys()
     # if output_pselab:
@@ -42,9 +44,10 @@ def collate_scn_base(input_dict_list, output_orig, output_image=True):
             imgs.append(torch.from_numpy(input_dict['img']))
             img_idxs.append(input_dict['img_indices'])
 
-        # if output_orig:
-        #     orig_seg_label.append(input_dict['orig_seg_label'])
-        #     orig_points_idx.append(input_dict['orig_points_idx'])
+        if output_orig:
+            orig_seg_label.append(input_dict['orig_seg_label'])
+            sparse_orig_points_idx.append(input_dict['sparse_orig_points_idx'])
+            inverse_maps.append(input_dict["inverse_map"])
         # if output_pselab:
         #     pseudo_label_2d.append(torch.from_numpy(input_dict['pseudo_label_2d']))
         #     if input_dict['pseudo_label_3d'] is not None:
@@ -53,7 +56,7 @@ def collate_scn_base(input_dict_list, output_orig, output_image=True):
     locs = torch.cat(locs, 0)
     feats = torch.cat(feats, 0)
 
-    out_dict = {'lidar': SparseTensor(locs, feats)}
+    out_dict = {'lidar': SparseTensor(coords=locs, feats=feats)}
     if labels:
         labels = torch.cat(labels, 0)
         out_dict['seg_label'] = labels
@@ -61,9 +64,10 @@ def collate_scn_base(input_dict_list, output_orig, output_image=True):
         out_dict['img'] = torch.stack(imgs)
         out_dict['img_indices'] = img_idxs
         
-    # if output_orig:
-    #     out_dict['orig_seg_label'] = orig_seg_label
-    #     out_dict['orig_points_idx'] = orig_points_idx
+    if output_orig:
+        out_dict['orig_seg_label'] = orig_seg_label
+        out_dict['sparse_orig_points_idx'] = sparse_orig_points_idx
+        out_dict["inverse_map"] = inverse_maps
     # if output_pselab:
     #     out_dict['pseudo_label_2d'] = torch.cat(pseudo_label_2d, 0)
     #     out_dict['pseudo_label_3d'] = torch.cat(pseudo_label_3d, 0) if pseudo_label_3d else pseudo_label_3d

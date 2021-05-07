@@ -31,7 +31,8 @@ class AverageMeter(object):
 
     @property
     def avg(self):
-        return np.sum(self.values) / np.sum(self.counts)
+        lower = np.sum(self.counts)
+        return np.sum(self.values) / lower if lower != 0 else float('nan')
 
     @property
     def global_avg(self):
@@ -103,5 +104,4 @@ class MetricLogger(object):
         return self.delimiter.join(metric_str)
 
     def reset(self):
-        for meter in self.meters.values():
-            meter.reset()
+        self.meters = defaultdict(AverageMeter)

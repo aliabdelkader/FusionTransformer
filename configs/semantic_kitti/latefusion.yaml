@@ -1,7 +1,9 @@
+AUTO_RESUME: False
+RESUME_STATES: False
 MODEL:
   TYPE: "LateFusionTransformer"
   DUAL_HEAD: True
-  NUM_CLASSES: 20
+  NUM_CLASSES: 20 
   block_number: 11
 DATASET:
   TYPE: "SemanticKITTISCN"
@@ -12,7 +14,7 @@ DATASET:
     preprocess_dir: "/home/user/SemanticKitti/preprocessed"
     semantic_kitti_dir: "/home/user/SemanticKitti"
 DATALOADER:
-  NUM_WORKERS: 4
+  NUM_WORKERS: 1
 OPTIMIZER:
   TYPE: "Adam"
   BASE_LR: 0.001
@@ -20,15 +22,18 @@ SCHEDULER:
   TYPE: "MultiStepLR"
   MultiStepLR:
     gamma: 0.1
-    # milestones: (80000, 90000)
-  MAX_ITERATION: 100000
+  MAX_EPOCH: 100
 TRAIN:
   BATCH_SIZE: 10
-  SUMMARY_PERIOD: 1
-  CHECKPOINT_PERIOD: 5000
+  SUMMARY_PERIOD: 2
+  CHECKPOINT_PERIOD: 2
   # CLASS_WEIGHTS: [1.89090012, 2.0585112, 3.1970535, 3.1111633, 1., 2.93751704, 1.92053733,
   #                 1.47886874, 1.04654198, 1.78266561]
+  CLASS_WEIGHTS: [0., 1.58592236, 3.70985175, 3.25614802, 2.66642065, 2.62257617, 3.29107353,
+ 3.49683708, 3.4743547,  1.,         2.07559625, 1.27048431, 2.67143446,
+ 1.38093766, 1.49573973, 1.03580662, 2.26519177, 1.52416277, 2.53003289,
+ 3.09923583]
 VAL:
   BATCH_SIZE: 10
-  PERIOD: 1
+  PERIOD: 2
 #OUTPUT_DIR: "path/to/output/directory/@"  #  @ will be replaced with config path, e.g. nuscenes/usa_singapore/FusionTransformer

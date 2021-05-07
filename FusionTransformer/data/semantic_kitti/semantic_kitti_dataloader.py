@@ -12,6 +12,8 @@ from torchsparse.utils import sparse_quantize
 import yaml
 from os.path import dirname, realpath
 from pathlib import Path
+from FusionTransformer.data.semantic_kitti import splits
+
 class SemanticKITTIBase(Dataset):
     """SemanticKITTI dataset"""
 
@@ -70,15 +72,20 @@ class SemanticKITTIBase(Dataset):
         assert isinstance(split, tuple)
         print('Load', split)
         
-        split_path = Path(self.preprocess_dir) / str(split[0])
-        self.data_paths = sorted(list(split_path.rglob("*.pkl"))) 
+        self.data_paths = []
+        split_sequences = getattr(splits, split[0])
+        for seq in split_sequences:
+            split_path = Path(self.preprocess_dir) / str(split[0]) / seq
+            self.data_paths.extend(sorted(list(split_path.rglob("*.pkl"))))
         # for curr_split in split:
         #     with open(osp.join(self.preprocess_dir, curr_split + '.pkl'), 'rb') as f:
         #         self.data.extend(pickle.load(f))
 
         self.semantic_kitti_config_dict = yaml.safe_load(open(dirname(realpath(__file__)) + "/semantic_kitti_label.yaml", 'r'))
+        self.class_names = [self.semantic_kitti_config_dict["labels"][k] for k in self.semantic_kitti_config_dict["learning_map_inv"].values()]
+        self.class_labels = list (self.semantic_kitti_config_dict["learning_map_inv"].copy().values())
         self.map_label = np.vectorize(lambda org_label: self.semantic_kitti_config_dict["learning_map"][org_label])
-        self.map_inverse_label = np.vectorize(lambda learning_labeld: self.semantic_kitti_config_dict["learning_map_inv"][learning_label])
+        self.map_inverse_label = np.vectorize(lambda learning_label: self.semantic_kitti_config_dict["learning_map_inv"][learning_label])
 
     def __getitem__(self, index):
         raise NotImplementedError
@@ -207,49 +214,53 @@ class SemanticKITTISCN(SemanticKITTIBase):
         # coords.min(1) -> minimum coordinate for each point, shape (N,)
         # coords.max(1) -> max coordinate for each point. shape (N,)
         # only use voxels inside receptive field
-        valid_idxs = (coords.min(1) >= 0) * (coords.max(1) < self.full_scale)
-        coords = coords[valid_idxs]
-        feats = feats[valid_idxs]
-        seg_label = seg_label[valid_idxs]
-        img_indices = img_indices[valid_idxs]
+        voxel_valid_idxs = (coords.min(1) >= 0) * (coords.max(1) < self.full_scale)
+        voxel_coords = coords[voxel_valid_idxs]
+        voxel_feats = feats[voxel_valid_idxs]
+        voxel_seg_label = seg_label[voxel_valid_idxs]
+        voxel_img_indices = img_indices[voxel_valid_idxs]
 
-        inds, _, inverse_map = sparse_quantize(coords, points, seg_label, return_index=True, return_invs=True)
-
-        out_dict["coords"] = coords[inds]
-        out_dict['feats'] = feats[inds]
-        out_dict['seg_label'] = seg_label[inds]
-        out_dict['img_indices'] = img_indices[inds]
-        out_dict["inverse_map"] = inverse_map
+        sparse_unique_inds, _, sparse_inverse_map = sparse_quantize(voxel_coords, points, voxel_seg_label, return_index=True, return_invs=True)
+        # print(type(inverse_map),"inverse map: ", inverse_map.shape, " coords: ", coords.shape, " inds ", inds.shape)
+        #import pdb; pdb.set_trace();
+        out_dict["coords"] = voxel_coords[sparse_unique_inds]
+        out_dict['feats'] = voxel_feats[sparse_unique_inds]
+        out_dict['seg_label'] = voxel_seg_label[sparse_unique_inds]
+        out_dict['img_indices'] = voxel_img_indices[sparse_unique_inds]
         # out_dict["lidar"] = SparseTensor(coords=coords[inds], feats=feats[inds])
         # out_dict['seg_label'] = SparseTensor(coords=coords[inds], feats=seg_label[inds])
         # out_dict['img_indices'] = img_indices[inds].tolist()#SparseTensor(coords=coords[inds], feats=img_indices[inds])
         # out_dict["inverse_map"] = SparseTensor(coords=coords[inds], feats=inverse_map) 
 
-        # if self.output_orig:
-        #     out_dict.update({
-        #         'orig_seg_label': seg_label,
-        #         # 'orig_points_idx': idxs,
-        #     })
+        if self.output_orig:
+            out_dict.update({
+                'orig_seg_label': seg_label,
+                'sparse_orig_points_idx': voxel_valid_idxs[sparse_unique_inds],
+                "inverse_map": sparse_inverse_map
+            })
 
         return out_dict
 
 
 def compute_class_weights():
-    preprocess_dir = '/home/user/SemanticKitti/semantic_kitti_preprocess/preprocess'
+    preprocess_dir = '/home/user/SemanticKitti/preprocessed'
     split = ('train',)
     dataset = SemanticKITTIBase(split,
                                 preprocess_dir,
                                 )
     # compute points per class over whole dataset
-    num_classes = len(dataset.semantic_kitti_config_dict["learning_map"])
+    num_classes = len(np.unique(list(dataset.semantic_kitti_config_dict["learning_map"].values())))
     points_per_class = np.zeros(num_classes, int)
-    for i, data in enumerate(dataset.data):
+    for i, data_path in enumerate(dataset.data_paths):
         print('{}/{}'.format(i, len(dataset)))
         # labels = dataset.label_mapping[data['seg_labels']]
+        with open(data_path, 'rb') as data_file:
+            data = pickle.load(data_file)
         labels = dataset.map_label(data['seg_labels'])
-        points_per_class += np.bincount(labels[labels != 0], minlength=num_classes)
+        points_per_class += np.bincount(labels, minlength=num_classes)
+
+    points_per_class = points_per_class[1:] # ignore zero class
     print(points_per_class)
-    # compute log smoothed class weights
     class_weights = np.log(5 * points_per_class.sum() / points_per_class)
     print('log smoothed class weights: ', class_weights / class_weights.min())
 

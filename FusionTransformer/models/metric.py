@@ -29,7 +29,7 @@ class SegIoU(object):
     """
 
     def __init__(self, num_classes, ignore_index=0, name='seg_iou'):
-        self.num_classes = num_classes
+        self.num_classes = num_classes # minus ignored class
         self.ignore_index = ignore_index
         self.mat = None
         self.name = name
@@ -40,8 +40,8 @@ class SegIoU(object):
         if "2d" in self.name:
             seg_logit = preds['img_seg_logit']  # (batch_size, num_classes, num_points)
 
-        seg_label = labels['seg_label'].cpu().long()  # (batch_size, num_points)
-        pred_label = seg_logit.cpu().argmax(1)
+        seg_label = labels['seg_label'].cpu().detach().long()  # (batch_size, num_points)
+        pred_label = seg_logit.cpu().detach().argmax(1)
 
         mask = (seg_label != self.ignore_index)
         seg_label = seg_label[mask]

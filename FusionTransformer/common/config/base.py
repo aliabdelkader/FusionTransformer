@@ -59,7 +59,7 @@ _C.OPTIMIZER.Adam.betas = (0.9, 0.999)
 _C.SCHEDULER = CN()
 _C.SCHEDULER.TYPE = ''
 
-_C.SCHEDULER.MAX_ITERATION = 1
+_C.SCHEDULER.MAX_EPOCH = 1
 # Minimum learning rate. 0.0 for disable.
 _C.SCHEDULER.CLIP_LR = 0.0
 

@@ -38,25 +38,16 @@ def build_dataloader(cfg, mode='train', start_iteration=0, halve_batch_size=Fals
 
 
     collate_fn = get_collate_scn(is_train=is_train)
-    if is_train:
-        sampler = RandomSampler(dataset)
-        batch_sampler = BatchSampler(sampler, batch_size=batch_size, drop_last=cfg.DATALOADER.DROP_LAST)
-        batch_sampler = IterationBasedBatchSampler(batch_sampler, cfg.SCHEDULER.MAX_ITERATION, start_iteration)
-        dataloader = DataLoader(
-            dataset,
-            batch_sampler=batch_sampler,
-            num_workers=cfg.DATALOADER.NUM_WORKERS,
-            worker_init_fn=worker_init_fn,
-            collate_fn=collate_fn
-        )
-    else:
-        dataloader = DataLoader(
+
+    dataloader = DataLoader(
             dataset,
             batch_size=batch_size,
             drop_last=False,
             num_workers=cfg.DATALOADER.NUM_WORKERS,
             worker_init_fn=worker_init_fn,
-            collate_fn=collate_fn
-        )
+            collate_fn=collate_fn,
+            shuffle=is_train
+
+    )
 
     return dataloader

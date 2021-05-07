@@ -36,8 +36,8 @@ class STN(nn.Module):
         theta = self.fc_loc(xs)
         theta = theta.view(-1, 2, 3)
 
-        grid = F.affine_grid(theta, (B, *output_shape))
-        x = F.grid_sample(x, grid)
+        grid = F.affine_grid(theta, (B, *output_shape),align_corners=False)
+        x = F.grid_sample(x, grid, align_corners=False)
         return x
     
 
@@ -51,7 +51,7 @@ class Net2DSeg(nn.Module):
         self.registered_hook_output = None
         self.feat_channels = 96
 
-        self.backbone = timm.create_model("vit_deit_base_patch16_384", pretrained=False)
+        self.backbone = timm.create_model("vit_deit_base_patch16_384", pretrained=True)
         self.backbone.reset_classifier(0)
 
         self.backbone_block_number = backbone_2d_kwargs["block_number"]

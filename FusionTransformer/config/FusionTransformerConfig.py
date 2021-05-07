@@ -82,7 +82,7 @@ _C.MODEL = CN()
 _C.MODEL.TYPE = ''
 _C.MODEL.CKPT_PATH = ''
 _C.MODEL.NUM_CLASSES = 20
-_C.MODEL.DUAL_HEAD = False
+_C.MODEL.DUAL_HEAD = True
 # ----------------------------------------------------------------------------- #
 # SCN options
 # ----------------------------------------------------------------------------- #
