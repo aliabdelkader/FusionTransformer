@@ -64,6 +64,8 @@ _C.DATASET.SemanticKITTISCN.scale = 20
 _C.DATASET.SemanticKITTISCN.full_scale = 4096
 # 2D
 _C.DATASET.SemanticKITTISCN.image_normalizer = ()
+_C.DATASET.SemanticKITTISCN.image_width = 1226
+_C.DATASET.SemanticKITTISCN.image_height = 370
 # 3D augmentation
 _C.DATASET.SemanticKITTISCN.augmentation = CN()
 _C.DATASET.SemanticKITTISCN.augmentation.noisy_rot = 0.1

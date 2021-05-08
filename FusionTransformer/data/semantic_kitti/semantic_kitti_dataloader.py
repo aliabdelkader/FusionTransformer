@@ -111,7 +111,9 @@ class SemanticKITTISCN(SemanticKITTIBase):
                  bottom_crop=tuple(),  # 2D augmentation (also effects 3D)
                  fliplr=0.0,  # 2D augmentation
                  color_jitter=None,  # 2D augmentation
-                 output_orig=False
+                 output_orig=False,
+                 image_width=1226,
+                 image_height=370
                  ):
         super().__init__(split,
                          preprocess_dir,
@@ -138,6 +140,8 @@ class SemanticKITTISCN(SemanticKITTIBase):
         self.bottom_crop = bottom_crop
         self.fliplr = fliplr
         self.color_jitter = T.ColorJitter(*color_jitter) if color_jitter else None
+        self.image_width = image_width
+        self.image_height = image_height
 
     def __getitem__(self, index):
         data_path = str(self.data_paths[index])
@@ -156,7 +160,7 @@ class SemanticKITTISCN(SemanticKITTIBase):
         keep_idx = np.ones(len(points), dtype=np.bool)
         points_img = data_dict['points_img'].copy()
         img_path = osp.join(self.semantic_kitti_dir, data_dict['camera_path'])
-        image = Image.open(img_path).resize((1220. 370))
+        image = Image.open(img_path).crop((self.image_width. selg.img_height))
 
         if self.bottom_crop:
             # self.bottom_crop is a tuple (crop_width, crop_height)

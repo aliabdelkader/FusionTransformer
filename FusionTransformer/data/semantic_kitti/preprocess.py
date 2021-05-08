@@ -9,17 +9,19 @@ from torch.utils.data import Dataset
 from torch.utils.data.dataloader import DataLoader
 
 from FusionTransformer.data.semantic_kitti import splits
-
+from pathlib import Path
+from tqdm import tqdm
 # prevent "RuntimeError: received 0 items of ancdata"
 torch.multiprocessing.set_sharing_strategy('file_system')
 
 
 class DummyDataset(Dataset):
     """Use torch dataloader for multiprocessing"""
-    def __init__(self, root_dir, scenes):
+    def __init__(self, root_dir, scenes, img_width, img_height):
         self.root_dir = root_dir
         self.data = []
         self.glob_frames(scenes)
+        self.img_width, self.img_height = img_width, img_height
 
     def glob_frames(self, scenes):
         for scene in scenes:
@@ -98,7 +100,8 @@ class DummyDataset(Dataset):
         label = label & 0xFFFF  # get lower half for semantics
 
         # load image
-        image = Image.open(data_dict['camera_path']).resize((1220. 370))
+        image = Image.open(data_dict['camera_path'])
+        image = image.crop((0, 0, self.img_width, self.img_height))
         image_size = image.size
 
         # project points into image
@@ -125,12 +128,12 @@ class DummyDataset(Dataset):
         return len(self.data)
 
 
-def preprocess(split_name, root_dir, out_dir):
+def preprocess(split_name, root_dir, out_dir, img_width, img_height):
     # pkl_data = []
     sequences = getattr(splits, split_name)
 
     for seq in sequences:
-        dataloader = DataLoader(DummyDataset(root_dir, [seq]), num_workers=5)
+        dataloader = DataLoader(DummyDataset(root_dir, [seq], img_width, img_height), num_workers=5)
         num_skips = 0
         for i, data_dict in enumerate(dataloader):
             # data error leads to returning empty dict
@@ -162,22 +165,28 @@ def preprocess(split_name, root_dir, out_dir):
             with open(save_path, 'wb') as f:
                 pickle.dump(scan_data, f)
                 print('Wrote preprocessed data to ' + save_path)
-        # pkl_data.append(out_dict)
 
     print('Skipped {} files'.format(num_skips))
 
-    # # save to pickle file
-    # save_dir = osp.join(out_dir, 'preprocess')
-    # os.makedirs(save_dir, exist_ok=True)
-    # save_path = osp.join(save_dir, '{}.pkl'.format(split_name))
-    # with open(save_path, 'wb') as f:
-    #     pickle.dump(pkl_data, f)
-    #     print('Wrote preprocessed data to ' + save_path)
+def calculate_min_img_shape(root_dir):
+    all_image_paths = list(Path(root_dir).rglob("dataset/sequences/**/image_2/*.png"))
+    images_shapes = []
+    for p in tqdm(all_image_paths):
+        img = Image.open(str(p))
+        W, H = img.size
+        images_shapes.append((W, H))
+    
+    images_shapes = np.array(images_shapes)
+    min_width, min_height = images_shapes.min(0)
+    
+    with open("image_shapes.txt", 'w') as f:
+        print(" min width ", min_width, "min height: ", min_height, file=f)
 
-
+    return min_width, min_height
 if __name__ == '__main__':
     root_dir = '/home/user/SemanticKitti'
     out_dir = '/home/user/SemanticKitti/preprocessed'
-    preprocess('val', root_dir, out_dir)
-    preprocess('train', root_dir, out_dir)
-    preprocess('test', root_dir, out_dir)
+    min_width, min_height = calculate_min_img_shape(root_dir)
+    preprocess('val', root_dir, out_dir, min_width, min_height)
+    preprocess('train', root_dir, out_dir, min_width, min_height)
+    preprocess('test', root_dir, out_dir, min_width, min_height)
