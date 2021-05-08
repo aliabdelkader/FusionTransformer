@@ -169,6 +169,14 @@ def update_validation_logging_meters(epoch, val_metric_logger, cfg, best_metric,
             if best_metric[modality] is None or best_metric[modality] < cur_metric:
                 best_metric[modality] = cur_metric
                 best_metric_epoch[modality] = epoch
+    
+
+    for modality in ['2d', '3d']:
+        logger.info('Best val-{}-{} = {:.2f} at epoch {}'.format(modality.upper(),
+                                                                        cfg.VAL.METRIC,
+                                                                        best_metric[modality] * 100,
+                                                                        best_metric_epoch[modality]))
+
 
 def update_validation_summary(epoch, summary_writer, val_metric_logger):
     if summary_writer is not None:
@@ -295,21 +303,15 @@ def train(cfg, output_dir='', run_name=''):
         update_validation_summary(epoch=epoch, 
                                   summary_writer=summary_writer, 
                                   val_metric_logger=val_metric_logger)
-        
-        
-        update_checkpoint(epoch=epoch, 
-                          checkpointer=checkpointer, 
-                          checkpoint_data=checkpoint_data,
-                          best_metric=best_metric, 
-                          best_metric_name=best_metric_name,
-                          cfg=cfg)        
-    
-
-        for modality in ['2d', '3d']:
-            logger.info('Best val-{}-{} = {:.2f} at epoch {}'.format(modality.upper(),
-                                                                         cfg.VAL.METRIC,
-                                                                         best_metric[modality] * 100,
-                                                                         best_metric_epoch[modality]))
+                                  
+        # save model if best iou was in this epoch
+        if  ( best_metric_epoch['2d'] == epoch ) or ( best_metric_epoch['3d'] == epoch ): 
+            update_checkpoint(epoch=epoch, 
+                            checkpointer=checkpointer, 
+                            checkpoint_data=checkpoint_data,
+                            best_metric=best_metric, 
+                            best_metric_name=best_metric_name,
+                            cfg=cfg)        
 
 
 def main():
