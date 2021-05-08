@@ -98,7 +98,7 @@ class DummyDataset(Dataset):
         label = label & 0xFFFF  # get lower half for semantics
 
         # load image
-        image = Image.open(data_dict['camera_path'])
+        image = Image.open(data_dict['camera_path']).resize((1220. 370))
         image_size = image.size
 
         # project points into image

@@ -156,7 +156,7 @@ class SemanticKITTISCN(SemanticKITTIBase):
         keep_idx = np.ones(len(points), dtype=np.bool)
         points_img = data_dict['points_img'].copy()
         img_path = osp.join(self.semantic_kitti_dir, data_dict['camera_path'])
-        image = Image.open(img_path)
+        image = Image.open(img_path).resize((1220. 370))
 
         if self.bottom_crop:
             # self.bottom_crop is a tuple (crop_width, crop_height)
