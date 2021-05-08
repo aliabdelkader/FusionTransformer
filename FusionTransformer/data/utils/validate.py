@@ -6,7 +6,7 @@ import torch
 import torch.nn.functional as F
 
 from FusionTransformer.data.utils.evaluate import Evaluator
-
+from tqdm import tqdm
 def map_sparse_to_org(x, inverse_map):
     return x[inverse_map]
 
@@ -31,7 +31,7 @@ def validate(cfg,
 
     end = time.time()
     with torch.no_grad():
-        for iteration, data_batch in enumerate(dataloader):
+        for iteration, data_batch in tqdm(enumerate(dataloader), total=len(dataloader)):
             data_time = time.time() - end
             # copy data from cpu to gpu
             if 'SCN' in cfg.DATASET.TYPE:
@@ -92,17 +92,6 @@ def validate(cfg,
                 evaluator_3d.update(pred_label_3d, curr_seg_label)
                 evaluator_ensemble.update(pred_label_ensemble, curr_seg_label)
 
-                # if pselab_path is not None:
-                #     assert np.all(pred_label_2d >= 0)
-                #     curr_probs_2d = probs_2d[left_idx:right_idx]
-                #     curr_probs_3d = probs_3d[left_idx:right_idx] if model_3d else None
-                #     pselab_data_list.append({
-                #         'probs_2d': curr_probs_2d[range(len(pred_label_2d)), pred_label_2d].cpu().numpy(),
-                #         'pseudo_label_2d': pred_label_2d.astype(np.uint8),
-                #         'probs_3d': curr_probs_3d[range(len(pred_label_3d)), pred_label_3d].cpu().numpy() if model_3d else None,
-                #         'pseudo_label_3d': pred_label_3d.astype(np.uint8) if model_3d else None
-                #     })
-
                 left_idx = right_idx
 
             seg_loss_2d = F.cross_entropy(preds['img_seg_logit'], data_batch['seg_label'], weight=class_weights)
@@ -115,24 +104,6 @@ def validate(cfg,
             val_metric_logger.update(time=batch_time, data=data_time)
             end = time.time()
 
-            # log
-            cur_iter = iteration + 1
-            if cur_iter == 1 or (cfg.VAL.LOG_PERIOD > 0 and cur_iter % cfg.VAL.LOG_PERIOD == 0):
-                logger.info(
-                    val_metric_logger.delimiter.join(
-                        [
-                            'iter: {iter}/{total_iter}',
-                            '{meters}',
-                            'max mem: {memory:.0f}',
-                        ]
-                    ).format(
-                        iter=cur_iter,
-                        total_iter=len(dataloader),
-                        meters=str(val_metric_logger),
-                        memory=torch.cuda.max_memory_allocated() / (1024.0 ** 2),
-                    )
-                )
-
         val_metric_logger.update(seg_iou_2d=evaluator_2d.overall_iou)
         if evaluator_3d is not None:
             val_metric_logger.update(seg_iou_3d=evaluator_3d.overall_iou)
@@ -144,7 +115,3 @@ def validate(cfg,
             logger.info('{} overall accuracy={:.2f}%'.format(modality, 100.0 * evaluator.overall_acc))
             logger.info('{} overall IOU={:.2f}'.format(modality, 100.0 * evaluator.overall_iou))
             logger.info('{} class-wise segmentation accuracy and IoU.\n{}'.format(modality, evaluator.print_table()))
-
-        # if pselab_path is not None:
-        #     np.save(pselab_path, pselab_data_list)
-        #     logger.info('Saved pseudo label data to {}'.format(pselab_path))
