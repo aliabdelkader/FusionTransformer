@@ -1,10 +1,10 @@
 AUTO_RESUME: False
 RESUME_STATES: False
 MODEL:
-  TYPE: "LateFusionTransformer"
+  TYPE: "MiddleFusionTransformer"
   DUAL_HEAD: True
   NUM_CLASSES: 20 
-  block_number: [11]
+  block_number: [5, 11]
 DATASET:
   TYPE: "SemanticKITTISCN"
   TRAIN: ("train",)
@@ -24,7 +24,7 @@ SCHEDULER:
     gamma: 0.1
   MAX_EPOCH: 100
 TRAIN:
-  BATCH_SIZE: 10
+  BATCH_SIZE: 8
   SUMMARY_PERIOD: 2
   CHECKPOINT_PERIOD: 2
   # CLASS_WEIGHTS: [1.89090012, 2.0585112, 3.1970535, 3.1111633, 1., 2.93751704, 1.92053733,

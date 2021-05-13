@@ -104,7 +104,7 @@ def train_step(data_batch, model, optimizer, train_metric_logger, train_2d_metri
         train_3d_metric.update_dict(preds, data_batch)
 
     # backward
-    loss_2d.backward()
+    loss_2d.backward(retain_graph=True)
     loss_3d.backward()
 
     optimizer.step()
