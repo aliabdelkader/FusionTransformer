@@ -16,11 +16,7 @@ _C.TRAIN.CLASS_WEIGHTS = []
 # FusionTransformer options
 # ---------------------------------------------------------------------------- #
 _C.TRAIN.FusionTransformer = CN()
-_C.TRAIN.FusionTransformer.lambda_xm_src = 0.0
-_C.TRAIN.FusionTransformer.lambda_xm_trg = 0.0
-_C.TRAIN.FusionTransformer.lambda_pl = 0.0
-_C.TRAIN.FusionTransformer.lambda_minent = 0.0
-_C.TRAIN.FusionTransformer.lambda_logcoral = 0.0
+_C.TRAIN.FusionTransformer.lambda_xm = 0.0
 
 # ---------------------------------------------------------------------------- #
 # Datasets

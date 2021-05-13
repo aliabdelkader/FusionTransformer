@@ -80,20 +80,23 @@ def train_step(data_batch, model, optimizer, train_metric_logger, train_2d_metri
     loss_3d = F.cross_entropy(preds['lidar_seg_logit'], data_batch['seg_label'].long(), weight=class_weights)
     train_metric_logger.update(seg_loss_src_2d=loss_2d.item(), seg_loss_src_3d=loss_3d.item())
 
-    if cfg.TRAIN.FusionTransformer.lambda_xm_src > 0:
+    if cfg.TRAIN.FusionTransformer.lambda_xm > 0:
         # cross-modal loss: KL divergence
         seg_logit_2d = preds['img_seg_logit2'] if cfg.MODEL.DUAL_HEAD else preds['img_seg_logit']
         seg_logit_3d = preds['lidar_seg_logit2'] if cfg.MODEL.DUAL_HEAD else preds['lidar_seg_logit']
-        xm_loss_src_2d = F.kl_div(F.log_softmax(seg_logit_2d, dim=1),
+
+        xm_loss_2d = F.kl_div(F.log_softmax(seg_logit_2d, dim=1),
                                 F.softmax(preds['lidar_seg_logit'].detach(), dim=1),
                                 reduction='none').sum(1).mean()
-        xm_loss_src_3d = F.kl_div(F.log_softmax(seg_logit_3d, dim=1),
+
+        xm_loss_3d = F.kl_div(F.log_softmax(seg_logit_3d, dim=1),
                                 F.softmax(preds['img_seg_logit'].detach(), dim=1),
                                 reduction='none').sum(1).mean()
-        train_metric_logger.update(xm_loss_src_2d=xm_loss_src_2d.detach().item(),
-                                xm_loss_src_3d=xm_loss_src_3d.detach().item())
-        loss_2d += cfg.TRAIN.FusionTransformer.lambda_xm_src * xm_loss_src_2d
-        loss_3d += cfg.TRAIN.FusionTransformer.lambda_xm_src * xm_loss_src_3d
+
+        train_metric_logger.update(xm_loss_src_2d=xm_loss_2d.detach().item(),
+                                xm_loss_src_3d=xm_loss_3d.detach().item())
+        loss_2d += cfg.TRAIN.FusionTransformer.lambda_xm * xm_loss_2d
+        loss_3d += cfg.TRAIN.FusionTransformer.lambda_xm * xm_loss_3d
 
     # update metric (e.g. IoU)
     with torch.no_grad():
