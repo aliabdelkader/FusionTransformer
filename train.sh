@@ -1,1 +1,1 @@
-python FusionTransformer/train.py --cfg configs/semantic_kitti/middlefusion.yaml
+python FusionTransformer/train.py --cfg configs/semantic_kitti/earlyfusion.yaml
