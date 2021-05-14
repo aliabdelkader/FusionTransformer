@@ -38,4 +38,4 @@ TRAIN:
 VAL:
   BATCH_SIZE: 8
   PERIOD: 2
-#OUTPUT_DIR: "path/to/output/directory/@"  #  @ will be replaced with config path, e.g. nuscenes/usa_singapore/FusionTransformer
+OUTPUT_DIR: "~/logs/@"  #  @ will be replaced with config path, e.g. nuscenes/usa_singapore/FusionTransformer
