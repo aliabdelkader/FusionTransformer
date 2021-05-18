@@ -1,0 +1,1 @@
+python FusionTransformer/test.py --cfg configs/semantic_kitti/middlefusion.yaml --ckpt ~/SemanticKitti/logs/FusionTransformer/semantic_kitti/middlefusion/model000076.pth | cat ~/SemanticKitti/logs/FusionTransformer/semantic_kitti/middlefusion/log.txt
