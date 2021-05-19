@@ -8,7 +8,7 @@ from FusionTransformer.models.utils import point_to_voxel, voxel_to_point, initi
 from torchsparse.sparse_tensor import SparseTensor
 from torchsparse.point_tensor import PointTensor
 from FusionTransformer.models.STN import STN
-from FusionTransformer.models.middle_fusion import Net2DSeg
+from FusionTransformer.models.transformer2D import Net2DSeg
 import numpy as np
 
 

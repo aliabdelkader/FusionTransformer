@@ -5,93 +5,9 @@ import timm
 from FusionTransformer.models.spvcnn import SPVCNN
 from torchsparse.sparse_tensor import SparseTensor
 from FusionTransformer.models.STN import STN
+from FusionTransformer.models.transformer2D import Net2DSeg
 
 import numpy as np
-
-class Net2DSeg(nn.Module):
-    def __init__(self,
-                 num_classes,
-                 dual_head,
-                 backbone_2d_kwargs=dict()):
-        super(Net2DSeg, self).__init__()
-
-        self.registered_hook_output = None
-        self.feat_channels = 96
-
-        self.backbone = timm.create_model("vit_deit_base_patch16_384", pretrained=True)
-        self.backbone.reset_classifier(0)
-
-        self.backbone_block_number = backbone_2d_kwargs["block_number"][-1]
-        block_layer_name = f"blocks.{self.backbone_block_number}.mlp.drop"
-        self.register_hook_in_layer(self.backbone, block_layer_name)
-        self.up = nn.ConvTranspose2d(768, self.feat_channels, kernel_size=(16, 16), stride=(16, 16))
-
-        self.stn_down = STN(in_channels=3)
-        self.stn_up = STN(in_channels=self.feat_channels)
-        # segmentation head
-        self.linear = nn.Linear(self.feat_channels, num_classes)
-
-        # 2nd segmentation head
-        self.dual_head = dual_head
-        if dual_head:
-            self.linear2 = nn.Linear(self.feat_channels, num_classes)
-    def hook_fn(self, module, input, output):
-        self.registered_hook_output = output
-    
-    def get_module_with_name(self, model, layer_name):
-        for name, module in model.named_modules():
-                    if name == layer_name:
-                        return module
-
-    def register_hook_in_layer(self, model, layer_name):
-            module = self.get_module_with_name(model=model, layer_name=layer_name)
-            assert module is not None, f"not module found in model with name {layer_name}"
-            module.register_forward_hook(self.hook_fn)
-
-
-    def forward(self, img, img_indices):
-        # 2D network
-        B, C, H, W = img.shape
-        # sptial attention to convert shape into EMBED_DIM, 384, 384
-        x = self.stn_down(img, (self.feat_channels, 384, 384))
-
-        # we do not care about transformer classification decisions, just features
-        _ = self.backbone(x)
-
-        # registered_hook_output: features from transformer
-        B, N, EMBED_DIM = self.registered_hook_output.shape
-        
-        # remove features from class token
-        x = self.registered_hook_output[:, 1:, :]
-        # reshape so that deconvolution can be performed
-        x= x.transpose(1, 2).reshape(B, EMBED_DIM, 384//16, 384//16)
-        x = self.up(x) 
-        x = self.stn_up(x, (96, H, W)) # shape B, C, H, 
-        
-        # # 2D-3D feature lifting
-        img_feats = []
-        # print("*************************", img_indices.F.shape)
-        for i in range(x.shape[0]):
-            img_indices_i = img_indices[i]
-            img_feats.append(
-                x.permute(0, 2, 3, 1)[i][img_indices_i[:, 0], img_indices_i[:, 1]]
-            )
-        
-        img_feats = torch.cat(img_feats, 0)
-
-        # linear
-        x = self.linear(img_feats)
-
-        preds = {
-            'img_feats': img_feats,
-            'img_seg_logit': x,
-        }
-
-        if self.dual_head:
-            preds['img_seg_logit2'] = self.linear2(img_feats)
-
-        return preds
-
 
 class Net3DSeg(nn.Module):
     def __init__(self,

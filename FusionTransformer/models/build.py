@@ -1,4 +1,4 @@
-from FusionTransformer.models.baseline_late import LateFusionTransformer
+from FusionTransformer.models.late_fusion import LateFusionTransformer
 from FusionTransformer.models.middle_fusion import MiddleFusionTransformer
 from FusionTransformer.models.early_fusion import EarlyFusionTransformer
 from FusionTransformer.models.metric import SegIoU
