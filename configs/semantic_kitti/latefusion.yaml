@@ -14,7 +14,7 @@ DATASET:
     preprocess_dir: "/home/user/SemanticKitti/preprocessed"
     semantic_kitti_dir: "/home/user/SemanticKitti"
 DATALOADER:
-  NUM_WORKERS: 1
+  NUM_WORKERS: 3
 OPTIMIZER:
   TYPE: "Adam"
   BASE_LR: 0.001
@@ -24,7 +24,7 @@ SCHEDULER:
     gamma: 0.1
   MAX_EPOCH: 100
 TRAIN:
-  BATCH_SIZE: 10
+  BATCH_SIZE: 8
   SUMMARY_PERIOD: 2
   CHECKPOINT_PERIOD: 2
   # CLASS_WEIGHTS: [1.89090012, 2.0585112, 3.1970535, 3.1111633, 1., 2.93751704, 1.92053733,
@@ -36,6 +36,6 @@ TRAIN:
   FusionTransformer:
     lambda_xm: 0.1
 VAL:
-  BATCH_SIZE: 10
+  BATCH_SIZE: 8
   PERIOD: 2
-#OUTPUT_DIR: "path/to/output/directory/@"  #  @ will be replaced with config path, e.g. nuscenes/usa_singapore/FusionTransformer
+OUTPUT_DIR: "~/logs/@"  #  @ will be replaced with config path, e.g. nuscenes/usa_singapore/FusionTransformer
