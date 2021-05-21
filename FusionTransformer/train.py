@@ -54,7 +54,7 @@ def init_metric_logger(metric_list):
     return metric_logger
        
 class Trainer(object):
-    def __init__(self, cfg):
+    def __init__(self, cfg, output_dir, run_name):
         # ---------------------------------------------------------------------------- #
         # Build models, optimizer, scheduler, checkpointer, etc.
         # ---------------------------------------------------------------------------- #
@@ -65,15 +65,15 @@ class Trainer(object):
 
         self.model, self.train_2d_metric, self.train_3d_metric = build_model(cfg)
 
-        self.logger.info('Build model:\n{}'.format(str(model)))
-        num_params = sum(param.numel() for param in model.parameters())
+        self.logger.info('Build model:\n{}'.format(str(self.model)))
+        num_params = sum(param.numel() for param in self.model.parameters())
         print('#Parameters: {:.2e}'.format(num_params))
 
 
         self.model = self.model.cuda()
 
         # build optimizer
-        self.optimizer = build_optimizer(cfg, model)
+        self.optimizer = build_optimizer(cfg, self.model)
 
         # build lr scheduler
         self.scheduler = build_scheduler(cfg, self.optimizer)
@@ -87,7 +87,7 @@ class Trainer(object):
                                         logger=self.logger,
                                         postfix='',
                                         max_to_keep=cfg.TRAIN.MAX_TO_KEEP)
-        self.checkpoint_data = checkpointer.load(cfg.RESUME_PATH, resume=cfg.AUTO_RESUME, resume_states=cfg.RESUME_STATES)
+        self.checkpoint_data = self.checkpointer.load(cfg.RESUME_PATH, resume=cfg.AUTO_RESUME, resume_states=cfg.RESUME_STATES)
 
         # build tensorboard logger (optionally by comment)
         if output_dir:
@@ -96,7 +96,7 @@ class Trainer(object):
         else:
             self.summary_writer = None
 
-        start_epoch = checkpoint_data.get('epoch', 0)
+        start_epoch = self.checkpoint_data.get('epoch', 0)
 
         # build data loader
         # Reset the random seed again in case the initialization of models changes the random state.
@@ -106,8 +106,8 @@ class Trainer(object):
 
         self.best_metric_name = 'best_{}'.format(cfg.VAL.METRIC)
         self.best_metric = {
-            '2d': checkpoint_data.get(self.best_metric_name, None),
-            '3d': checkpoint_data.get(self.best_metric_name, None)
+            '2d': self.checkpoint_data.get(self.best_metric_name, None),
+            '3d': self.checkpoint_data.get(self.best_metric_name, None)
         }
         self.best_metric_epoch = {'2d': -1, '3d': -1}
         self.logger.info('Start training from epoch {}'.format(start_epoch))
@@ -115,7 +115,7 @@ class Trainer(object):
         # logger.info('Start training from iteration {}'.format(start_iteration))
 
         # add metrics
-        self.train_metric_logger = init_metric_logger([train_2d_metric, train_3d_metric])
+        self.train_metric_logger = init_metric_logger([self.train_2d_metric, self.train_3d_metric])
         self.val_metric_logger = MetricLogger(delimiter='  ')
 
         if cfg.TRAIN.CLASS_WEIGHTS:
@@ -166,8 +166,8 @@ class Trainer(object):
 
             self.train_metric_logger.update(xm_loss_2d=xm_loss_2d.detach().item(),
                                     xm_loss_3d=xm_loss_3d.detach().item())
-            loss_2d += cfg.TRAIN.FusionTransformer.lambda_xm * xm_loss_2d
-            loss_3d += cfg.TRAIN.FusionTransformer.lambda_xm * xm_loss_3d
+            loss_2d += self.cfg.TRAIN.FusionTransformer.lambda_xm * xm_loss_2d
+            loss_3d += self.cfg.TRAIN.FusionTransformer.lambda_xm * xm_loss_3d
 
         # update metric (e.g. IoU)
         with torch.no_grad():
@@ -184,7 +184,7 @@ class Trainer(object):
         ###### start of training for one epoch ###########################################
         self.setup_train()
         end = time.time()
-        for data_batch in tqdm(train_dataloader, f"training for epoch {epoch}:", total=len(train_dataloader)):
+        for data_batch in tqdm(self.train_dataloader, f"training for epoch {epoch}:", total=len(self.train_dataloader)):
             self.train_step(data_batch=data_batch)
         self.scheduler.step()
         ###### end of training for one epoch ###########################################
@@ -256,7 +256,7 @@ class Trainer(object):
                     continue
                 self.summary_writer.add_scalar('val/' + name, meter.avg, global_step=epoch)
     
-    def train(self, output_dir='', run_name=''):
+    def train(self):
         # train_iter = enumerate(train_dataloader)    
         for epoch in tqdm(range(int(self.cfg.SCHEDULER.MAX_EPOCH)), "epoch: "):
 
@@ -310,8 +310,8 @@ def main():
     logger.info('Loaded configuration file {:s}'.format(args.config_file))
     logger.info('Running with config:\n{}'.format(cfg))
 
-    trainer = Trainer(cfg)
-    self.train(output_dir, run_name)
+    trainer = Trainer(cfg, output_dir, run_name)
+    trainer.train()
 
 
 if __name__ == '__main__':
