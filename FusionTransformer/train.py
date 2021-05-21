@@ -52,270 +52,230 @@ def init_metric_logger(metric_list):
     metric_logger = MetricLogger(delimiter='  ')
     metric_logger.add_meters(new_metric_list)
     return metric_logger
+       
+class Trainer(object):
+    def __init__(cfg):
+        # ---------------------------------------------------------------------------- #
+        # Build models, optimizer, scheduler, checkpointer, etc.
+        # ---------------------------------------------------------------------------- #
+        self.cfg = cfg
+        self.logger = logging.getLogger('FusionTransformer.train')
 
-def setup_train(model, train_metric_logger):
-        # set training mode
-        model.train()
-        # reset metric
-        train_metric_logger.reset()
+        set_random_seed(cfg.RNG_SEED)
 
-def setup_validate(model, val_metric_logger):
+        self.model, self.train_2d_metric, self.train_3d_metric = build_model(cfg)
+
+        self.logger.info('Build model:\n{}'.format(str(model)))
+        num_params = sum(param.numel() for param in model.parameters())
+        print('#Parameters: {:.2e}'.format(num_params))
+
+
+        self.model = self.model.cuda()
+
+        # build optimizer
+        self.optimizer = build_optimizer(cfg, model)
+
+        # build lr scheduler
+        self.scheduler = build_scheduler(cfg, self.optimizer)
+
+        # build checkpointer
+        # Note that checkpointer will load state_dict of model, optimizer and scheduler.
+        self.checkpointer = CheckpointerV2(self.model,
+                                        optimizer=self.optimizer,
+                                        scheduler=self.scheduler,
+                                        save_dir=output_dir,
+                                        logger=self.logger,
+                                        postfix='',
+                                        max_to_keep=cfg.TRAIN.MAX_TO_KEEP)
+        self.checkpoint_data = checkpointer.load(cfg.RESUME_PATH, resume=cfg.AUTO_RESUME, resume_states=cfg.RESUME_STATES)
+
+        # build tensorboard logger (optionally by comment)
+        if output_dir:
+            tb_dir = osp.join(output_dir, 'tb.{:s}'.format(run_name))
+            self.summary_writer = SummaryWriter(tb_dir)
+        else:
+            self.summary_writer = None
+
+        start_epoch = checkpoint_data.get('epoch', 0)
+
+        # build data loader
+        # Reset the random seed again in case the initialization of models changes the random state.
+        set_random_seed(cfg.RNG_SEED)
+        self.train_dataloader = build_dataloader(cfg, mode='train') #, start_iteration=start_iteration)
+        self.val_dataloader = build_dataloader(cfg, mode='val') if cfg.VAL.PERIOD > 0 else None
+
+        self.best_metric_name = 'best_{}'.format(cfg.VAL.METRIC)
+        self.best_metric = {
+            '2d': checkpoint_data.get(self.best_metric_name, None),
+            '3d': checkpoint_data.get(self.best_metric_name, None)
+        }
+        self.best_metric_epoch = {'2d': -1, '3d': -1}
+        self.logger.info('Start training from epoch {}'.format(start_epoch))
+
+        # logger.info('Start training from iteration {}'.format(start_iteration))
+
+        # add metrics
+        self.train_metric_logger = init_metric_logger([train_2d_metric, train_3d_metric])
+        self.val_metric_logger = MetricLogger(delimiter='  ')
+
+        if cfg.TRAIN.CLASS_WEIGHTS:
+            self.class_weights = torch.tensor(cfg.TRAIN.CLASS_WEIGHTS).cuda()
+        else:
+            self.class_weights = None
+
+    def setup_train(self):
+            # set training mode
+            self.model.train()
+            # reset metric
+            self.train_metric_logger.reset()
+
+    def setup_validate(self):
         # set evaluate mode
-        model.eval()
+        self.model.eval()
         # reset metric
-        val_metric_logger.reset()
-def train_step(data_batch, model, optimizer, train_metric_logger, train_2d_metric, train_3d_metric, cfg, class_weights):
-    # copy data from cpu to gpu
-    data_batch['lidar'] = data_batch['lidar'].cuda()
-    data_batch['seg_label'] = data_batch['seg_label'].cuda()
-    data_batch['img'] = data_batch['img'].cuda()
+        self.val_metric_logger.reset()
+
+    def train_step(self, data_batch):
+        # copy data from cpu to gpu
+        data_batch['lidar'] = data_batch['lidar'].cuda()
+        data_batch['seg_label'] = data_batch['seg_label'].cuda()
+        data_batch['img'] = data_batch['img'].cuda()
 
 
-    optimizer.zero_grad()
+        self.optimizer.zero_grad()
 
-    preds = model(data_batch)
+        preds = self.model(data_batch)
 
-    # segmentation loss: cross entropy
-    loss_2d = F.cross_entropy(preds['img_seg_logit'], data_batch['seg_label'].long(), weight=class_weights)
-    loss_3d = F.cross_entropy(preds['lidar_seg_logit'], data_batch['seg_label'].long(), weight=class_weights)
-    train_metric_logger.update(seg_loss_src_2d=loss_2d.item(), seg_loss_src_3d=loss_3d.item())
+        # segmentation loss: cross entropy
+        loss_2d = F.cross_entropy(preds['img_seg_logit'], data_batch['seg_label'].long(), weight=self.class_weights)
+        loss_3d = F.cross_entropy(preds['lidar_seg_logit'], data_batch['seg_label'].long(), weight=self.class_weights)
+        self.train_metric_logger.update(seg_loss_2d=loss_2d.item(), seg_loss_3d=loss_3d.item())
 
-    if cfg.TRAIN.FusionTransformer.lambda_xm > 0:
-        # cross-modal loss: KL divergence
-        seg_logit_2d = preds['img_seg_logit2'] if cfg.MODEL.DUAL_HEAD else preds['img_seg_logit']
-        seg_logit_3d = preds['lidar_seg_logit2'] if cfg.MODEL.DUAL_HEAD else preds['lidar_seg_logit']
+        if self.cfg.TRAIN.FusionTransformer.lambda_xm > 0:
+            # cross-modal loss: KL divergence
+            seg_logit_2d = preds['img_seg_logit2'] if self.cfg.MODEL.DUAL_HEAD else preds['img_seg_logit']
+            seg_logit_3d = preds['lidar_seg_logit2'] if self.cfg.MODEL.DUAL_HEAD else preds['lidar_seg_logit']
 
-        xm_loss_2d = F.kl_div(F.log_softmax(seg_logit_2d, dim=1),
-                                F.softmax(preds['lidar_seg_logit'].detach(), dim=1),
-                                reduction='none').sum(1).mean()
+            xm_loss_2d = F.kl_div(F.log_softmax(seg_logit_2d, dim=1),
+                                    F.softmax(preds['lidar_seg_logit'].detach(), dim=1),
+                                    reduction='none').sum(1).mean()
 
-        xm_loss_3d = F.kl_div(F.log_softmax(seg_logit_3d, dim=1),
-                                F.softmax(preds['img_seg_logit'].detach(), dim=1),
-                                reduction='none').sum(1).mean()
+            xm_loss_3d = F.kl_div(F.log_softmax(seg_logit_3d, dim=1),
+                                    F.softmax(preds['img_seg_logit'].detach(), dim=1),
+                                    reduction='none').sum(1).mean()
 
-        train_metric_logger.update(xm_loss_src_2d=xm_loss_2d.detach().item(),
-                                xm_loss_src_3d=xm_loss_3d.detach().item())
-        loss_2d += cfg.TRAIN.FusionTransformer.lambda_xm * xm_loss_2d
-        loss_3d += cfg.TRAIN.FusionTransformer.lambda_xm * xm_loss_3d
+            self.train_metric_logger.update(xm_loss_2d=xm_loss_2d.detach().item(),
+                                    xm_loss_3d=xm_loss_3d.detach().item())
+            loss_2d += cfg.TRAIN.FusionTransformer.lambda_xm * xm_loss_2d
+            loss_3d += cfg.TRAIN.FusionTransformer.lambda_xm * xm_loss_3d
 
-    # update metric (e.g. IoU)
-    with torch.no_grad():
-        train_2d_metric.update_dict(preds, data_batch)
-        train_3d_metric.update_dict(preds, data_batch)
+        # update metric (e.g. IoU)
+        with torch.no_grad():
+            self.train_2d_metric.update_dict(preds, data_batch)
+            self.train_3d_metric.update_dict(preds, data_batch)
 
-    # backward
-    loss_2d.backward(retain_graph=True)
-    loss_3d.backward()
+        # backward
+        loss_2d.backward(retain_graph=True)
+        loss_3d.backward()
 
-    optimizer.step()
+        self.optimizer.step()
     
-def train_for_one_epoch(epoch, model, optimizer, scheduler, train_metric_logger, train_2d_metric, train_3d_metric, cfg, train_dataloader, class_weights):
-    ###### start of training for one epoch ###########################################
-    setup_train(model=model, train_metric_logger=train_metric_logger)
-    end = time.time()
-    for data_batch in tqdm(train_dataloader, "training for one epoch", total=len(train_dataloader)):
-        train_step(data_batch=data_batch, model=model, optimizer=optimizer, train_metric_logger=train_metric_logger,
-         train_2d_metric=train_2d_metric, train_3d_metric=train_3d_metric, cfg=cfg, class_weights=class_weights)
-    scheduler.step()
-    ###### end of training for one epoch ###########################################
+    def train_for_one_epoch(self, epoch):
+        ###### start of training for one epoch ###########################################
+        self.setup_train()
+        end = time.time()
+        for data_batch in tqdm(train_dataloader, f"training for epoch {epoch}:", total=len(train_dataloader)):
+            self.train_step(data_batch=data_batch)
+        self.scheduler.step()
+        ###### end of training for one epoch ###########################################
 
-def update_log(epoch, train_metric_logger, optimizer, cfg, logger):
-    if epoch == 1 or (cfg.TRAIN.LOG_PERIOD > 0 and epoch % cfg.TRAIN.LOG_PERIOD == 0):
-        logger.info(
-            train_metric_logger.delimiter.join(
-                [
-                    'iter: {iter:4d}',
-                    '{meters}',
-                    'lr: {lr:.2e}',
-                    'max mem: {memory:.0f}',
-                ]
-            ).format(
-                iter=epoch,
-                meters=str(train_metric_logger),
-                lr=optimizer.param_groups[0]['lr'],
-                memory=torch.cuda.max_memory_allocated() / (1024.0 ** 2),
+    def update_log(self, epoch):
+        if epoch == 1 or (self.cfg.TRAIN.LOG_PERIOD > 0 and epoch % self.cfg.TRAIN.LOG_PERIOD == 0):
+            self.logger.info(
+                self.train_metric_logger.delimiter.join(
+                    [
+                        'iter: {iter:4d}',
+                        '{meters}',
+                        'lr: {lr:.2e}',
+                        'max mem: {memory:.0f}',
+                    ]
+                ).format(
+                    iter=epoch,
+                    meters=str(self.train_metric_logger),
+                    lr=self.optimizer.param_groups[0]['lr'],
+                    memory=torch.cuda.max_memory_allocated() / (1024.0 ** 2),
+                )
             )
-        )
 
-def update_summary(epoch, summary_writer, cfg, train_metric_logger):
-    if summary_writer is not None and cfg.TRAIN.SUMMARY_PERIOD > 0 and epoch % cfg.TRAIN.SUMMARY_PERIOD == 0:
-        keywords = ('loss', 'acc', 'iou')
-        for name, meter in train_metric_logger.meters.items():
-            if all(k not in name for k in keywords):
-                continue
-            summary_writer.add_scalar('train/' + name, meter.avg, global_step=epoch)
+    def update_summary(self, epoch):
+        if self.summary_writer is not None and self.cfg.TRAIN.SUMMARY_PERIOD > 0 and epoch % self.cfg.TRAIN.SUMMARY_PERIOD == 0:
+            keywords = ('loss', 'acc', 'iou')
+            for name, meter in self.train_metric_logger.meters.items():
+                if all(k not in name for k in keywords):
+                    continue
+                self.summary_writer.add_scalar('train/' + name, meter.avg, global_step=epoch)
 
-def update_checkpoint(epoch, checkpointer, checkpoint_data, best_metric, best_metric_name, cfg):
-    if (cfg.TRAIN.CHECKPOINT_PERIOD > 0 and epoch % cfg.TRAIN.CHECKPOINT_PERIOD == 0) or epoch == cfg.SCHEDULER.MAX_EPOCH:
-        checkpoint_data['epoch'] = epoch
-        checkpoint_data["2d_" + best_metric_name] = best_metric['2d']
-        checkpoint_data["3d_" + best_metric_name] = best_metric['3d']
-        checkpointer.save('model{:06d}'.format(epoch), **checkpoint_data)
+    def update_checkpoint(self, epoch):
+        if (self.cfg.TRAIN.CHECKPOINT_PERIOD > 0 and epoch % self.cfg.TRAIN.CHECKPOINT_PERIOD == 0) or epoch == self.cfg.SCHEDULER.MAX_EPOCH:
+            self.checkpoint_data['epoch'] = epoch
+            self.checkpoint_data["2d_" + self.best_metric_name] = self.best_metric['2d']
+            self.checkpoint_data["3d_" + self.best_metric_name] = self.best_metric['3d']
+            self.checkpointer.save('model{:06d}'.format(epoch), **self.checkpoint_data)
 
-def validate_for_one_epoch(epoch, model, val_dataloader, val_metric_logger, cfg, class_weights):
-    # ---------------------------------------------------------------------------- #
-    # validate for one epoch
-    # ---------------------------------------------------------------------------- #
-    if cfg.VAL.PERIOD > 0 and (epoch % cfg.VAL.PERIOD == 0 or epoch == cfg.SCHEDULER.MAX_EPOCH):
-        setup_validate(model=model, val_metric_logger=val_metric_logger)
-        validate(cfg, model, val_dataloader, val_metric_logger, class_weights)
+    def validate_for_one_epoch(self, epoch):
+        # ---------------------------------------------------------------------------- #
+        # validate for one epoch
+        # ---------------------------------------------------------------------------- #
+        if self.cfg.VAL.PERIOD > 0 and (epoch % self.cfg.VAL.PERIOD == 0 or epoch == self.cfg.SCHEDULER.MAX_EPOCH):
+            self.setup_validate()
+            validate(self.cfg, self.model, self.val_dataloader, self.val_metric_logger, self.class_weights)
 
 
-def update_validation_logging_meters(epoch, val_metric_logger, cfg, best_metric, logger, best_metric_epoch):
-    logger.info('Epoch[{}]-Val {}'.format(
-        epoch, val_metric_logger.summary_str))
-        # best validation
-    for modality in ['2d', '3d']:
-        cur_metric_name = cfg.VAL.METRIC + '_' + modality
-        if cur_metric_name in val_metric_logger.meters:
-            cur_metric = val_metric_logger.meters[cur_metric_name].global_avg
-            if best_metric[modality] is None or best_metric[modality] < cur_metric:
-                best_metric[modality] = cur_metric
-                best_metric_epoch[modality] = epoch
+    def update_validation_logging_meters(self, epoch):
+        self.logger.info('Epoch[{}]-Val {}'.format(epoch, self.val_metric_logger.summary_str))
+            # best validation
+        for modality in ['2d', '3d']:
+            cur_metric_name = self.cfg.VAL.METRIC + '_' + modality
+            if cur_metric_name in self.val_metric_logger.meters:
+                cur_metric = self.val_metric_logger.meters[cur_metric_name].global_avg
+                if self.best_metric[modality] is None or self.best_metric[modality] < cur_metric:
+                    self.best_metric[modality] = cur_metric
+                    self.best_metric_epoch[modality] = epoch
     
+        for modality in ['2d', '3d']:
+            self.logger.info('Best val-{}-{} = {:.2f} at epoch {}'.format(modality.upper(),
+                                                                            self.cfg.VAL.METRIC,
+                                                                            self.best_metric[modality] * 100,
+                                                                            self.best_metric_epoch[modality]))
 
-    for modality in ['2d', '3d']:
-        logger.info('Best val-{}-{} = {:.2f} at epoch {}'.format(modality.upper(),
-                                                                        cfg.VAL.METRIC,
-                                                                        best_metric[modality] * 100,
-                                                                        best_metric_epoch[modality]))
+    def update_validation_summary(self, epoch):
+        if self.summary_writer is not None:
+            keywords = ('loss', 'acc', 'iou')
+            for name, meter in self.val_metric_logger.meters.items():
+                if all(k not in name for k in keywords):
+                    continue
+                self.summary_writer.add_scalar('val/' + name, meter.avg, global_step=epoch)
+    
+    def train(self, output_dir='', run_name=''):
+        # train_iter = enumerate(train_dataloader)    
+        for epoch in tqdm(range(int(self.cfg.SCHEDULER.MAX_EPOCH)), "epoch: "):
 
+            self.train_for_one_epoch(epoch=epoch)
+            
+            self.update_log(epoch=epoch)
 
-def update_validation_summary(epoch, summary_writer, val_metric_logger):
-    if summary_writer is not None:
-        keywords = ('loss', 'acc', 'iou')
-        for name, meter in val_metric_logger.meters.items():
-            if all(k not in name for k in keywords):
-                continue
-            summary_writer.add_scalar('val/' + name, meter.avg, global_step=epoch)
+            self.update_summary(epoch=epoch)
 
-
-def train(cfg, output_dir='', run_name=''):
-    # ---------------------------------------------------------------------------- #
-    # Build models, optimizer, scheduler, checkpointer, etc.
-    # ---------------------------------------------------------------------------- #
-    logger = logging.getLogger('FusionTransformer.train')
-
-    set_random_seed(cfg.RNG_SEED)
-
-    # build 2d model
-    model, train_2d_metric, train_3d_metric = build_model(cfg)
-
-    logger.info('Build model:\n{}'.format(str(model)))
-    num_params = sum(param.numel() for param in model.parameters())
-    print('#Parameters: {:.2e}'.format(num_params))
+            self.validate_for_one_epoch(epoch=epoch)
+            
+            self.update_validation_logging_meters(epoch=epoch)
 
 
-    model = model.cuda()
-
-    # build optimizer
-    optimizer = build_optimizer(cfg, model)
-
-    # build lr scheduler
-    scheduler = build_scheduler(cfg, optimizer)
-
-    # build checkpointer
-    # Note that checkpointer will load state_dict of model, optimizer and scheduler.
-    checkpointer = CheckpointerV2(model,
-                                     optimizer=optimizer,
-                                     scheduler=scheduler,
-                                     save_dir=output_dir,
-                                     logger=logger,
-                                     postfix='',
-                                     max_to_keep=cfg.TRAIN.MAX_TO_KEEP)
-    checkpoint_data = checkpointer.load(cfg.RESUME_PATH, resume=cfg.AUTO_RESUME, resume_states=cfg.RESUME_STATES)
-
-    # build tensorboard logger (optionally by comment)
-    if output_dir:
-        tb_dir = osp.join(output_dir, 'tb.{:s}'.format(run_name))
-        summary_writer = SummaryWriter(tb_dir)
-    else:
-        summary_writer = None
-
-    # ---------------------------------------------------------------------------- #
-    # Train
-    # ---------------------------------------------------------------------------- #
-
-    start_epoch = checkpoint_data.get('epoch', 0)
-
-    # build data loader
-    # Reset the random seed again in case the initialization of models changes the random state.
-    set_random_seed(cfg.RNG_SEED)
-    train_dataloader = build_dataloader(cfg, mode='train') #, start_iteration=start_iteration)
-    val_dataloader = build_dataloader(cfg, mode='val') if cfg.VAL.PERIOD > 0 else None
-
-    best_metric_name = 'best_{}'.format(cfg.VAL.METRIC)
-    best_metric = {
-        '2d': checkpoint_data.get(best_metric_name, None),
-        '3d': checkpoint_data.get(best_metric_name, None)
-    }
-    best_metric_epoch = {'2d': -1, '3d': -1}
-    logger.info('Start training from epoch {}'.format(start_epoch))
-
-    # logger.info('Start training from iteration {}'.format(start_iteration))
-
-    # add metrics
-    train_metric_logger = init_metric_logger([train_2d_metric, train_3d_metric])
-    val_metric_logger = MetricLogger(delimiter='  ')
-
-    if cfg.TRAIN.CLASS_WEIGHTS:
-        class_weights = torch.tensor(cfg.TRAIN.CLASS_WEIGHTS).cuda()
-    else:
-        class_weights = None
-
-    # train_iter = enumerate(train_dataloader)    
-    for epoch in tqdm(range(int(cfg.SCHEDULER.MAX_EPOCH)), "epoch: "):
-
-        train_for_one_epoch(epoch=epoch, 
-                            model=model, 
-                            optimizer=optimizer,
-                            scheduler=scheduler,
-                            train_metric_logger=train_metric_logger, 
-                            train_2d_metric=train_2d_metric, 
-                            train_3d_metric=train_3d_metric,
-                            cfg=cfg,
-                            train_dataloader=train_dataloader,
-                            class_weights=class_weights)
-        
-        update_log(epoch=epoch, 
-                   train_metric_logger=train_metric_logger, 
-                   optimizer=optimizer, 
-                   cfg=cfg,
-                   logger=logger)
-
-        update_summary(epoch=epoch, 
-                        summary_writer=summary_writer, 
-                        cfg=cfg, 
-                        train_metric_logger=train_metric_logger)
-
-        validate_for_one_epoch(epoch=epoch, 
-                               model=model, 
-                               val_dataloader=val_dataloader, 
-                               val_metric_logger=val_metric_logger, 
-                               cfg=cfg,
-                               class_weights=class_weights)
-        
-        update_validation_logging_meters(epoch=epoch, 
-                                        val_metric_logger=val_metric_logger, 
-                                        cfg=cfg, 
-                                        best_metric=best_metric, 
-                                        logger=logger,
-                                        best_metric_epoch=best_metric_epoch)
-
-
-        update_validation_summary(epoch=epoch, 
-                                  summary_writer=summary_writer, 
-                                  val_metric_logger=val_metric_logger)
-                                  
-        # save model if best iou was in this epoch
-        if  ( best_metric_epoch['2d'] == epoch ) or ( best_metric_epoch['3d'] == epoch ): 
-            update_checkpoint(epoch=epoch, 
-                            checkpointer=checkpointer, 
-                            checkpoint_data=checkpoint_data,
-                            best_metric=best_metric, 
-                            best_metric_name=best_metric_name,
-                            cfg=cfg)        
-
+            self.update_validation_summary(epoch=epoch)
+                                    
+            # save model if best iou was in this epoch
+            if  ( self.best_metric_epoch['2d'] == epoch ) or ( self.best_metric_epoch['3d'] == epoch ): 
+                self.update_checkpoint(epoch=epoch) 
 
 def main():
     args = parse_args()
@@ -350,7 +310,8 @@ def main():
     logger.info('Loaded configuration file {:s}'.format(args.config_file))
     logger.info('Running with config:\n{}'.format(cfg))
 
-    train(cfg, output_dir, run_name)
+    trainer = Trainer(cfg)
+    self.train(output_dir, run_name)
 
 
 if __name__ == '__main__':
