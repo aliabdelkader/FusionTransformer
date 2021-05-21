@@ -54,7 +54,7 @@ def init_metric_logger(metric_list):
     return metric_logger
        
 class Trainer(object):
-    def __init__(cfg):
+    def __init__(self, cfg):
         # ---------------------------------------------------------------------------- #
         # Build models, optimizer, scheduler, checkpointer, etc.
         # ---------------------------------------------------------------------------- #
