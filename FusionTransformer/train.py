@@ -315,10 +315,10 @@ def main():
 
 
 if __name__ == '__main__':
-    import sys, traceback, pdb
+    import sys, traceback, ipdb
     try:
         main()
     except:
         extype, value, tb = sys.exc_info()
         traceback.print_exc()
-        pdb.post_mortem(tb)
+        ipdb.post_mortem(tb)

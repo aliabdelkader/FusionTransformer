@@ -10,6 +10,6 @@ setup(
     version="0.0.1",
     url="https://github.com/aliabdelkader/FusionTransformer",
     description="Transformer and Lidar fusion for semantic segmentation",
-    install_requires=['yacs', 'nuscenes-devkit', 'tabulate', 'timm', 'dataclasses', 'tensorboard', 'PyYAML', 'tqdm'],
+    install_requires=['yacs', 'nuscenes-devkit', 'tabulate', 'timm', 'dataclasses', 'tensorboard', 'PyYAML', 'tqdm', 'ipdb', 'jupyterlab'],
     packages=find_packages(exclude=exclude_dirs),
 )
