@@ -18,6 +18,7 @@ DATALOADER:
 OPTIMIZER:
   TYPE: "Adam"
   BASE_LR: 0.001
+  WEIGHT_DECAY: 0.0005
 SCHEDULER:
   TYPE: "MultiStepLR"
   MultiStepLR:
@@ -36,6 +37,6 @@ TRAIN:
   FusionTransformer:
     lambda_xm: 0.1
 VAL:
-  BATCH_SIZE: 10
+  BATCH_SIZE: 8
   PERIOD: 2
-#OUTPUT_DIR: "path/to/output/directory/@"  #  @ will be replaced with config path, e.g. nuscenes/usa_singapore/FusionTransformer
+OUTPUT_DIR: "/home/user/logs_2/@"  #  @ will be replaced with config path, e.g. nuscenes/usa_singapore/FusionTransformer
