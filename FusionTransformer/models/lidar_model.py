@@ -4,7 +4,7 @@ import torch.nn as nn
 from FusionTransformer.models.spvcnn import SPVCNN
 
 class LidarSeg():
-    def __init__(self, num_class, backbone_3d_kwargs):
+    def __init__(self, num_classes, backbone_3d_kwargs):
         super(LidarSeg, self).__init__()
 
         self.backbone = SPVCNN(**backbone_3d_kwargs)
