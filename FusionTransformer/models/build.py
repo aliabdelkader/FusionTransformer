@@ -65,4 +65,5 @@ def build_model(cfg):
         if cfg.MODEL.TYPE == "EarlyFusionTransformer":
             return build_early_fusion_model(cfg)
     else:
-        return build_lidar_model(cfg)
+        if cfg.MODEL.TYPE == "LidarSeg":
+            return build_lidar_model(cfg)
