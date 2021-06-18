@@ -114,7 +114,7 @@ def validate(cfg,
 
         if evaluator_3d is not None:
             val_metric_logger.update(seg_iou_3d=evaluator_3d.overall_iou)
-            eval_list.expend([('3D', evaluator_3d)])
+            eval_list.extend([('3D', evaluator_3d)])
 
         eval_list.extend([])
         for modality, evaluator in eval_list:
