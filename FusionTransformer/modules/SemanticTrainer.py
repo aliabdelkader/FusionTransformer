@@ -17,6 +17,7 @@ from FusionTransformer.data.build import build_dataloader
 from FusionTransformer.data.utils.validate import validate
 from FusionTransformer.models.losses import entropy_loss
 from tqdm import tqdm
+import wandb
 
 class SemanticTrainer(object):
     def __init__(self, cfg, output_dir, run_name):
@@ -25,10 +26,12 @@ class SemanticTrainer(object):
         # ---------------------------------------------------------------------------- #
         self.cfg = cfg
         self.logger = logging.getLogger('FusionTransformer.train')
-
+        wandb.login()
+        self.run = wandb.init(project='FusionTransformer', config=self.cfg, group=self.cfg["MODEL"]["TYPE"], sync_tensorboard=True)
         set_random_seed(cfg.RNG_SEED)
 
         self.model, self.train_2d_metric, self.train_3d_metric = build_model(cfg)
+        wandb.watch(self.model)
 
         self.logger.info('Build model:\n{}'.format(str(self.model)))
         num_params = sum(param.numel() for param in self.model.parameters())
@@ -156,6 +159,7 @@ class SemanticTrainer(object):
         loss_3d.backward()
 
         self.optimizer.step()
+        wandb.log({"loss_2d": loss_2d, "loss_3d": loss_3d})
     
     def train_for_one_epoch(self, epoch):
         ###### start of training for one epoch ###########################################
@@ -224,6 +228,7 @@ class SemanticTrainer(object):
                                                                             self.cfg.VAL.METRIC,
                                                                             self.best_metric[modality] * 100,
                                                                             self.best_metric_epoch[modality]))
+            wandb.log({f"Best val-{modality.upper()}-{self.cfg.VAL.METRIC}": f"{self.best_metric[modality]:.2f}"})
 
     def update_validation_summary(self, epoch):
         if self.summary_writer is not None:
@@ -234,7 +239,8 @@ class SemanticTrainer(object):
                 self.summary_writer.add_scalar('val/' + name, meter.avg, global_step=epoch)
     
     def train(self):
-        # train_iter = enumerate(train_dataloader)    
+        # train_iter = enumerate(train_dataloader)
+            
         for epoch in tqdm(range(int(self.cfg.SCHEDULER.MAX_EPOCH)), "epoch: "):
 
             self.train_for_one_epoch(epoch=epoch)
@@ -252,4 +258,6 @@ class SemanticTrainer(object):
                                     
             # save model if best iou was in this epoch
             if  ( self.best_metric_epoch['2d'] == epoch ) or ( self.best_metric_epoch['3d'] == epoch ): 
-                self.update_checkpoint(epoch=epoch) 
+                self.update_checkpoint(epoch=epoch)
+                
+        wandb.finish()

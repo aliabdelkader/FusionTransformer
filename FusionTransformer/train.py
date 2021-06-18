@@ -72,6 +72,7 @@ if __name__ == '__main__':
     try:
         main()
     except:
+        import wandb; wandb.finish()
         extype, value, tb = sys.exc_info()
         traceback.print_exc()
         ipdb.post_mortem(tb)

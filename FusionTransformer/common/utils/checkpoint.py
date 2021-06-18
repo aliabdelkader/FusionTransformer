@@ -7,7 +7,7 @@ import torch
 from torch.nn.parallel import DataParallel, DistributedDataParallel
 
 from .io import get_md5
-
+import wandb
 
 class Checkpointer(object):
     """Checkpoint the model and relevant states.
@@ -56,6 +56,10 @@ class Checkpointer(object):
         torch.save(data, save_file)
         if tag:
             self.tag_last_checkpoint(save_file)
+        
+        # model_artifact = wandb.Artifact(name, type="model")
+        # model_artifact.add_file(save_file, base_dir=self.save_dir)
+        wandb.save(save_file)
 
     def load(self, path=None, resume=True, resume_states=True):
         if resume and self.has_checkpoint():
