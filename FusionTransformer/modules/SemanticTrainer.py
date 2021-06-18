@@ -145,6 +145,7 @@ class SemanticTrainer(object):
 
         # segmentation loss: cross entropy
         if self.cfg.MODEL.USE_IMAGE == True:
+            loss_3d = F.cross_entropy(preds['lidar_seg_logit'], data_batch['seg_label'].long(), weight=self.class_weights)
             loss_2d = F.cross_entropy(preds['img_seg_logit'], data_batch['seg_label'].long(), weight=self.class_weights)
             self.train_metric_logger.update(seg_loss_2d=loss_2d.item(), seg_loss_3d=loss_3d.item())
 
