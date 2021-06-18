@@ -1,10 +1,10 @@
 AUTO_RESUME: False
 RESUME_STATES: False
 MODEL:
-  TYPE: "MiddleFusionTransformer"
-  DUAL_HEAD: True
+  TYPE: "LidarSeg"
+  DUAL_HEAD: False
+  USE_IMAGE: False
   NUM_CLASSES: 20 
-  block_number: [5, 11]
 DATASET:
   TYPE: "SemanticKITTISCN"
   TRAIN: ("train",)
@@ -14,11 +14,10 @@ DATASET:
     preprocess_dir: "/home/user/SemanticKitti/preprocessed"
     semantic_kitti_dir: "/home/user/SemanticKitti"
 DATALOADER:
-  NUM_WORKERS: 1
+  NUM_WORKERS: 3
 OPTIMIZER:
   TYPE: "Adam"
   BASE_LR: 0.001
-  WEIGHT_DECAY: 0.0005
 SCHEDULER:
   TYPE: "MultiStepLR"
   MultiStepLR:
