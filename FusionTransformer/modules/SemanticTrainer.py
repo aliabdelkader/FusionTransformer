@@ -228,6 +228,7 @@ class SemanticTrainer(object):
                                                                             self.cfg.VAL.METRIC,
                                                                             self.best_metric[modality] * 100,
                                                                             self.best_metric_epoch[modality]))
+            wandb.log({f"Best val-{modality.upper()}-{self.cfg.VAL.METRIC}": f"{self.best_metric[modality]:.2f}"})
 
     def update_validation_summary(self, epoch):
         if self.summary_writer is not None:
@@ -257,4 +258,6 @@ class SemanticTrainer(object):
                                     
             # save model if best iou was in this epoch
             if  ( self.best_metric_epoch['2d'] == epoch ) or ( self.best_metric_epoch['3d'] == epoch ): 
-                self.update_checkpoint(epoch=epoch) 
+                self.update_checkpoint(epoch=epoch)
+                
+        wandb.finish()
