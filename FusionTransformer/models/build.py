@@ -50,7 +50,7 @@ def build_early_fusion_model(cfg):
 
 def build_lidar_model(cfg):
     train_3d_metric = SegIoU(num_classes=cfg.MODEL.NUM_CLASSES, name='seg_iou_3d')
-    model = LidarSeg(num_class=cfg.MODEL.NUM_CLASSES, backbone_3d_kwargs=cfg.MODEL)
+    model = LidarSeg(num_classes=cfg.MODEL.NUM_CLASSES, backbone_3d_kwargs=cfg.MODEL)
     return model, train_3d_metric
 
 def build_model(cfg):
