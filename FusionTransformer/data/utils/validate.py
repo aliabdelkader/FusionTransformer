@@ -27,6 +27,9 @@ def validate(cfg,
     if cfg.MODEL.USE_IMAGE: 
         evaluator_ensemble = Evaluator(class_names, labels=class_labels) 
         evaluator_2d = Evaluator(class_names, labels=class_labels)
+    else:
+        evaluator_2d = None
+        evaluator_ensemble = None
 
     end = time.time()
     with torch.no_grad():
