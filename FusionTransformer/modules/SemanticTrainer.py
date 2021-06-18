@@ -192,7 +192,7 @@ class SemanticTrainer(object):
         ###### start of training for one epoch ###########################################
         self.setup_train()
         end = time.time()
-        for data_batch in tqdm(self.train_dataloader, f"training for epoch {epoch}:", total=len(self.train_dataloader)):
+        for data_batch in tqdm(self.train_dataloader, f"training for epoch {epoch}", total=len(self.train_dataloader)):
             self.train_step(data_batch=data_batch)
         self.scheduler.step()
         ###### end of training for one epoch ###########################################
