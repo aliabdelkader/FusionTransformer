@@ -30,7 +30,7 @@ class SemanticTrainer(object):
         self.run = wandb.init(project='FusionTransformer', config=self.cfg, group=self.cfg["MODEL"]["TYPE"], sync_tensorboard=True)
         set_random_seed(cfg.RNG_SEED)
 
-        if self.cfg.MODEL.USE_IMAGE == True:
+        if self.cfg.MODEL.USE_IMAGE:
             self.model, self.train_2d_metric, self.train_3d_metric = build_model(cfg)
         else:
             self.model, self.train_3d_metric = build_model(cfg)
@@ -135,7 +135,7 @@ class SemanticTrainer(object):
         data_batch['lidar'] = data_batch['lidar'].cuda()
         data_batch['seg_label'] = data_batch['seg_label'].cuda()
 
-        if self.cfg.MODEL.USE_IMAGE == True:
+        if self.cfg.MODEL.USE_IMAGE:
             data_batch['img'] = data_batch['img'].cuda()
 
 
@@ -144,7 +144,7 @@ class SemanticTrainer(object):
         preds = self.model(data_batch)
 
         # segmentation loss: cross entropy
-        if self.cfg.MODEL.USE_IMAGE == True:
+        if self.cfg.MODEL.USE_IMAGE:
             loss_3d = F.cross_entropy(preds['lidar_seg_logit'], data_batch['seg_label'].long(), weight=self.class_weights)
             loss_2d = F.cross_entropy(preds['img_seg_logit'], data_batch['seg_label'].long(), weight=self.class_weights)
             self.train_metric_logger.update(seg_loss_2d=loss_2d.item(), seg_loss_3d=loss_3d.item())
@@ -173,17 +173,17 @@ class SemanticTrainer(object):
         # update metric (e.g. IoU)
         with torch.no_grad():
             self.train_3d_metric.update_dict(preds, data_batch)
-            if self.cfg.MODEL.USE_IMAGE == True:
+            if self.cfg.MODEL.USE_IMAGE:
                 self.train_2d_metric.update_dict(preds, data_batch)
             
         # backward
-        if self.cfg.MODEL.USE_IMAGE == True:
+        if self.cfg.MODEL.USE_IMAGE:
             loss_2d.backward(retain_graph=True)
         loss_3d.backward()
 
         self.optimizer.step()
 
-        if self.cfg.MODEL.USE_IMAGE == True:
+        if self.cfg.MODEL.USE_IMAGE:
             wandb.log({"loss_2d": loss_2d, "loss_3d": loss_3d})
         else:
             wandb.log({"loss_3d": loss_3d})
@@ -226,7 +226,7 @@ class SemanticTrainer(object):
     def update_checkpoint(self, epoch):
         if (self.cfg.TRAIN.CHECKPOINT_PERIOD > 0 and epoch % self.cfg.TRAIN.CHECKPOINT_PERIOD == 0) or epoch == self.cfg.SCHEDULER.MAX_EPOCH:
             self.checkpoint_data['epoch'] = epoch
-            if self.cfg.MODEL.USE_IMAGE == True:
+            if self.cfg.MODEL.USE_IMAGE:
                 self.checkpoint_data["2d_" + self.best_metric_name] = self.best_metric['2d']
             self.checkpoint_data["3d_" + self.best_metric_name] = self.best_metric['3d']
             self.checkpointer.save('model{:06d}'.format(epoch), **self.checkpoint_data)
@@ -243,10 +243,10 @@ class SemanticTrainer(object):
     def update_validation_logging_meters(self, epoch):
         self.logger.info('Epoch[{}]-Val {}'.format(epoch, self.val_metric_logger.summary_str))
 
-        if self.cfg.MODEL.USE_IMAGE == True:
+        if self.cfg.MODEL.USE_IMAGE:
             modalities = ['2d', '3d']
         else:
-            modalities = ['2d']
+            modalities = ['3d']
 
             # best validation
         for modality in modalities:
