@@ -25,7 +25,7 @@ class SemanticTrainer(object):
         # Build models, optimizer, scheduler, checkpointer, etc.
         # ---------------------------------------------------------------------------- #
         self.cfg = cfg
-        self.logger = logging.getLogger('FusionTransformer.train')
+        self.logger = logging.getLogger('FusionTransformer.{}.train'.format(self.cfg["MODEL"]["TYPE"]))
         wandb.login()
         self.run = wandb.init(project='FusionTransformer', config=self.cfg, group=self.cfg["MODEL"]["TYPE"], sync_tensorboard=True)
         set_random_seed(cfg.RNG_SEED)

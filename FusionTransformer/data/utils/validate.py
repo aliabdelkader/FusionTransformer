@@ -16,7 +16,7 @@ def validate(cfg,
              val_metric_logger,
              class_weights
              ):
-    logger = logging.getLogger('FusionTransformer.validate')
+    logger = logging.getLogger('FusionTransformer.{}.validate'.format(self.cfg["MODEL"]["TYPE"]))
     logger.info('Validation')
 
     # evaluator

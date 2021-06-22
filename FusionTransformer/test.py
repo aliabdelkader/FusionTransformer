@@ -40,7 +40,7 @@ def parse_args():
 
 
 def test(cfg, args, output_dir=''):
-    logger = logging.getLogger('FusionTransformer.test')
+    logger = logging.getLogger('FusionTransformer.{}.test'.format(self.cfg["MODEL"]["TYPE"]))
 
     # build 2d model
     model = build_model(cfg)[0]
