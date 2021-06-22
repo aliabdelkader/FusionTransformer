@@ -270,7 +270,7 @@ class SemanticTrainer(object):
             modalities = ['2d', '3d']
         elif self.cfg.MODEL.USE_LIDAR:
             modalities = ['3d']
-        elif self.cfg.MODEL.USE_LIDAR:
+        elif self.cfg.MODEL.USE_IMAGE:
             modalities = ['2d']
             # best validation
         for modality in modalities:
