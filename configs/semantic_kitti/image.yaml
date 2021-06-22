@@ -1,12 +1,11 @@
 AUTO_RESUME: False
 RESUME_STATES: False
 MODEL:
-  TYPE: "EarlyFusionTransformer"
-  DUAL_HEAD: True
-  NUM_CLASSES: 20 
-  block_number: [0, 11]
+  TYPE: "ImageSeg"
+  DUAL_HEAD: False
   USE_IMAGE: True
-  USE_LIDAR: True
+  USE_LIDAR: False
+  NUM_CLASSES: 20 
 DATASET:
   TYPE: "SemanticKITTISCN"
   TRAIN: ("train",)
@@ -16,7 +15,7 @@ DATASET:
     preprocess_dir: "/home/user/SemanticKitti/preprocessed"
     semantic_kitti_dir: "/home/user/SemanticKitti"
 DATALOADER:
-  NUM_WORKERS: 1
+  NUM_WORKERS: 3
 OPTIMIZER:
   TYPE: "Adam"
   BASE_LR: 0.001

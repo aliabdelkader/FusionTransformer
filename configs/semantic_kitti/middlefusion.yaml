@@ -5,6 +5,8 @@ MODEL:
   DUAL_HEAD: True
   NUM_CLASSES: 20 
   block_number: [5, 11]
+  USE_IMAGE: True
+  USE_LIDAR: True
 DATASET:
   TYPE: "SemanticKITTISCN"
   TRAIN: ("train",)
