@@ -7,6 +7,7 @@ MODEL:
   block_number: [5, 11]
   USE_IMAGE: True
   USE_LIDAR: True
+  USE_FUSION: True
 DATASET:
   TYPE: "SemanticKITTISCN"
   TRAIN: ("train",)

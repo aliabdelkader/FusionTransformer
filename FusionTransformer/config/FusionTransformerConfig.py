@@ -83,7 +83,7 @@ _C.MODEL.NUM_CLASSES = 20
 _C.MODEL.DUAL_HEAD = True
 _C.MODEL.USE_IMAGE = True
 _C.MODEL.USE_LIDAR = True
-_C.MODEL.USE_FUSION = _C.MODEL.USE_IMAGE and _C.MODEL.USE_LIDAR 
+_C.MODEL.USE_FUSION = True 
 # ----------------------------------------------------------------------------- #
 # SCN options
 # ----------------------------------------------------------------------------- #

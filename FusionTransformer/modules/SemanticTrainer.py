@@ -30,7 +30,7 @@ class SemanticTrainer(object):
         self.run = wandb.init(project='FusionTransformer', config=self.cfg, group=self.cfg["MODEL"]["TYPE"], sync_tensorboard=True)
         set_random_seed(cfg.RNG_SEED)
 
-        if self.cfg.MODE.USE_FUSION:
+        if self.cfg.MODEL.USE_FUSION:
             self.model, self.train_2d_metric, self.train_3d_metric = build_model(cfg)
         elif self.cfg.MODEL.USE_LIDAR:
             self.model, self.train_3d_metric = build_model(cfg)

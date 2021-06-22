@@ -5,6 +5,7 @@ MODEL:
   DUAL_HEAD: False
   USE_IMAGE: True
   USE_LIDAR: False
+  USE_FUSION: False
   NUM_CLASSES: 20 
 DATASET:
   TYPE: "SemanticKITTISCN"
