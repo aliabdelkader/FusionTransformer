@@ -16,19 +16,26 @@ def validate(cfg,
              val_metric_logger,
              class_weights
              ):
-    logger = logging.getLogger('FusionTransformer.validate')
+    logger = logging.getLogger('FusionTransformer.{}.validate'.format(cfg["MODEL"]["TYPE"]))
     logger.info('Validation')
 
     # evaluator
     class_names = dataloader.dataset.class_names
     class_labels = dataloader.dataset.class_labels
-    evaluator_3d = Evaluator(class_names, labels=class_labels)
 
-    if cfg.MODEL.USE_IMAGE: 
-        evaluator_ensemble = Evaluator(class_names, labels=class_labels) 
+    if cfg.MODEL.USE_FUSION:
+        evaluator_3d = Evaluator(class_names, labels=class_labels)
         evaluator_2d = Evaluator(class_names, labels=class_labels)
-    else:
+        evaluator_ensemble = Evaluator(class_names, labels=class_labels) 
+
+    elif cfg.MODEL.USE_LIDAR:
+        evaluator_3d = Evaluator(class_names, labels=class_labels)
         evaluator_2d = None
+        evaluator_ensemble = None
+
+    elif cfg.MODEL.USE_IMAGE: 
+        evaluator_2d = Evaluator(class_names, labels=class_labels)
+        evaluator_3d = None
         evaluator_ensemble = None
 
     end = time.time()
@@ -37,9 +44,13 @@ def validate(cfg,
             data_time = time.time() - end
             # copy data from cpu to gpu
             if 'SCN' in cfg.DATASET.TYPE:
+
+                if cfg.MODEL.USE_LIDAR:
+                    data_batch["lidar"] = data_batch["lidar"].cuda()
+
                 if cfg.MODEL.USE_IMAGE:
                     data_batch["img"] = data_batch["img"].cuda()
-                data_batch["lidar"] = data_batch["lidar"].cuda()
+
                 data_batch['seg_label'] = data_batch['seg_label'].cuda()
             else:
                 raise NotImplementedError
@@ -47,13 +58,17 @@ def validate(cfg,
             # predict
             preds = model(data_batch)
 
+            if cfg.MODEL.USE_LIDAR:
+                pred_label_voxel_3d = preds['lidar_seg_logit'].argmax(1).cpu().numpy() 
+
             if cfg.MODEL.USE_IMAGE:
                 pred_label_voxel_2d = preds['img_seg_logit'].argmax(1).cpu().numpy()
+            
+            if cfg.MODEL.USE_FUSION:
                 probs_2d = F.softmax(preds['img_seg_logit'], dim=1)
                 probs_3d = F.softmax(preds['lidar_seg_logit'], dim=1) 
                 pred_label_voxel_ensemble = (probs_2d + probs_3d).argmax(1).cpu().numpy()
 
-            pred_label_voxel_3d = preds['lidar_seg_logit'].argmax(1).cpu().numpy() 
 
             # get original point cloud from before voxelization
             seg_label = data_batch['orig_seg_label']
@@ -70,33 +85,42 @@ def validate(cfg,
                 curr_seg_label = seg_label[batch_ind]
                 right_idx = left_idx + curr_points_idx.sum()
 
-                pred_label_3d = pred_label_voxel_3d[left_idx:right_idx]
-                pred_label_3d = map_sparse_to_org(pred_label_3d, curr_inverse_map)
+                if cfg.MODEL.USE_LIDAR:
+                    pred_label_3d = pred_label_voxel_3d[left_idx:right_idx]
+                    pred_label_3d = map_sparse_to_org(pred_label_3d, curr_inverse_map)
 
                 if cfg.MODEL.USE_IMAGE:
                     pred_label_2d = pred_label_voxel_2d[left_idx:right_idx]
                     pred_label_2d = map_sparse_to_org(pred_label_2d, curr_inverse_map)
+                
+                if cfg.MODEL.USE_FUSION:
                     pred_label_ensemble = pred_label_voxel_ensemble[left_idx:right_idx]
                     pred_label_ensemble = map_sparse_to_org(pred_label_ensemble, curr_inverse_map)
 
                 if dataloader.dataset.map_inverse_label is not None:
                     curr_seg_label = dataloader.dataset.map_inverse_label(curr_seg_label)
-                    pred_label_3d =  dataloader.dataset.map_inverse_label(pred_label_3d)
+
+                    if cfg.MODEL.USE_LIDAR:
+                        pred_label_3d =  dataloader.dataset.map_inverse_label(pred_label_3d)
                     if cfg.MODEL.USE_IMAGE:
                         pred_label_2d =  dataloader.dataset.map_inverse_label(pred_label_2d)
+                    if cfg.MODEL.USE_FUSION:
                         pred_label_ensemble = dataloader.dataset.map_inverse_label(pred_label_ensemble)
 
-                evaluator_3d.update(pred_label_3d, curr_seg_label)
+                if cfg.MODEL.USE_LIDAR:
+                    evaluator_3d.update(pred_label_3d, curr_seg_label)
 
                 # evaluate
                 if cfg.MODEL.USE_IMAGE:
                     evaluator_2d.update(pred_label_2d, curr_seg_label)
+
+                if cfg.MODEL.USE_FUSION:
                     evaluator_ensemble.update(pred_label_ensemble, curr_seg_label)
 
                 left_idx = right_idx
 
-            seg_loss_3d = F.cross_entropy(preds['lidar_seg_logit'], data_batch['seg_label'], weight=class_weights) 
-            if seg_loss_3d is not None:
+            if cfg.MODEL.USE_LIDAR:
+                seg_loss_3d = F.cross_entropy(preds['lidar_seg_logit'], data_batch['seg_label'], weight=class_weights) 
                 val_metric_logger.update(seg_loss_3d=seg_loss_3d)
 
             if cfg.MODEL.USE_IMAGE:
@@ -110,12 +134,15 @@ def validate(cfg,
         eval_list = []
         if evaluator_2d is not None:
             val_metric_logger.update(seg_iou_2d=evaluator_2d.overall_iou)
-            eval_list.extend([('2D', evaluator_2d), ('2D+3D', evaluator_ensemble)])
+            eval_list.extend([('2D', evaluator_2d)])
 
         if evaluator_3d is not None:
             val_metric_logger.update(seg_iou_3d=evaluator_3d.overall_iou)
             eval_list.extend([('3D', evaluator_3d)])
 
+        if evaluator_ensemble is not None:
+            eval_list.extend([('2D+3D', evaluator_ensemble)])
+            
         eval_list.extend([])
         for modality, evaluator in eval_list:
             logger.info('{} overall accuracy={:.2f}%'.format(modality, 100.0 * evaluator.overall_acc))

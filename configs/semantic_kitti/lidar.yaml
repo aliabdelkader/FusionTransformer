@@ -4,6 +4,8 @@ MODEL:
   TYPE: "LidarSeg"
   DUAL_HEAD: False
   USE_IMAGE: False
+  USE_LIDAR: True
+  USE_FUSION: False
   NUM_CLASSES: 20 
 DATASET:
   TYPE: "SemanticKITTISCN"

@@ -2,6 +2,7 @@ from FusionTransformer.models.late_fusion import LateFusionTransformer
 from FusionTransformer.models.middle_fusion import MiddleFusionTransformer
 from FusionTransformer.models.early_fusion import EarlyFusionTransformer
 from FusionTransformer.models.lidar_model import LidarSeg
+from FusionTransformer.models.image_model import ImageSeg
 from FusionTransformer.models.metric import SegIoU
 
 
@@ -53,9 +54,14 @@ def build_lidar_model(cfg):
     model = LidarSeg(num_classes=cfg.MODEL.NUM_CLASSES, backbone_3d_kwargs=cfg.MODEL)
     return model, train_3d_metric
 
+def build_image_model(cfg):
+    train_2d_metric = SegIoU(num_classes=cfg.MODEL.NUM_CLASSES, name='seg_iou_2d')
+    model = ImageSeg(num_classes=cfg.MODEL.NUM_CLASSES, dual_head=cfg.MODEL.DUAL_HEAD, backbone_2d_kwargs=cfg.MODEL)
+    return model, train_2d_metric
+
 def build_model(cfg):
     
-    if cfg.MODEL.USE_IMAGE:
+    if cfg.MODEL.USE_FUSION:
         if cfg.MODEL.TYPE == "LateFusionTransformer":
             return build_late_fusion_model(cfg=cfg)
         
@@ -64,6 +70,11 @@ def build_model(cfg):
 
         if cfg.MODEL.TYPE == "EarlyFusionTransformer":
             return build_early_fusion_model(cfg)
-    else:
+
+    elif cfg.MODEL.USE_LIDAR:
         if cfg.MODEL.TYPE == "LidarSeg":
             return build_lidar_model(cfg)
+    
+    elif cfg.MODEL.USE_IMAGE:
+        if cfg.MODEL.TYPE == "ImageSeg":
+            return build_image_model(cfg)

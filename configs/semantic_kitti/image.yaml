@@ -1,13 +1,12 @@
 AUTO_RESUME: False
 RESUME_STATES: False
 MODEL:
-  TYPE: "LateFusionTransformer"
-  DUAL_HEAD: True
-  NUM_CLASSES: 20 
-  block_number: [11]
+  TYPE: "ImageSeg"
+  DUAL_HEAD: False
   USE_IMAGE: True
-  USE_LIDAR: True
-  USE_FUSION: True
+  USE_LIDAR: False
+  USE_FUSION: False
+  NUM_CLASSES: 20 
 DATASET:
   TYPE: "SemanticKITTISCN"
   TRAIN: ("train",)
@@ -41,4 +40,4 @@ TRAIN:
 VAL:
   BATCH_SIZE: 8
   PERIOD: 2
-OUTPUT_DIR: "~/logs/@"  #  @ will be replaced with config path, e.g. nuscenes/usa_singapore/FusionTransformer
+OUTPUT_DIR: "/home/user/logs/@"  #  @ will be replaced with config path, e.g. nuscenes/usa_singapore/FusionTransformer

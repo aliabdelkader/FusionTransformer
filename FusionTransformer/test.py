@@ -40,7 +40,7 @@ def parse_args():
 
 
 def test(cfg, args, output_dir=''):
-    logger = logging.getLogger('FusionTransformer.test')
+    logger = logging.getLogger('FusionTransformer.{}.test'.format(self.cfg["MODEL"]["TYPE"]))
 
     # build 2d model
     model = build_model(cfg)[0]
@@ -104,7 +104,7 @@ def main():
     hostname = socket.gethostname()
     run_name = '{:s}.{:s}'.format(timestamp, hostname)
 
-    logger = setup_logger('FusionTransformer', output_dir, comment='test.{:s}'.format(run_name))
+    logger = setup_logger('FusionTransformer', output_dir, comment='{}.test.{:s}'.format(cfg["MODEL"]["TYPE"], run_name))
     logger.info('{:d} GPUs available'.format(torch.cuda.device_count()))
     logger.info(args)
 
