@@ -97,7 +97,6 @@ class Net3DSeg(SPVCNN):
 class EarlyFusionTransformer(nn.Module):
     def __init__(self, num_class, dual_head, backbone_3d_kwargs, backbone_2d_kwargs):
         super(EarlyFusionTransformer, self).__init__()
-        assert backbone_2d_kwargs["block_number"][0] == 0, "test that features are taken from block 0 in img transformer model has falled"
         self.lidar_backbone = Net3DSeg(num_classes=num_class, dual_head=dual_head, backbone_3d_kwargs=backbone_3d_kwargs)
         self.image_backbone = Net2DSeg(
                  num_classes=num_class,
