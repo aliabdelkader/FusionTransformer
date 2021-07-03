@@ -142,7 +142,7 @@ class Net2DSeg(nn.Module):
 
         backbone_output = self.backbone.forward_blocks(x)
 
-        late_feats  = self.get_img_feats(img_indices=img_indices, block_id=self.late_feat_block_number, image_shape=img.shape, backbone_output=backbone_output)
+        late_feats  = self.get_img_feats(img_indices=img_indices, block_id=str(self.late_feat_block_number), image_shape=img.shape, backbone_output=backbone_output)
 
         # linear
         x = self.linear(late_feats)
@@ -155,7 +155,7 @@ class Net2DSeg(nn.Module):
             preds['img_seg_logit2'] = self.linear2(late_feats)
 
         if self.middle_feat_block_number:
-            middle_feats = self.get_img_feats(img_indices=img_indices, block_id=self.middle_feat_block_number, image_shape=img.shape, backbone_output=backbone_output)
+            middle_feats = self.get_img_feats(img_indices=img_indices, block_id=str(self.middle_feat_block_number), image_shape=img.shape, backbone_output=backbone_output)
             preds['img_middle_feats'] = middle_feats
 
 
