@@ -22,7 +22,7 @@ class Image2DTransformer(VisionTransformer):
         else:
             x = torch.cat((cls_token, self.dist_token.expand(x.shape[0], -1, -1), x), dim=1)
         x = self.pos_drop(x + self.pos_embed)
-        outputs = {str(i): block(x) for i, block in enumerate(self.blocks)}
+        outputs = {i: block(x) for i, block in enumerate(self.blocks)}
         return outputs
 
 
@@ -90,12 +90,12 @@ class Net2DSeg(nn.Module):
         self.stn_up = nn.ModuleDict()
         
         if self.middle_feat_block_number:
-            self.up[str(self.middle_feat_block_number)] = nn.ConvTranspose2d(self.hidden_channels, self.feat_channels, kernel_size=(16, 16), stride=(16, 16))
-            self.stn_up[str(self.middle_feat_block_number)] = STN(in_channels=self.feat_channels)
+            self.up[self.middle_feat_block_number] = nn.ConvTranspose2d(self.hidden_channels, self.feat_channels, kernel_size=(16, 16), stride=(16, 16))
+            self.stn_up[self.middle_feat_block_number] = STN(in_channels=self.feat_channels)
 
 
-        self.up[str(self.late_feat_block_number)] = nn.ConvTranspose2d(self.hidden_channels, self.feat_channels, kernel_size=(16, 16), stride=(16, 16))
-        self.stn_up[str(self.late_feat_block_number)] = STN(in_channels=self.feat_channels)
+        self.up[self.late_feat_block_number] = nn.ConvTranspose2d(self.hidden_channels, self.feat_channels, kernel_size=(16, 16), stride=(16, 16))
+        self.stn_up[self.late_feat_block_number] = STN(in_channels=self.feat_channels)
 
         self.stn_down = STN(in_channels=3)
 
@@ -142,7 +142,7 @@ class Net2DSeg(nn.Module):
 
         backbone_output = self.backbone.forward_blocks(x)
 
-        late_feats  = self.get_img_feats(img_indices=img_indices, block_id=str(self.late_feat_block_number), image_shape=img.shape, backbone_output=backbone_output)
+        late_feats  = self.get_img_feats(img_indices=img_indices, block_id=self.late_feat_block_number, image_shape=img.shape, backbone_output=backbone_output)
 
         # linear
         x = self.linear(late_feats)
@@ -155,7 +155,7 @@ class Net2DSeg(nn.Module):
             preds['img_seg_logit2'] = self.linear2(late_feats)
 
         if self.middle_feat_block_number:
-            middle_feats = self.get_img_feats(img_indices=img_indices, block_id=str(self.middle_feat_block_number), image_shape=img.shape, backbone_output=backbone_output)
+            middle_feats = self.get_img_feats(img_indices=img_indices, block_id=self.middle_feat_block_number, image_shape=img.shape, backbone_output=backbone_output)
             preds['img_middle_feats'] = middle_feats
 
 
