@@ -9,7 +9,6 @@ from timm.models.helpers import overlay_external_default_cfg
 from timm.models.vision_transformer import VisionTransformer, default_cfgs, build_model_with_cfg, checkpoint_filter_fn
 from timm.models.registry import register_model
 from copy import deepcopy
-from logging import logger
 class Image2DTransformer(VisionTransformer):
     def __init__(self, **kwargs):
       super(Image2DTransformer, self).__init__(**kwargs)
@@ -41,7 +40,7 @@ def _create_transformer_2d(variant, pretrained=False, default_cfg=None, **kwargs
     if repr_size is not None and num_classes != default_num_classes:
         # Remove representation layer if fine-tuning. This may not always be the desired action,
         # but I feel better than doing nothing by default for fine-tuning. Perhaps a better interface?
-        logger.warning("Removing representation layer for fine-tuning.")
+        print("Removing representation layer for fine-tuning.")
         repr_size = None
 
     if kwargs.get('features_only', None):
