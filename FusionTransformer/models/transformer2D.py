@@ -58,7 +58,7 @@ def image_2d_transformer(pretrained=False, **kwargs):
     ImageNet-1k weights from https://github.com/facebookresearch/deit.
     """
     model_kwargs = dict(patch_size=16, embed_dim=768, depth=12, num_heads=12, **kwargs)
-    model = _create_transformer_2d('deit_base_patch16_384', pretrained=pretrained, **model_kwargs)
+    model = _create_transformer_2d('vit_deit_base_patch16_384', pretrained=pretrained, **model_kwargs)
     return model
 
 
