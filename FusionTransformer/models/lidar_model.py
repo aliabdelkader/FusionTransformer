@@ -1,6 +1,4 @@
-import torch
 import torch.nn as nn
-
 from FusionTransformer.models.spvcnn import SPVCNN
 
 class LidarSeg(nn.Module):

@@ -1,13 +1,9 @@
-import torch
 import torch.nn as nn
-import torch.nn.functional as F
-import timm
-from FusionTransformer.models.spvcnn import SPVCNN
 import torchsparse
 from FusionTransformer.models.utils import point_to_voxel, voxel_to_point, initial_voxelize
-from torchsparse.sparse_tensor import SparseTensor
 from torchsparse.point_tensor import PointTensor
-from FusionTransformer.models.transformer2D import Net2DSeg
+from FusionTransformer.models.image_models import Net2DSeg
+from FusionTransformer.models.spvcnn import SPVCNN
 
 import numpy as np
 
@@ -78,8 +74,6 @@ class Net3DSeg(SPVCNN):
         return z3.F
         
     def forward(self, x, img_middle_feats):
-        # x = data_dict["lidar"]
-        # feats = self.backbone(x)
         feats = self.backbone_forward_pass(x, img_middle_feats)
         x = self.linear(feats)
 
@@ -107,7 +101,3 @@ class MiddleFusionTransformer(nn.Module):
         preds_lidar = self.lidar_backbone(x=data_dict["lidar"], img_middle_feats=preds_image["img_middle_feats"])
         out = {**preds_image, **preds_lidar}
         return out
-
-# if __name__ == '__main__':
-    # test_Net2DSeg()
-    # test_LateFusion()
