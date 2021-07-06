@@ -35,7 +35,7 @@ class Image2DTransformer(VisionTransformer):
         for i, block in enumerate(self.blocks):
             x = block(x)
             outputs[str(i)] = x
-        assert torch.not_equal(outputs['0'], outputs['11'])
+        assert torch.all(torch.not_equal(outputs['0'], outputs['11']))
         return outputs
 
 
