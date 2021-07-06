@@ -110,14 +110,15 @@ class Net2DSeg(nn.Module):
     def get_img_feats(self, img_indices, block_id, image_shape, backbone_output):
         B, C, H, W  = image_shape
 
-        # registered_hook_output: features from transformer
-
-        # B, N, EMBED_DIM = self.registered_hook_output[idx].shape
         B, N, EMBED_DIM = backbone_output[block_id].shape
 
         x = backbone_output[block_id]
+
+        # remove class token features
+        x = x[:, 1: , :]
         # reshape so that deconvolution can be performed
         x = x.transpose(1, 2).reshape(B, EMBED_DIM, 384//16, 384//16)
+        
         x = self.up[block_id](x) 
         x = self.stn_up[block_id](x, (self.feat_channels, H, W)) # shape B, C, H, 
         
