@@ -133,7 +133,7 @@ class ScaleUpModule(nn.Module):
         self.up_conv = nn.ConvTranspose2d(input_features, output_features, kernel_size=(kernel_size, kernel_size), stride=(stride, stride))
         self.up_stn = SpatialTransformer(in_channels=output_features)
     
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
+    def forward(self, x: torch.Tensor, output_shape: tuple) -> torch.Tensor:
         x = self.up_conv(x)
-        x = self.up_stn(x)
+        x = self.up_stn(x, output_shape)
         return x

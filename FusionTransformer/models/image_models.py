@@ -85,8 +85,7 @@ class Net2DSeg(nn.Module):
         # reshape so that deconvolution can be performed
         x = x.transpose(1, 2).reshape(B, EMBED_DIM, 384//16, 384//16)
         
-        x = self.up[block_id](x) 
-        x = self.stn_up[block_id](x, (self.feat_channels, H, W)) # shape B, C, H, 
+        x = self.up[block_id](x, (self.feat_channels, H, W)) # shape B, C, H, 
         
         # # 2D-3D feature lifting
         img_feats = []
