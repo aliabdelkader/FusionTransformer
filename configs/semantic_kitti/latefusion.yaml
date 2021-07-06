@@ -4,7 +4,8 @@ MODEL:
   TYPE: "LateFusionTransformer"
   DUAL_HEAD: True
   NUM_CLASSES: 20 
-  block_number: [11]
+  # block_number: [11]
+  late_feat_block_number: 11
   USE_IMAGE: True
   USE_LIDAR: True
   USE_FUSION: True

@@ -3,6 +3,7 @@ RESUME_STATES: False
 MODEL:
   TYPE: "ImageSeg"
   DUAL_HEAD: False
+  late_feat_block_number: 11
   USE_IMAGE: True
   USE_LIDAR: False
   USE_FUSION: False
