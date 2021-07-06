@@ -83,8 +83,8 @@ class Net2DSeg(nn.Module):
         self.backbone = timm.create_model("image_2d_transformer", pretrained=True)
         self.backbone.reset_classifier(0, '')
 
-        self.middle_feat_block_number = backbone_2d_kwargs["middle_feat_block_number"]
-        self.late_feat_block_number = backbone_2d_kwargs["late_feat_block_number"]
+        self.middle_feat_block_number = str(backbone_2d_kwargs["middle_feat_block_number"])
+        self.late_feat_block_number = str(backbone_2d_kwargs["late_feat_block_number"])
 
         self.up = nn.ModuleDict()
         self.stn_up = nn.ModuleDict()
