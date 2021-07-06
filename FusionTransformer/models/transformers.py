@@ -31,7 +31,7 @@ class Image2DTransformer(VisionTransformer):
         else:
             x = torch.cat((cls_token, self.dist_token.expand(x.shape[0], -1, -1), x), dim=1)
         x = self.pos_drop(x + self.pos_embed)
-        outputs = Dict()
+        outputs = dict()
         for i, block in enumerate(self.blocks):
             x = block(x)
             outputs[str(i)] = x
