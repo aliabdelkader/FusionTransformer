@@ -34,12 +34,12 @@ class Net2DSeg(nn.Module):
         self.backbone.reset_classifier(0, '')
 
         # vision transformer blocks to select the output of
-        if backbone_2d_kwargs.get("middle_feat_block_number", None):
+        if backbone_2d_kwargs.get("middle_feat_block_number", None) is not None:
             self.middle_feat_block_number = str(backbone_2d_kwargs["middle_feat_block_number"])
         else:
             self.middle_feat_block_number = None
         
-        if backbone_2d_kwargs.get("late_feat_block_number", None):
+        if backbone_2d_kwargs.get("late_feat_block_number", None) is not None:
             self.late_feat_block_number = str(backbone_2d_kwargs["late_feat_block_number"])
         else:
             self.late_feat_block_number = None
