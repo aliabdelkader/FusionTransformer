@@ -22,7 +22,7 @@ class Image2DTransformer(VisionTransformer):
         else:
             x = torch.cat((cls_token, self.dist_token.expand(x.shape[0], -1, -1), x), dim=1)
         x = self.pos_drop(x + self.pos_embed)
-        outputs = {i: block(x) for i, block in enumerate(self.blocks)}
+        outputs = {str(i): block(x) for i, block in enumerate(self.blocks)}
         return outputs
 
 
@@ -76,7 +76,7 @@ class Net2DSeg(nn.Module):
                  backbone_2d_kwargs=dict()):
         super(Net2DSeg, self).__init__()
 
-        self.registered_hook_output = []
+
         self.feat_channels = 96
         self.hidden_channels = 768
 
