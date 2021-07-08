@@ -4,7 +4,8 @@ MODEL:
   TYPE: "MiddleFusionTransformer"
   DUAL_HEAD: True
   NUM_CLASSES: 20 
-  block_number: [5, 11]
+  middle_feat_block_number: 5
+  late_feat_block_number: 11
   USE_IMAGE: True
   USE_LIDAR: True
   USE_FUSION: True
