@@ -1,5 +1,5 @@
-AUTO_RESUME: False
-RESUME_STATES: False
+AUTO_RESUME: TRUE
+RESUME_STATES: TRUE
 MODEL:
   TYPE: "LateFusionTransformer"
   DUAL_HEAD: True
