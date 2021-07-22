@@ -16,7 +16,6 @@ class LidarSeg(nn.Module):
         x = self.linear(feats)
 
         preds = {
-            'lidar_feats': feats,
             'lidar_seg_logit': x,
         }
 
