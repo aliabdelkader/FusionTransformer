@@ -38,10 +38,6 @@ def main(cfg = None, output_dir = None) -> None:
 
     configs.update(cfg)
 
-    # seed
-    if ('seed' not in configs.TRAIN) or (cfg.RNG_SEED is None):
-        cfg.RNG_SEED = torch.initial_seed() % (2 ** 32 - 1)
-
     seed = cfg.RNG_SEED + dist.rank() * cfg.DATALOADER.NUM_WORKERS * cfg.SCHEDULER.MAX_EPOCH
     print(seed)
     set_random_seed(seed)
