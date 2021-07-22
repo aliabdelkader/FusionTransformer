@@ -8,7 +8,7 @@ import socket
 import warnings
 import torch
 
-from FusionTransformer.modules import TorckpackInterface
+from FusionTransformer.modules import TorchpackInterface
 from FusionTransformer.modules.SemanticTrainer import SemanticTrainer
 from FusionTransformer.common.utils.logger import setup_logger
 
@@ -72,7 +72,7 @@ def main():
     logger.info('Running with config:\n{}'.format(cfg))
 
     if args.use_torchpack:
-        TorckpackInterface.main(cfg=cfg, output_dir=output_dir)
+        TorchpackInterface.main(cfg=cfg, output_dir=output_dir)
     else:
         trainer = SemanticTrainer(cfg, output_dir, run_name)
         trainer.train()
