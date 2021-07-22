@@ -57,6 +57,7 @@ def main():
         if osp.isdir(output_dir):
             warnings.warn('Output directory exists.')
         os.makedirs(output_dir, exist_ok=True)
+        print("output dir",  output_dir)
 
     # run name
     timestamp = time.strftime('%m-%d_%H-%M-%S')

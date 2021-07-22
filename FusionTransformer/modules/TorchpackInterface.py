@@ -18,7 +18,7 @@ from FusionTransformer.data.build import build_dataloader
 from FusionTransformer.models.build import build_model
 from FusionTransformer.common.solver.build import build_optimizer, build_scheduler
 from FusionTransformer.modules.SemanticTorchpackTrainer import SemanticTorchpackTrainer
-from FusionTransformer.modules.TorckpackCallbacks import MeanIoU, iouEval, accEval, WandbMaxSaver
+from FusionTransformer.modules.TorchpackCallbacks import MeanIoU, iouEval, accEval, WandbMaxSaver
 from FusionTransformer.common.utils.torch_util import set_random_seed
 
 import wandb

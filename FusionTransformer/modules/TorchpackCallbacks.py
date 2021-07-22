@@ -195,8 +195,9 @@ class accEval(InternalEval):
 
 class WandbMaxSaver(MaxSaver):
     def _trigger(self):
-        super()._trigger()
         _, value = self.trainer.summary[self.scalar][-1]
+
+        super()._trigger()
 
         if self.best is None or (self.extreme == 'min' and value < self.best[1]) \
                             or (self.extreme == 'max' and value > self.best[1]):
