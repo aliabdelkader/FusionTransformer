@@ -52,7 +52,9 @@ def main(cfg = None, output_dir = None) -> None:
 
 
     model = build_model(cfg)[0]
-    wandb.watch(model)
+    dist.barrier()
+    if dist.rank() == 0:
+        wandb.watch(model)
 
     model = torch.nn.parallel.DistributedDataParallel(
         model.cuda(),
@@ -87,8 +89,10 @@ def main(cfg = None, output_dir = None) -> None:
         ] + [
             WandbMaxSaver('MeanIoU/val')
         ])
-
-    wandb.finish()
+        
+    dist.barrier()
+    if dist.rank() == 0:
+        wandb.finish()
 
 
 if __name__ == '__main__':
