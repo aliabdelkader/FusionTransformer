@@ -15,8 +15,10 @@ RUN apt-get update && apt-get install -y \
     nano \
     libsparsehash-dev \
     wget \
-    unzip 
-
+    unzip \
+    openmpi-bin \
+    libopenmpi-dev
+    
 ENV HOME=/home/user
 
 # Create a working directory
