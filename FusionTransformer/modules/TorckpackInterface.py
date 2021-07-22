@@ -32,9 +32,8 @@ def main(cfg = None, output_dir = None) -> None:
     print("local rank", dist.local_rank())
     
     if dist.rank() == 0:
-        wandb.login()
         run = wandb.init(project='FusionTransformer', config=cfg, group=cfg["MODEL"]["TYPE"], sync_tensorboard=True)
-        
+
     set_run_dir(output_dir)
 
     configs.update(cfg)
