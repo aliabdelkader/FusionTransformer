@@ -29,7 +29,7 @@ def parse_args():
         nargs=argparse.REMAINDER,
     )
     parser.add_argument(
-        'use_torchpack',
+        '--use_torchpack',
         help='use torchpack for training',
         default=False,
         nargs=argparse.REMAINDER,
