@@ -202,4 +202,4 @@ class WandbMaxSaver(MaxSaver):
                             or (self.extreme == 'max' and value > self.best[1]):
             save_path = os.path.join(self.save_dir, self.name + '.pt')
 
-            wandb.save(save_path, self.trainer.state_dict())
+            wandb.save(save_path)
