@@ -14,10 +14,10 @@ DATASET:
   TRAIN: ("train",)
   VAL: ("val",)
   TEST: ("test",)
-  DEBUG: TRUE
   SemanticKITTISCN:
     preprocess_dir: "/home/user/SemanticKitti/preprocessed"
     semantic_kitti_dir: "/home/user/SemanticKitti"
+    debug: True
 DATALOADER:
   NUM_WORKERS: 1
 OPTIMIZER:
