@@ -27,7 +27,7 @@ _C.DATASET.TRAIN = tuple()
 _C.DATASET.TRAIN = tuple()
 _C.DATASET.VAL = tuple()
 _C.DATASET.TEST = tuple()
-
+_C.DATASET.DEBUG = False
 # # NuScenesSCN
 # _C.DATASET.NuScenesSCN = CN()
 # _C.DATASET.NuScenesSCN.preprocess_dir = ''
