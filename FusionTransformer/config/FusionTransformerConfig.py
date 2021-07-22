@@ -27,7 +27,6 @@ _C.DATASET.TRAIN = tuple()
 _C.DATASET.TRAIN = tuple()
 _C.DATASET.VAL = tuple()
 _C.DATASET.TEST = tuple()
-_C.DATASET.DEBUG = False
 # # NuScenesSCN
 # _C.DATASET.NuScenesSCN = CN()
 # _C.DATASET.NuScenesSCN.preprocess_dir = ''
@@ -85,6 +84,7 @@ _C.DATASET.SemanticKITTISCN.full_scale = 4096
 _C.DATASET.SemanticKITTISCN.image_normalizer = (IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD)
 _C.DATASET.SemanticKITTISCN.image_width = 1226
 _C.DATASET.SemanticKITTISCN.image_height = 370
+_C.DATASET.SemanticKITTISCN.debug = False
 # 3D augmentation
 _C.DATASET.SemanticKITTISCN.augmentation = CN()
 _C.DATASET.SemanticKITTISCN.augmentation.noisy_rot = 0.0

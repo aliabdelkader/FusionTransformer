@@ -31,7 +31,6 @@ def build_dataloader(cfg, mode='train', start_iteration=0, halve_batch_size=Fals
     elif dataset_cfg.TYPE == 'SemanticKITTISCN':
         dataset = SemanticKITTISCN(split=split,
                                 output_orig=not is_train,
-                                debug=dataset_cfg.DEBUG
                                 **dataset_kwargs,
                                 **augmentation)        
     else:
