@@ -6,9 +6,9 @@ MODEL:
   NUM_CLASSES: 20 
   middle_feat_block_number: 5
   late_feat_block_number: 11
-  USE_IMAGE: False
+  USE_IMAGE: True
   USE_LIDAR: True
-  USE_FUSION: False
+  USE_FUSION: True
 DATASET:
   TYPE: "SemanticKITTISCN"
   TRAIN: ("train",)
