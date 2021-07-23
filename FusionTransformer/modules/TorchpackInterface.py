@@ -53,7 +53,7 @@ def main(cfg = None, output_dir = None) -> None:
 
     dataflow = {}
     dataflow["train"] = build_dataloader(cfg, mode='train', use_distributed=True)
-    dataflow["val"] = build_dataloader(cfg, mode='val', use_distributed=True) if cfg.VAL.PERIOD > 0 else None
+    dataflow["val"] = build_dataloader(cfg, mode='val', use_distributed=True)
 
 
     model = build_model(cfg)[0]
