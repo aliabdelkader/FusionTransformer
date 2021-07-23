@@ -45,12 +45,12 @@ class SemanticTorchpackTrainer(Trainer):
         if self.cfg.MODEL.USE_IMAGE:
             feed_dict['img'] = feed_dict['img'].cuda()
 
-        preds = self.model(feed_dict)
+        scores = self.model(feed_dict)
 
         if self.model.training:
-            outputs, targets = self.train_step(preds, feed_dict)
+            outputs, targets = self.train_step(preds=scores, feed_dict=feed_dict)
         else:
-            outputs, targets = self.eval_step(preds, feed_dict)
+            outputs, targets = self.eval_step(preds=scores, feed_dict=feed_dict)
 
         return {'outputs': outputs, 'targets': targets}
 
@@ -82,41 +82,36 @@ class SemanticTorchpackTrainer(Trainer):
             self.summary.add_scalar('loss_3d', loss_3d.item())
             loss_2d.backward()
             loss_3d.backward()
-            outputs = preds['lidar_seg_logit']
 
         elif self.cfg.MODEL.USE_LIDAR:
             loss_3d = F.cross_entropy(preds['lidar_seg_logit'], feed_dict['seg_label'].long(), weight=self.class_weights)
             self.summary.add_scalar('loss_3d', loss_3d.item())
             loss_3d.backward()
-            outputs = preds['lidar_seg_logit']
 
         elif self.cfg.MODEL.USE_IMAGE:
             loss_2d = F.cross_entropy(preds['img_seg_logit'], feed_dict['seg_label'].long(), weight=self.class_weights)
             self.summary.add_scalar('loss_2d', loss_2d.item())
             loss_2d.backward()
-            outputs = preds['img_seg_logit']
 
         targets = feed_dict["seg_label"]
         self.optimizer.step()
         self.scheduler.step()
 
-        return outputs, targets
+        return preds, targets
 
     def eval_step(self, preds, feed_dict):
-        
+        outputs = {}
         if self.cfg.MODEL.USE_FUSION:
-            probs_2d = F.softmax(preds['img_seg_logit'], dim=1)
-            probs_3d = F.softmax(preds['lidar_seg_logit'], dim=1) 
-            preds = (probs_2d + probs_3d).argmax(1)
+            outputs['lidar_seg_logit'] = self.prepare_outputs_for_eval(feed_dict=feed_dict, preds=preds['lidar_seg_logit'].argmax(1))
+            outputs['img_seg_logit'] = self.prepare_outputs_for_eval(feed_dict=feed_dict, preds=preds['img_seg_logit'].argmax(1))
 
         elif self.cfg.MODEL.USE_LIDAR:
-            preds = preds['lidar_seg_logit'].argmax(1)
+            outputs['lidar_seg_logit'] = self.prepare_outputs_for_eval(feed_dict=feed_dict, preds=preds['lidar_seg_logit'].argmax(1))
 
         elif self.cfg.MODEL.USE_IMAGE:
-            preds = preds['img_seg_logit'].argmax(1)
+            outputs['img_seg_logit'] = self.prepare_outputs_for_eval(feed_dict=feed_dict, preds=preds['img_seg_logit'].argmax(1))
 
         targets = self.prepare_targets_for_eval(feed_dict=feed_dict)
-        outputs = self.prepare_outputs_for_eval(feed_dict=feed_dict, preds=preds)
         return outputs, targets
 
     
