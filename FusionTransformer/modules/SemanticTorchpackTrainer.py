@@ -51,8 +51,8 @@ class SemanticTorchpackTrainer(Trainer):
             outputs, targets = self.train_step(preds=scores, feed_dict=feed_dict)
         else:
             outputs, targets = self.eval_step(preds=scores, feed_dict=feed_dict)
-
-        return {'outputs': outputs, 'targets': targets}
+        
+        return {'targets': targets, **outputs}
 
     def train_step(self, preds, feed_dict):
 
