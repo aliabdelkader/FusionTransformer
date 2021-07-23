@@ -130,7 +130,7 @@ class DummyDataset(Dataset):
 
 def preprocess(split_name, root_dir, out_dir, img_width, img_height):
     # pkl_data = []
-    sequences = getattr(splits, split_name)
+    sequences = getattr(splits.regular, split_name)
 
     for seq in sequences:
         dataloader = DataLoader(DummyDataset(root_dir, [seq], img_width, img_height), num_workers=5)

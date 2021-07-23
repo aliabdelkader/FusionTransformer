@@ -60,8 +60,7 @@ class SemanticKITTIBase(Dataset):
     def __init__(self,
                  split,
                  preprocess_dir,
-                #  merge_classes=False,
-                #  pselab_paths=None
+                 debug=False
                  ):
 
         self.split = split
@@ -73,7 +72,11 @@ class SemanticKITTIBase(Dataset):
         print('Load', split)
         
         self.data_paths = []
-        split_sequences = getattr(splits, split[0])
+        if debug:
+            split_sequences = getattr(splits.debug, split[0])
+        else:
+            split_sequences = getattr(splits.regular, split[0])
+
         for seq in split_sequences:
             split_path = Path(self.preprocess_dir) / seq
             self.data_paths.extend(sorted(list(split_path.rglob("*.pkl"))))
@@ -113,12 +116,12 @@ class SemanticKITTISCN(SemanticKITTIBase):
                  color_jitter=None,  # 2D augmentation
                  output_orig=False,
                  image_width=1226,
-                 image_height=370
+                 image_height=370,
+                 debug=False
                  ):
         super().__init__(split,
                          preprocess_dir,
-                        #  merge_classes=merge_classes,
-                        #  pselab_paths=pselab_paths
+                         debug=debug
                          )
 
 

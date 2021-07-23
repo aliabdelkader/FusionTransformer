@@ -8,6 +8,7 @@ import socket
 import warnings
 import torch
 
+from FusionTransformer.modules import TorchpackInterface
 from FusionTransformer.modules.SemanticTrainer import SemanticTrainer
 from FusionTransformer.common.utils.logger import setup_logger
 
@@ -25,6 +26,12 @@ def parse_args():
         'opts',
         help='Modify config options using the command-line',
         default=None,
+        nargs=argparse.REMAINDER,
+    )
+    parser.add_argument(
+        '--use_torchpack',
+        help='use torchpack for training',
+        default=False,
         nargs=argparse.REMAINDER,
     )
     args = parser.parse_args()
@@ -50,6 +57,7 @@ def main():
         if osp.isdir(output_dir):
             warnings.warn('Output directory exists.')
         os.makedirs(output_dir, exist_ok=True)
+        print("output dir",  output_dir)
 
     # run name
     timestamp = time.strftime('%m-%d_%H-%M-%S')
@@ -63,8 +71,11 @@ def main():
     logger.info('Loaded configuration file {:s}'.format(args.config_file))
     logger.info('Running with config:\n{}'.format(cfg))
 
-    trainer = SemanticTrainer(cfg, output_dir, run_name)
-    trainer.train()
+    if args.use_torchpack:
+        TorchpackInterface.main(cfg=cfg, output_dir=output_dir)
+    else:
+        trainer = SemanticTrainer(cfg, output_dir, run_name)
+        trainer.train()
 
 
 if __name__ == '__main__':

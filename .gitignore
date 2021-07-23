@@ -9,3 +9,6 @@ dist/
 
 # Pycharm editor settings
 .idea
+
+# vscode 
+.vscode

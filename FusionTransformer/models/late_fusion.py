@@ -37,6 +37,7 @@ class Net3DSeg(nn.Module):
 class LateFusionTransformer(nn.Module):
     def __init__(self, num_class, dual_head, backbone_3d_kwargs, backbone_2d_kwargs):
         super(LateFusionTransformer, self).__init__()
+        self.dual_head = dual_head
         self.lidar_backbone = Net3DSeg(num_classes=num_class, dual_head=dual_head, backbone_3d_kwargs=backbone_3d_kwargs)
         self.image_backbone = Net2DSeg(
                  num_classes=num_class,
@@ -46,5 +47,13 @@ class LateFusionTransformer(nn.Module):
     def forward(self, data_dict):
         preds_image = self.image_backbone(data_dict["img"], data_dict["img_indices"])
         preds_lidar = self.lidar_backbone(data_dict["lidar"])
-        out = {**preds_image, **preds_lidar}
+        out = {
+            'lidar_seg_logit': preds_lidar['lidar_seg_logit'],
+            'img_seg_logit': preds_image["img_seg_logit"]
+        }
+        if self.dual_head:
+           out.update({
+               'lidar_seg_logit2': preds_lidar['lidar_seg_logit2'],
+               'img_seg_logit2': preds_image["img_seg_logit2"]
+           }) 
         return out

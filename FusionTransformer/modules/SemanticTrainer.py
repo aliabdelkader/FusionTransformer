@@ -1,4 +1,3 @@
-import os
 import os.path as osp
 import time
 
@@ -15,7 +14,6 @@ from FusionTransformer.common.utils.torch_util import set_random_seed
 from FusionTransformer.models.build import build_model
 from FusionTransformer.data.build import build_dataloader
 from FusionTransformer.data.utils.validate import validate
-from FusionTransformer.models.losses import entropy_loss
 from tqdm import tqdm
 import wandb
 
@@ -75,7 +73,7 @@ class SemanticTrainer(object):
         # build data loader
         # Reset the random seed again in case the initialization of models changes the random state.
         set_random_seed(cfg.RNG_SEED)
-        self.train_dataloader = build_dataloader(cfg, mode='train') #, start_iteration=start_iteration)
+        self.train_dataloader = build_dataloader(cfg, mode='train')
         self.val_dataloader = build_dataloader(cfg, mode='val') if cfg.VAL.PERIOD > 0 else None
 
         self.best_metric_name = 'best_{}'.format(cfg.VAL.METRIC)

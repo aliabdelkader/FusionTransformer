@@ -137,4 +137,7 @@ class ImageSeg(nn.Module):
     
     def forward(self, data_dict):
         preds_image = self.image_backbone(data_dict["img"], data_dict["img_indices"])
-        return preds_image
+        out = {
+            'img_seg_logit': preds_image["img_seg_logit"]
+        }
+        return out
