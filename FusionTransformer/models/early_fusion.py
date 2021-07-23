@@ -89,6 +89,7 @@ class Net3DSeg(SPVCNN):
 class EarlyFusionTransformer(nn.Module):
     def __init__(self, num_class, dual_head, backbone_3d_kwargs, backbone_2d_kwargs):
         super(EarlyFusionTransformer, self).__init__()
+        self.dual_head = dual_head
         self.lidar_backbone = Net3DSeg(num_classes=num_class, dual_head=dual_head, backbone_3d_kwargs=backbone_3d_kwargs)
         self.image_backbone = Net2DSeg(
                  num_classes=num_class,
@@ -101,6 +102,14 @@ class EarlyFusionTransformer(nn.Module):
         # image features has to be taken taken from block 0 in img transformer 
         # therefore, then preds_image["img_middle_feats"] are actually img_early_feats
         # img_early_feats = preds_image["img_middle_feats"] if  backbone_2d_kwargs["block_number"][0] = 0
-        preds_lidar = self.lidar_backbone(x=data_dict["lidar"], img_early_feats=preds_image["img_middle_feats"])
-        out = {**preds_image, **preds_lidar}
+        preds_lidar = self.lidar_backbone(x=data_dict["lidar"], img_early_feats=preds_image["img_middle_feats"].detach())
+        out = {
+            'lidar_seg_logit': preds_lidar['lidar_seg_logit'],
+            'img_seg_logit': preds_image["img_seg_logit"]
+        }
+        if self.dual_head:
+           out.update({
+               'lidar_seg_logit2': preds_lidar['lidar_seg_logit2'],
+               'img_seg_logit2': preds_image["img_seg_logit2"]
+           }) 
         return out

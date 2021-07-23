@@ -76,8 +76,12 @@ class SemanticTorchpackTrainer(Trainer):
                                         F.softmax(preds['img_seg_logit'].detach(), dim=1),
                                         reduction='none').sum(1).mean()
 
-                loss_2d += self.cfg.TRAIN.FusionTransformer.lambda_xm * xm_loss_2d
-                loss_3d += self.cfg.TRAIN.FusionTransformer.lambda_xm * xm_loss_3d
+                loss_2d = ( 1 - self.cfg.TRAIN.FusionTransformer.lambda_xm ) * loss_2d + \
+                          ( self.cfg.TRAIN.FusionTransformer.lambda_xm     ) * xm_loss_2d
+
+                loss_3d = ( 1 - self.cfg.TRAIN.FusionTransformer.lambda_xm ) * loss_3d + \
+                          ( self.cfg.TRAIN.FusionTransformer.lambda_xm     ) * xm_loss_3d
+                          
             self.summary.add_scalar('loss_2d', loss_2d.item())
             self.summary.add_scalar('loss_3d', loss_3d.item())
             loss_2d.backward()
