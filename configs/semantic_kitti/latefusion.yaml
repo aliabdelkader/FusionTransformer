@@ -28,7 +28,7 @@ SCHEDULER:
     gamma: 0.1
   MAX_EPOCH: 100
 TRAIN:
-  BATCH_SIZE: 16
+  BATCH_SIZE: 10
   # SUMMARY_PERIOD: 2
   # CHECKPOINT_PERIOD: 5
   # CLASS_WEIGHTS: [1.89090012, 2.0585112, 3.1970535, 3.1111633, 1., 2.93751704, 1.92053733,
@@ -40,6 +40,6 @@ TRAIN:
   FusionTransformer:
     lambda_xm: 0.1
 VAL:
-  BATCH_SIZE: 16
+  BATCH_SIZE: 10
   # PERIOD: 5
 OUTPUT_DIR: "/home/user/logs/@"  #  @ will be replaced with config path, e.g. nuscenes/usa_singapore/FusionTransformer
