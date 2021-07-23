@@ -8,6 +8,8 @@ import wandb
 from torchpack import distributed as dist
 from torchpack.callbacks.callback import Callback
 from torchpack.callbacks import MaxSaver
+from torchpack.utils.logging import logger
+from torchpack.utils import io, fs
 
 __all__ = ['MeanIoU', 'iouEval', 'accEval']
 
@@ -195,11 +197,31 @@ class accEval(InternalEval):
 
 class WandbMaxSaver(MaxSaver):
     def _trigger(self):
+        if self.scalar not in self.trainer.summary:
+            logger.warning(
+                f'`{self.scalar}` has not been added to `trainer.summary`.')
+            return
         step, value = self.trainer.summary[self.scalar][-1]
+
+        if self.step is not None and step <= self.step:
+            logger.warning(
+                f'`{self.scalar}` has not been updated since last trigger.')
+            return
         self.step = step
+
         if self.best is None or (self.extreme == 'min' and value < self.best[1]) \
                              or (self.extreme == 'max' and value > self.best[1]):
             self.best = (step, value)
             save_path = os.path.join(self.save_dir, self.name + '.pt')
-            wandb.save(save_path, self.trainer.state_dict())
+            try:
+                io.save(save_path, self.trainer.state_dict())
+                wandb.save(save_path)
+            except OSError:
+                logger.exception(
+                    f'Error occurred when saving checkpoint "{save_path}".')
+            else:
+                logger.info(f'Checkpoint saved: "{save_path}" ({value:.5g}).')
 
+        if self.best is not None:
+            self.trainer.summary.add_scalar(self.scalar + '/' + self.extreme,
+                                            self.best[1])
