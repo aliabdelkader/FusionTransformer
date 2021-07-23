@@ -71,7 +71,7 @@ class MeanIoU(Callback):
 
         miou = np.mean(ious)
         if hasattr(self, 'trainer') and hasattr(self.trainer, 'summary'):
-            self.trainer.summary.add_scalar(self.name, miou * 100)
+            self.trainer.summary.add_scalar(self.name, miou)
         else:
             print(ious)
             print(miou)           
