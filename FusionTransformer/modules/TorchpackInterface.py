@@ -87,9 +87,10 @@ def main(cfg = None, output_dir = None) -> None:
                 ],
             ) for split in ['val']
         ] + [
+            MaxSaver('MeanIoU/val'),
             WandbMaxSaver('MeanIoU/val')
         ])
-        
+
     dist.barrier()
     if dist.rank() == 0:
         wandb.finish()

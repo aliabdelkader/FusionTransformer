@@ -195,12 +195,11 @@ class accEval(InternalEval):
 
 class WandbMaxSaver(MaxSaver):
     def _trigger(self):
-        _, value = self.trainer.summary[self.scalar][-1]
-
-        super()._trigger()
-
+        step, value = self.trainer.summary[self.scalar][-1]
+        self.step = step
         if self.best is None or (self.extreme == 'min' and value < self.best[1]) \
-                            or (self.extreme == 'max' and value > self.best[1]):
+                             or (self.extreme == 'max' and value > self.best[1]):
+            self.best = (step, value)
             save_path = os.path.join(self.save_dir, self.name + '.pt')
+            wandb.save(save_path, self.trainer.state_dict())
 
-            wandb.save(save_path)
