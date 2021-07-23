@@ -1,18 +1,12 @@
-import argparse
-import random
-import sys
-
-import numpy as np
 import torch
 import torch.backends.cudnn
 import torch.cuda
 from torch import nn
 import torch.utils.data
 from torchpack import distributed as dist
-from torchpack.callbacks import InferenceRunner, MaxSaver
+from torchpack.callbacks import InferenceRunner
 from torchpack.environ import set_run_dir
 from torchpack.utils.config import configs
-from torchpack.utils.logging import logger
 
 from FusionTransformer.data.build import build_dataloader
 from FusionTransformer.models.build import build_model
@@ -22,6 +16,15 @@ from FusionTransformer.modules.TorchpackCallbacks import MeanIoU, iouEval, accEv
 from FusionTransformer.common.utils.torch_util import set_random_seed
 
 import wandb
+
+def create_callbacks(callback_name: str = "", num_classes: int = 1, ignore_label: int = 0, output_tensor: str = ""):
+    return [
+        MeanIoU(name='MeanIoU/'+ callback_name, num_classes=num_classes, ignore_label=ignore_label, output_tensor=output_tensor),
+        iouEval(name='iouEval/'+ callback_name, n_classes=num_classes, ignore=ignore_label, output_tensor=output_tensor),
+        accEval(name='accEval/'+ callback_name, n_classes=num_classes, ignore=ignore_label, output_tensor=output_tensor),
+        WandbMaxSaver('MeanIoU/'+ callback_name)
+    ]
+
 
 def main(cfg = None, output_dir = None) -> None:
     dist.init()
@@ -73,22 +76,24 @@ def main(cfg = None, output_dir = None) -> None:
                                    num_workers=cfg.DATALOADER.NUM_WORKERS,
                                    seed=seed, 
                                    cfg=cfg)
+    call_backs = []
+    if cfg.MODEL.USE_FUSION == True:
+        call_backs += create_callbacks(callback_name= "val/image", num_classes=cfg["MODEL"]["NUM_CLASSES"], ignore_label= 0, output_tensor="img_seg_logit")
+        call_backs += create_callbacks(callback_name= "val/lidar", num_classes=cfg["MODEL"]["NUM_CLASSES"], ignore_label= 0, output_tensor="lidar_seg_logit")
+    elif cfg.MODEL.USE_LIDAR == True:
+        call_backs += create_callbacks(callback_name= "val/lidar", num_classes=cfg["MODEL"]["NUM_CLASSES"], ignore_label= 0, output_tensor="lidar_seg_logit")
+    elif cfg.MODEL.USE_IMAGE == True:
+        call_backs += create_callbacks(callback_name= "val/image", num_classes=cfg["MODEL"]["NUM_CLASSES"], ignore_label= 0, output_tensor="img_seg_logit")
+
     trainer.train_with_defaults(
         dataflow=dataflow['train'],
         num_epochs=cfg.SCHEDULER.MAX_EPOCH,
         callbacks=[
             InferenceRunner(
-                dataflow[split],
-                callbacks=[
-                    MeanIoU(name=f'MeanIoU/{split}', num_classes=cfg["MODEL"]["NUM_CLASSES"], ignore_label=0),
-                    iouEval(name=f'iouEval/{split}', n_classes=cfg["MODEL"]["NUM_CLASSES"], ignore=0),
-                    accEval(name=f'accEval/{split}', n_classes=cfg["MODEL"]["NUM_CLASSES"], ignore=0)
-
-                ],
-            ) for split in ['val']
-        ] + [
-            WandbMaxSaver('MeanIoU/val')
-        ])
+                dataflow['val'],
+                callbacks=call_backs)
+        ]
+    )
 
     dist.barrier()
     if dist.rank() == 0:

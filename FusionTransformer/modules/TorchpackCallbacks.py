@@ -9,7 +9,7 @@ from torchpack import distributed as dist
 from torchpack.callbacks.callback import Callback
 from torchpack.callbacks import MaxSaver
 from torchpack.utils.logging import logger
-from torchpack.utils import io, fs
+from torchpack.utils import io
 
 __all__ = ['MeanIoU', 'iouEval', 'accEval']
 

@@ -1,4 +1,3 @@
-import os
 import os.path as osp
 import time
 
@@ -15,7 +14,6 @@ from FusionTransformer.common.utils.torch_util import set_random_seed
 from FusionTransformer.models.build import build_model
 from FusionTransformer.data.build import build_dataloader
 from FusionTransformer.data.utils.validate import validate
-from FusionTransformer.models.losses import entropy_loss
 from tqdm import tqdm
 import wandb
 
