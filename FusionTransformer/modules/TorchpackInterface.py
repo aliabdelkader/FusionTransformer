@@ -81,17 +81,17 @@ def main(cfg = None, output_dir = None) -> None:
     inference_callbacks = []
     saver_callbacks = []
     if cfg.MODEL.USE_FUSION == True:
-        inference_callbacks += create_callbacks(callback_name="val/image", num_classes=cfg["MODEL"]["NUM_CLASSES"], ignore_label= 0, output_tensor="img_seg_logit")
+        inference_callbacks += create_callbacks(callback_name="val/image", num_classes=cfg["MODEL"]["NUM_CLASSES"], ignore_label= 0, output_tensor="img_seg")
         saver_callbacks += create_saver(callback_name="val/image")
-        inference_callbacks += create_callbacks(callback_name="val/lidar", num_classes=cfg["MODEL"]["NUM_CLASSES"], ignore_label= 0, output_tensor="lidar_seg_logit")
+        inference_callbacks += create_callbacks(callback_name="val/lidar", num_classes=cfg["MODEL"]["NUM_CLASSES"], ignore_label= 0, output_tensor="lidar_seg")
         saver_callbacks += create_saver(callback_name="val/lidar")
 
     elif cfg.MODEL.USE_LIDAR == True:
-        inference_callbacks += create_callbacks(callback_name= "val/lidar", num_classes=cfg["MODEL"]["NUM_CLASSES"], ignore_label= 0, output_tensor="lidar_seg_logit")
+        inference_callbacks += create_callbacks(callback_name= "val/lidar", num_classes=cfg["MODEL"]["NUM_CLASSES"], ignore_label= 0, output_tensor="lidar_seg")
         saver_callbacks += create_saver(callback_name="val/lidar")
     
     elif cfg.MODEL.USE_IMAGE == True:
-        inference_callbacks += create_callbacks(callback_name= "val/image", num_classes=cfg["MODEL"]["NUM_CLASSES"], ignore_label= 0, output_tensor="img_seg_logit")
+        inference_callbacks += create_callbacks(callback_name= "val/image", num_classes=cfg["MODEL"]["NUM_CLASSES"], ignore_label= 0, output_tensor="img_seg")
         saver_callbacks += create_saver(callback_name="val/image")
 
     trainer.train_with_defaults(
