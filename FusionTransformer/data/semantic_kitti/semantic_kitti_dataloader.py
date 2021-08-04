@@ -227,7 +227,7 @@ class SemanticKITTISCN(SemanticKITTIBase):
         voxel_seg_label = seg_label[voxel_valid_idxs]
         voxel_img_indices = img_indices[voxel_valid_idxs]
 
-        sparse_unique_inds, _, sparse_inverse_map = sparse_quantize(voxel_coords, points, voxel_seg_label, return_index=True, return_invs=True)
+        sparse_unique_inds, _, sparse_inverse_map = sparse_quantize(voxel_coords, voxel_feats, voxel_seg_label, return_index=True, return_invs=True)
         # print(type(inverse_map),"inverse map: ", inverse_map.shape, " coords: ", coords.shape, " inds ", inds.shape)
         #import pdb; pdb.set_trace();
         out_dict["coords"] = voxel_coords[sparse_unique_inds]
