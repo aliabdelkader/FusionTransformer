@@ -52,7 +52,7 @@ def build_dataloader(cfg, mode='train', start_iteration=0, halve_batch_size=Fals
             dataset,
             batch_size=batch_size,
             sampler=sampler,
-            num_workers=batch_size,
+            num_workers=cfg.DATALOADER.NUM_WORKERS,
             pin_memory=True,
             collate_fn=collate_fn)
     

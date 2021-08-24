@@ -19,7 +19,7 @@ DATASET:
     semantic_kitti_dir: "/home/user/SemanticKitti"
     debug: True
 DATALOADER:
-  NUM_WORKERS: 1
+  NUM_WORKERS: 0
 OPTIMIZER:
   TYPE: "Adam"
   BASE_LR: 0.001
