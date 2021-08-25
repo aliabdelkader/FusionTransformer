@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-from FusionTransformer.models.transformers import SpatialTransformer, ScaleUpModule, image_2d_transformer
+from FusionTransformer.models.transformers import SpatialTransformer, ScaleUpModule, image_2d_distilled_transformer
 import timm
 from typing import Dict
 
@@ -30,7 +30,7 @@ class Net2DSeg(nn.Module):
         self.hidden_channels = 768
 
         # create vision transformer
-        self.backbone = timm.create_model("image_2d_transformer", pretrained=True)
+        self.backbone = timm.create_model("image_2d_distilled_transformer", pretrained=True, remove_tokens_outputs=True)
         self.backbone.reset_classifier(0, '')
 
         # vision transformer blocks to select the output of
@@ -79,8 +79,8 @@ class Net2DSeg(nn.Module):
 
         x = backbone_output[block_id]
 
-        # remove class token features
-        x = x[:, 1: , :]
+        # # remove class token features
+        # x = x[:, 1: , :]
 
         # reshape so that deconvolution can be performed
         x = x.transpose(1, 2).reshape(B, EMBED_DIM, 384//16, 384//16)

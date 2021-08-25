@@ -9,8 +9,9 @@ from timm.models.registry import register_model
 from copy import deepcopy
 
 class Image2DTransformer(VisionTransformer):
-    def __init__(self, **kwargs):
+    def __init__(self, remove_tokens_outputs=False, **kwargs):
       super(Image2DTransformer, self).__init__(**kwargs)
+      self.remove_tokens_outputs = remove_tokens_outputs
 
     def forward_blocks(self, x: torch.Tensor) -> Dict[str, torch.Tensor]:
         """
@@ -34,7 +35,13 @@ class Image2DTransformer(VisionTransformer):
         outputs = dict()
         for i, block in enumerate(self.blocks):
             x = block(x)
-            outputs[str(i)] = x
+            if self.remove_tokens_outputs:
+                if self.dist_token is None:
+                    outputs[str(i)] = x[:, 1:, :] # remove class token output
+                else:
+                    outputs[str(i)] = x[:, 2:, :] # remove class and dist tokens outputs
+            else:
+                outputs[str(i)] = x
         return outputs
 
 
@@ -72,7 +79,7 @@ def _create_transformer_2d(variant, pretrained=False, default_cfg=None, **kwargs
 @register_model
 def image_2d_transformer(pretrained=False, **kwargs):
     """
-    copied from timm 
+    modified copy from timm 
     DeiT base model @ 384x384 from paper (https://arxiv.org/abs/2012.12877).
     ImageNet-1k weights from https://github.com/facebookresearch/deit.
     """
@@ -80,6 +87,17 @@ def image_2d_transformer(pretrained=False, **kwargs):
     model = _create_transformer_2d('vit_deit_base_patch16_384', pretrained=pretrained, **model_kwargs)
     return model
 
+@register_model
+def image_2d_distilled_transformer(pretrained=False, **kwargs):
+    """ 
+    modified copy from timm 
+    DeiT-base distilled model @ 384x384 from paper (https://arxiv.org/abs/2012.12877).
+    ImageNet-1k weights from https://github.com/facebookresearch/deit.
+    """
+    model_kwargs = dict(patch_size=16, embed_dim=768, depth=12, num_heads=12, **kwargs)
+    model = _create_transformer_2d(
+        'vit_deit_base_distilled_patch16_384', pretrained=pretrained, distilled=True, **model_kwargs)
+    return model
 
 class SpatialTransformer(nn.Module):
     def __init__(self, in_channels):

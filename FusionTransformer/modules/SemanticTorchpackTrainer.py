@@ -112,51 +112,6 @@ class SemanticTorchpackTrainer(Trainer):
         self.scheduler.step()
 
         return preds, targets
-        # segmentation loss: cross entropy
-        # if self.cfg.MODEL.USE_FUSION:
-        #     loss_3d = F.cross_entropy(preds['lidar_seg_logit'], feed_dict['seg_label'].long(), weight=self.class_weights)
-        #     loss_2d = F.cross_entropy(preds['img_seg_logit'], feed_dict['seg_label'].long(), weight=self.class_weights)
-
-
-        #     if self.cfg.TRAIN.FusionTransformer.lambda_xm > 0:
-        #         # cross-modal loss: KL divergence
-        #         seg_logit_2d = preds['img_seg_logit2'] if self.cfg.MODEL.DUAL_HEAD else preds['img_seg_logit']
-        #         seg_logit_3d = preds['lidar_seg_logit2'] if self.cfg.MODEL.DUAL_HEAD else preds['lidar_seg_logit']
-
-        #         xm_loss_2d = F.kl_div(F.log_softmax(seg_logit_2d, dim=1),
-        #                                 F.softmax(preds['lidar_seg_logit'].detach(), dim=1),
-        #                                 reduction='none').sum(1).mean()
-
-        #         xm_loss_3d = F.kl_div(F.log_softmax(seg_logit_3d, dim=1),
-        #                                 F.softmax(preds['img_seg_logit'].detach(), dim=1),
-        #                                 reduction='none').sum(1).mean()
-
-        #         loss_2d = ( 1 - self.cfg.TRAIN.FusionTransformer.lambda_xm ) * loss_2d + \
-        #                   ( self.cfg.TRAIN.FusionTransformer.lambda_xm     ) * xm_loss_2d
-
-        #         loss_3d = ( 1 - self.cfg.TRAIN.FusionTransformer.lambda_xm ) * loss_3d + \
-        #                   ( self.cfg.TRAIN.FusionTransformer.lambda_xm     ) * xm_loss_3d
-                          
-        #     self.summary.add_scalar('train/loss_2d', loss_2d.item())
-        #     self.summary.add_scalar('train/loss_3d', loss_3d.item())
-        #     loss_2d.backward()
-        #     loss_3d.backward()
-
-        # elif self.cfg.MODEL.USE_LIDAR:
-        #     loss_3d = F.cross_entropy(preds['lidar_seg_logit'], feed_dict['seg_label'].long(), weight=self.class_weights)
-        #     self.summary.add_scalar('train/loss_3d', loss_3d.item())
-        #     loss_3d.backward()
-
-        # elif self.cfg.MODEL.USE_IMAGE:
-        #     loss_2d = F.cross_entropy(preds['img_seg_logit'], feed_dict['seg_label'].long(), weight=self.class_weights)
-        #     self.summary.add_scalar('train/loss_2d', loss_2d.item())
-        #     loss_2d.backward()
-
-        # targets = feed_dict["seg_label"]
-        # self.optimizer.step()
-        # self.scheduler.step()
-
-        # return preds, targets
 
     def eval_step(self, preds, feed_dict):
         outputs = {}
