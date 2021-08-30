@@ -23,6 +23,7 @@ class SemanticTorchpackTrainer(Trainer):
         self.seed = seed
         self.epoch_num = 1
         self.cfg = cfg
+        self.loss = dict()
         if cfg.TRAIN.CLASS_WEIGHTS:
             self.class_weights = torch.tensor(cfg.TRAIN.CLASS_WEIGHTS).cuda()
         else:
@@ -33,6 +34,10 @@ class SemanticTorchpackTrainer(Trainer):
         self.dataflow.sampler.set_epoch(self.epoch_num - 1)
         self.dataflow.worker_init_fn = lambda worker_id: np.random.seed(
             self.seed + (self.epoch_num - 1) * self.num_workers + worker_id)
+
+        # init loss to zero
+        for k, v in self.loss.items():
+            self.loss[k] = 0
 
     def _run_step(self, feed_dict: Dict[str, Any]) -> Dict[str, Any]:
 
@@ -100,11 +105,19 @@ class SemanticTorchpackTrainer(Trainer):
         loss_3d, loss_2d = self.calc_loss(preds, feed_dict)
 
         if loss_3d is not None:
-            self.summary.add_scalar('train/loss_3d', loss_3d.item())
+            if 'train/loss_3d' in self.loss:
+                self.loss['train/loss_3d'] += loss_3d.item()
+            else:
+                self.loss['train/loss_3d'] = loss_3d.item()
+
             loss_3d.backward()
         
         if loss_2d is not None:
-            self.summary.add_scalar('train/loss_2d', loss_2d.item())
+            if 'train/loss_2d' in self.loss:
+                self.loss['train/loss_2d'] += loss_2d.item()
+            else:
+                self.loss['train/loss_2d'] = loss_2d.item()
+            #self.summary.add_scalar('train/loss_2d', loss_2d.item())
             loss_2d.backward()
         
         targets = feed_dict["seg_label"]
@@ -118,11 +131,21 @@ class SemanticTorchpackTrainer(Trainer):
 
         loss_3d, loss_2d = self.calc_loss(preds, feed_dict)
 
+        # if loss_3d is not None:
+        #     self.summary.add_scalar('eval/loss_3d', loss_3d.item())
+
         if loss_3d is not None:
-            self.summary.add_scalar('eval/loss_3d', loss_3d.item())
-        
+            if 'eval/loss_3d' in self.loss:
+                self.loss['eval/loss_3d'] += loss_3d.item()
+            else:
+                self.loss['eval/loss_3d'] = loss_3d.item() 
+
         if loss_2d is not None:
-            self.summary.add_scalar('eval/loss_2d', loss_2d.item())
+            #self.summary.add_scalar('eval/loss_2d', loss_2d.item())
+            if 'eval/loss_2d' in self.loss:
+                self.loss['eval/loss_2d'] += loss_2d.item()
+            else:
+                self.loss['eval/loss_2d'] = loss_2d.item()
 
         
         if self.cfg.MODEL.USE_FUSION:
@@ -179,6 +202,8 @@ class SemanticTorchpackTrainer(Trainer):
         return outputs
 
     def _after_epoch(self) -> None:
+        for k, v in self.loss.items():
+             self.summary.add_scalar(k, np.mean(v))
         self.model.eval()
 
     def _state_dict(self) -> Dict[str, Any]:
