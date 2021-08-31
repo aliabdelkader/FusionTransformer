@@ -1,14 +1,13 @@
 AUTO_RESUME: TRUE
 RESUME_STATES: TRUE
 MODEL:
-  TYPE: "MiddleFusionTransformer"
-  DUAL_HEAD: True
+  TYPE: "ImageSeg"
+  DUAL_HEAD: False
   NUM_CLASSES: 20 
-  middle_feat_block_number: 5
   late_feat_block_number: 11
   USE_IMAGE: True
-  USE_LIDAR: True
-  USE_FUSION: True
+  USE_LIDAR: False
+  USE_FUSION: False
 DATASET:
   TYPE: "SemanticKITTISCN"
   TRAIN: ("train",)
