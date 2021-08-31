@@ -6,7 +6,7 @@ import os
 import wandb
 
 from torchpack import distributed as dist
-from torchpack.callbacks.callback import Callback, TFEventWriter
+from torchpack.callbacks.callback import Callback
 from torchpack.callbacks.writers import TFEventWriter
 from typing import List, Optional, Union
 from torchpack.callbacks import MaxSaver
