@@ -202,9 +202,11 @@ class SemanticTorchpackTrainer(Trainer):
         return outputs
 
     def _after_epoch(self) -> None:
+        self.model.eval()
+    
+    def _trigger_epoch(self) -> None:
         for k, v in self.loss.items():
              self.summary.add_scalar(k, np.mean(v))
-        self.model.eval()
 
     def _state_dict(self) -> Dict[str, Any]:
         state_dict = {}
