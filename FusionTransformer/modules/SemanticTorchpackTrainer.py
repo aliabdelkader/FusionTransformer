@@ -121,6 +121,7 @@ class SemanticTorchpackTrainer(Trainer):
             loss_2d.backward()
         
         targets = feed_dict["seg_label"]
+        self.summary.add_scalar("learning rate", self.scheduler.get_last_lr())
         self.optimizer.step()
         self.scheduler.step()
 
