@@ -6,12 +6,14 @@ import os
 import wandb
 
 from torchpack import distributed as dist
-from torchpack.callbacks.callback import Callback
+from torchpack.callbacks.callback import Callback, TFEventWriter
+from torchpack.callbacks.writers import TFEventWriter
+from typing import List, Optional, Union
 from torchpack.callbacks import MaxSaver
 from torchpack.utils.logging import logger
 from torchpack.utils import io
 
-__all__ = ['MeanIoU', 'iouEval', 'accEval']
+__all__ = ['MeanIoU', 'iouEval', 'accEval', 'TFEventWriterEpoch']
 
 class MeanIoU(Callback):
     """
@@ -225,3 +227,16 @@ class WandbMaxSaver(MaxSaver):
         if self.best is not None:
             self.trainer.summary.add_scalar(self.scalar + '/' + self.extreme,
                                             self.best[1])
+
+class TFEventWriterEpoch(TFEventWriter):
+    """
+    Write summaries to TensorFlow event file per epoch
+    """
+    def _add_scalar(self, name: str, scalar: Union[int, float]) -> None:
+        self.writer.add_scalar(name, scalar, self.trainer.epoch_num)
+
+    def _add_image(self, name: str, tensor: np.ndarray) -> None:
+        self.writer.add_image(name, tensor, self.trainer.epoch_num)
+
+    def _after_train(self) -> None:
+        self.writer.close()

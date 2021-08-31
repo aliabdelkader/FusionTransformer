@@ -7,12 +7,13 @@ from torchpack import distributed as dist
 from torchpack.callbacks import InferenceRunner
 from torchpack.environ import set_run_dir
 from torchpack.utils.config import configs
-
+from torchpack.callbacks import (ConsoleWriter, EstimatedTimeLeft,
+                         JSONLWriter, MetaInfoSaver, ProgressBar)
 from FusionTransformer.data.build import build_dataloader
 from FusionTransformer.models.build import build_model
 from FusionTransformer.common.solver.build import build_optimizer, build_scheduler
 from FusionTransformer.modules.SemanticTorchpackTrainer import SemanticTorchpackTrainer
-from FusionTransformer.modules.TorchpackCallbacks import MeanIoU, iouEval, accEval, WandbMaxSaver
+from FusionTransformer.modules.TorchpackCallbacks import MeanIoU, iouEval, accEval, WandbMaxSaver, TFEventWriterEpoch
 from FusionTransformer.common.utils.torch_util import set_random_seed
 
 import wandb
@@ -94,13 +95,17 @@ def main(cfg = None, output_dir = None) -> None:
         inference_callbacks += create_callbacks(callback_name= "val/image", num_classes=cfg["MODEL"]["NUM_CLASSES"], ignore_label= 0, output_tensor="img_seg")
         saver_callbacks += create_saver(callback_name="val/image")
 
-    trainer.train_with_defaults(
+    trainer.train(
         dataflow=dataflow['train'],
         num_epochs=cfg.SCHEDULER.MAX_EPOCH,
         callbacks=[
-            InferenceRunner(
-                dataflow['val'],
-                callbacks=inference_callbacks)
+            InferenceRunner(dataflow['val'], callbacks=inference_callbacks),
+            MetaInfoSaver(),
+            ConsoleWriter(),
+            TFEventWriterEpoch(),
+            JSONLWriter(),
+            ProgressBar(),
+            EstimatedTimeLeft()
         ] + saver_callbacks
     )
 
