@@ -37,7 +37,7 @@ class SemanticTorchpackTrainer(Trainer):
 
         # init loss to zero
         for k, v in self.loss.items():
-            self.loss[k] = 0
+            self.loss[k] = []
 
     def _run_step(self, feed_dict: Dict[str, Any]) -> Dict[str, Any]:
 
@@ -106,17 +106,17 @@ class SemanticTorchpackTrainer(Trainer):
 
         if loss_3d is not None:
             if 'train/loss_3d' in self.loss:
-                self.loss['train/loss_3d'] += loss_3d.item()
+                self.loss['train/loss_3d'].append(loss_3d.item())
             else:
-                self.loss['train/loss_3d'] = loss_3d.item()
+                self.loss['train/loss_3d'] = [loss_3d.item()]
 
             loss_3d.backward()
         
         if loss_2d is not None:
             if 'train/loss_2d' in self.loss:
-                self.loss['train/loss_2d'] += loss_2d.item()
+                self.loss['train/loss_2d'].append(loss_2d.item())
             else:
-                self.loss['train/loss_2d'] = loss_2d.item()
+                self.loss['train/loss_2d'] = [loss_2d.item()]
             #self.summary.add_scalar('train/loss_2d', loss_2d.item())
             loss_2d.backward()
         
@@ -137,16 +137,16 @@ class SemanticTorchpackTrainer(Trainer):
 
         if loss_3d is not None:
             if 'eval/loss_3d' in self.loss:
-                self.loss['eval/loss_3d'] += loss_3d.item()
+                self.loss['eval/loss_3d'].append(loss_3d.item())
             else:
-                self.loss['eval/loss_3d'] = loss_3d.item() 
+                self.loss['eval/loss_3d'] = [loss_3d.item()]
 
         if loss_2d is not None:
             #self.summary.add_scalar('eval/loss_2d', loss_2d.item())
             if 'eval/loss_2d' in self.loss:
-                self.loss['eval/loss_2d'] += loss_2d.item()
+                self.loss['eval/loss_2d'].append(loss_2d.item())
             else:
-                self.loss['eval/loss_2d'] = loss_2d.item()
+                self.loss['eval/loss_2d'] = [loss_2d.item()]
 
         
         if self.cfg.MODEL.USE_FUSION:
