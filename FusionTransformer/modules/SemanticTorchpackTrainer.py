@@ -129,9 +129,7 @@ class SemanticTorchpackTrainer(Trainer):
         
         targets = feed_dict["seg_label"]
         self.summary.add_scalar("learning rate", self.scheduler.get_last_lr()[0])
-        if (self.global_step % 10 == 0):
-            self.summary.add_weights_histogram() 
-            self.summary.add_grads_histogram()
+
 
         self.optimizer.step()
         self.scheduler.step()
@@ -217,6 +215,7 @@ class SemanticTorchpackTrainer(Trainer):
         self.model.eval()
     
     def _trigger_epoch(self) -> None:
+        self.summary.add_weights_histogram()
         for k, v in self.loss.items():
              self.summary.add_scalar(k, np.mean(v))
 
