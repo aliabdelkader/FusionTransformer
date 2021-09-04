@@ -1,7 +1,6 @@
 from typing import Any, Dict
 
 import numpy as np
-from tensorboard.compat.proto.summary_pb2 import Summary
 import torch
 import os
 import wandb
@@ -9,7 +8,7 @@ import wandb
 from torchpack import distributed as dist
 from torchpack.callbacks.callback import Callback
 from torchpack.callbacks.writers import TFEventWriter
-from torchpack.train.summary import summary
+from torchpack.train.summary import Summary
 from typing import List, Optional, Union
 from torchpack.callbacks import MaxSaver
 from torchpack.utils.logging import logger
