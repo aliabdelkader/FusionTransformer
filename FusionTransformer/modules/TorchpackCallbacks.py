@@ -1,6 +1,7 @@
 from typing import Any, Dict
 
 import numpy as np
+from tensorboard.compat.proto.summary_pb2 import Summary
 import torch
 import os
 import wandb
@@ -8,12 +9,13 @@ import wandb
 from torchpack import distributed as dist
 from torchpack.callbacks.callback import Callback
 from torchpack.callbacks.writers import TFEventWriter
+from torchpack.train.summary import summary
 from typing import List, Optional, Union
 from torchpack.callbacks import MaxSaver
 from torchpack.utils.logging import logger
 from torchpack.utils import io
 
-__all__ = ['MeanIoU', 'iouEval', 'accEval', 'TFEventWriterEpoch']
+__all__ = ['MeanIoU', 'iouEval', 'accEval', 'TFEventWriterExtended', 'SummaryExtended']
 
 class MeanIoU(Callback):
     """
@@ -228,7 +230,7 @@ class WandbMaxSaver(MaxSaver):
             self.trainer.summary.add_scalar(self.scalar + '/' + self.extreme,
                                             self.best[1])
 
-class TFEventWriterEpoch(TFEventWriter):
+class TFEventWriterExtended(TFEventWriter):
     """
     Write summaries to TensorFlow event file per epoch
     """
@@ -237,6 +239,17 @@ class TFEventWriterEpoch(TFEventWriter):
 
     def _add_image(self, name: str, tensor: np.ndarray) -> None:
         self.writer.add_image(name, tensor, self.trainer.epoch_num)
+    
+    def add_weights_histogram(self) -> None:
+        for name, weight in self.trainer.model.named_parameters():
+            self.writer.add_histogram(name,weight, self.trainer.epoch_num)
+            self.writer.add_histogram(f'{name}.grad',weight.grad, self.trainer.epoch_num)
 
     def _after_train(self) -> None:
         self.writer.close()
+
+class SummaryExtended(Summary):
+    def add_weights_histogram(self):
+        for writer in self.writers:
+            if isinstance(writer, TFEventWriterExtended):
+                writer.add_weights_histogram()

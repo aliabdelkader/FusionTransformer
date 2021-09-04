@@ -13,7 +13,7 @@ from FusionTransformer.data.build import build_dataloader
 from FusionTransformer.models.build import build_model
 from FusionTransformer.common.solver.build import build_optimizer, build_scheduler
 from FusionTransformer.modules.SemanticTorchpackTrainer import SemanticTorchpackTrainer
-from FusionTransformer.modules.TorchpackCallbacks import MeanIoU, iouEval, accEval, WandbMaxSaver, TFEventWriterEpoch
+from FusionTransformer.modules.TorchpackCallbacks import MeanIoU, iouEval, accEval, WandbMaxSaver, TFEventWriterExtended
 from FusionTransformer.common.utils.torch_util import set_random_seed
 
 import wandb
@@ -102,7 +102,7 @@ def main(cfg = None, output_dir = None) -> None:
             InferenceRunner(dataflow['val'], callbacks=inference_callbacks),
             MetaInfoSaver(),
             ConsoleWriter(),
-            TFEventWriterEpoch(),
+            TFEventWriterExtended(),
             JSONLWriter(),
             ProgressBar(),
             EstimatedTimeLeft()

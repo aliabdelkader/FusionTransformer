@@ -7,6 +7,7 @@ from torchpack.train import Trainer
 from torchpack.utils.typing import Optimizer, Scheduler
 import torch.nn.functional as F
 from FusionTransformer.data.utils.validate import map_sparse_to_org
+from FusionTransformer.modules.TorchpackCallbacks import SummaryExtended
 __all__ = ['SemanticTorchpackTrainer']
 
 
@@ -28,6 +29,12 @@ class SemanticTorchpackTrainer(Trainer):
             self.class_weights = torch.tensor(cfg.TRAIN.CLASS_WEIGHTS).cuda()
         else:
             self.class_weights = None
+    
+    def before_train(self) -> None:
+        # overide the default summary object in the trainer
+        self.summary = SummaryExtended()
+        self.summary.set_trainer(self)
+        return super().before_train()
 
     def _before_epoch(self) -> None:
         self.model.train()
@@ -208,6 +215,7 @@ class SemanticTorchpackTrainer(Trainer):
     def _trigger_epoch(self) -> None:
         for k, v in self.loss.items():
              self.summary.add_scalar(k, np.mean(v))
+        self.summary.add_weights_histogram()
 
     def _state_dict(self) -> Dict[str, Any]:
         state_dict = {}
