@@ -241,14 +241,16 @@ class TFEventWriterExtended(TFEventWriter):
         self.writer.add_image(name, tensor, self.trainer.epoch_num)
     
     def add_weights_histogram(self) -> None:
-        for name, weight in self.trainer.model.named_parameters():
-            if weight is not None:
-                self.writer.add_histogram(f"weights/{name}", weight, self.trainer.epoch_num, max_bins=self.WANDB_MAX_HIST_BIN)
+        if self.enabled:
+            for name, weight in self.trainer.model.named_parameters():
+                if weight is not None:
+                    self.writer.add_histogram(f"weights/{name}", weight, self.trainer.epoch_num, max_bins=self.WANDB_MAX_HIST_BIN)
     
     def add_grads_histogram(self) -> None:
-        for name, weight in self.trainer.model.named_parameters():
-            if weight.grad is not None:
-                self.writer.add_histogram(f'grads/{name}.grad',weight.grad, self.trainer.epoch_num, max_bins=self.WANDB_MAX_HIST_BIN)
+        if self.enabled:
+            for name, weight in self.trainer.model.named_parameters():
+                if weight.grad is not None:
+                    self.writer.add_histogram(f'grads/{name}.grad',weight.grad, self.trainer.epoch_num, max_bins=self.WANDB_MAX_HIST_BIN)
 
     def _after_train(self) -> None:
         self.writer.close()
