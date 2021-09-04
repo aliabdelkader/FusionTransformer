@@ -32,8 +32,8 @@ class SemanticTorchpackTrainer(Trainer):
     def _before_epoch(self) -> None:
         self.model.train()
         self.dataflow.sampler.set_epoch(self.epoch_num - 1)
-        self.dataflow.worker_init_fn = lambda worker_id: np.random.seed(
-            self.seed + (self.epoch_num - 1) * self.num_workers + worker_id)
+        # self.dataflow.worker_init_fn = lambda worker_id: np.random.seed(
+        #     self.seed + (self.epoch_num - 1) * self.num_workers + worker_id)
 
         # init loss to zero
         for k, v in self.loss.items():
