@@ -233,6 +233,7 @@ class TFEventWriterExtended(TFEventWriter):
     """
     Write summaries to TensorFlow event file per epoch
     """
+    WANDB_MAX_HIST_BIN = 512
     def _add_scalar(self, name: str, scalar: Union[int, float]) -> None:
         self.writer.add_scalar(name, scalar, self.trainer.epoch_num)
 
@@ -241,8 +242,13 @@ class TFEventWriterExtended(TFEventWriter):
     
     def add_weights_histogram(self) -> None:
         for name, weight in self.trainer.model.named_parameters():
-            self.writer.add_histogram(name,weight, self.trainer.epoch_num)
-            self.writer.add_histogram(f'{name}.grad',weight.grad, self.trainer.epoch_num)
+            if weight is not None:
+                self.writer.add_histogram(f"weights/{name}", weight, self.trainer.global_step, max_bins=self.WANDB_MAX_HIST_BIN)
+    
+    def add_grads_histogram(self) -> None:
+        for name, weight in self.trainer.model.named_parameters():
+            if weight.grad is not None:
+                self.writer.add_histogram(f'grads/{name}.grad',weight.grad, self.trainer.global_step, max_bins=self.WANDB_MAX_HIST_BIN)
 
     def _after_train(self) -> None:
         self.writer.close()
@@ -252,3 +258,8 @@ class SummaryExtended(Summary):
         for writer in self.writers:
             if isinstance(writer, TFEventWriterExtended):
                 writer.add_weights_histogram()
+
+    def add_grads_histogram(self):
+        for writer in self.writers:
+            if isinstance(writer, TFEventWriterExtended):
+                writer.add_grads_histogram()

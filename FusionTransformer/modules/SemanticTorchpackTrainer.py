@@ -110,7 +110,7 @@ class SemanticTorchpackTrainer(Trainer):
 
         self.optimizer.zero_grad()
         loss_3d, loss_2d = self.calc_loss(preds, feed_dict)
-
+        
         if loss_3d is not None:
             if 'train/loss_3d' in self.loss:
                 self.loss['train/loss_3d'].append(loss_3d.item())
@@ -129,6 +129,10 @@ class SemanticTorchpackTrainer(Trainer):
         
         targets = feed_dict["seg_label"]
         self.summary.add_scalar("learning rate", self.scheduler.get_last_lr()[0])
+        if (self.global_step % 10 == 0):
+            self.summary.add_weights_histogram() 
+            self.summary.add_grads_histogram()
+
         self.optimizer.step()
         self.scheduler.step()
 
@@ -215,7 +219,6 @@ class SemanticTorchpackTrainer(Trainer):
     def _trigger_epoch(self) -> None:
         for k, v in self.loss.items():
              self.summary.add_scalar(k, np.mean(v))
-        self.summary.add_weights_histogram()
 
     def _state_dict(self) -> Dict[str, Any]:
         state_dict = {}
