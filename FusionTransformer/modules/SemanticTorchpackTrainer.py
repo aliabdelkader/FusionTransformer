@@ -129,7 +129,7 @@ class SemanticTorchpackTrainer(Trainer):
         
         targets = feed_dict["seg_label"]
         self.summary.add_scalar("learning rate", self.scheduler.get_last_lr()[0])
-        if self.epoch_num >= 4:
+        if (self.epoch_num == 6) or (self.epoch_num == 7):
             self.summary.add_weights_histogram()
             self.summary.add_grads_histogram()
         self.optimizer.step()

@@ -244,13 +244,13 @@ class TFEventWriterExtended(TFEventWriter):
         if self.enabled:
             for name, weight in self.trainer.model.named_parameters():
                 if weight is not None:
-                    self.writer.add_histogram(f"weights/{name}", weight, self.trainer.global_step, max_bins=self.WANDB_MAX_HIST_BIN)
+                    self.writer.add_histogram(f"{name}/weight", weight, self.trainer.global_step, max_bins=self.WANDB_MAX_HIST_BIN)
     
     def add_grads_histogram(self) -> None:
         if self.enabled:
             for name, weight in self.trainer.model.named_parameters():
                 if weight.grad is not None:
-                    self.writer.add_histogram(f'grads/{name}.grad',weight.grad, self.trainer.global_step, max_bins=self.WANDB_MAX_HIST_BIN)
+                    self.writer.add_histogram(f'{name}/grad',weight.grad, self.trainer.global_step, max_bins=self.WANDB_MAX_HIST_BIN)
 
     def _after_train(self) -> None:
         self.writer.close()
