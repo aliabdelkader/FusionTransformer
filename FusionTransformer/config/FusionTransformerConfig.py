@@ -93,7 +93,7 @@ _C.DATASET.SemanticKITTISCN.augmentation.rot_z = 0.0  # 2 * pi
 _C.DATASET.SemanticKITTISCN.augmentation.transl = False
 # 2D augmentation
 _C.DATASET.SemanticKITTISCN.augmentation.bottom_crop = None
-_C.DATASET.SemanticKITTISCN.augmentation.fliplr = 0.0
+_C.DATASET.SemanticKITTISCN.augmentation.fliplr = None
 _C.DATASET.SemanticKITTISCN.augmentation.color_jitter = None
 # ---------------------------------------------------------------------------- #
 # Model 3D

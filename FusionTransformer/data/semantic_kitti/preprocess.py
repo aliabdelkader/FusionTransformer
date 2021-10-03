@@ -95,6 +95,7 @@ class DummyDataset(Dataset):
         scan = np.fromfile(data_dict['lidar_path'], dtype=np.float32)
         scan = scan.reshape((-1, 4))
         points = scan[:, :3]
+        intensity = scan[:, -1]
         label = np.fromfile(data_dict['label_path'], dtype=np.uint32)
         label = label.reshape((-1))
         label = label & 0xFFFF  # get lower half for semantics
@@ -117,7 +118,7 @@ class DummyDataset(Dataset):
 
         data_dict['seg_label'] = label[keep_idx].astype(np.int16)
         data_dict['points'] = points[keep_idx]
-        data_dict['feats'] = scan[keep_idx]
+        data_dict['feats'] = intensity[keep_idx]
 
         data_dict['points_img'] = img_points[keep_idx_img_pts]
         data_dict['image_size'] = np.array(image_size)

@@ -165,7 +165,7 @@ class SemanticKITTISCN(SemanticKITTIBase):
         img_path = osp.join(self.semantic_kitti_dir, data_dict['camera_path'])
         image = Image.open(img_path).crop((0, 0, self.image_width, self.image_height))
 
-        if self.bottom_crop:
+        if self.bottom_crop is not None:
             # self.bottom_crop is a tuple (crop_width, crop_height)
             left = int(np.random.rand() * (image.size[0] + 1 - self.bottom_crop[0]))
             right = left + self.bottom_crop[0]
@@ -195,9 +195,9 @@ class SemanticKITTISCN(SemanticKITTIBase):
         if self.color_jitter is not None:
             image = self.color_jitter(image)
         # PIL to numpy
-        image = np.array(image, dtype=np.float32, copy=False) / 255.
+        image = np.array(image, dtype=np.float32, copy=False)
         # 2D augmentation
-        if np.random.rand() < self.fliplr:
+        if (self.fliplr is not None) and (np.random.rand() < self.fliplr):
             image = np.ascontiguousarray(np.fliplr(image))
             img_indices[:, 1] = image.shape[1] - 1 - img_indices[:, 1]
 
