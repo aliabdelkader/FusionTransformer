@@ -79,6 +79,7 @@ class SemanticKITTIBase(Dataset):
 
         for seq in split_sequences:
             split_path = Path(self.preprocess_dir) / seq
+            print(split_path)
             self.data_paths.extend(sorted(list(split_path.rglob("*.pkl"))))
         # for curr_split in split:
         #     with open(osp.join(self.preprocess_dir, curr_split + '.pkl'), 'rb') as f:
