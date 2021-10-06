@@ -73,7 +73,7 @@ _C.DATASET.TEST = tuple()
 # _C.DATASET.SemanticKITTISCN.augmentation.color_jitter = (0.4, 0.4, 0.4)
 
 # SemanticKITTISCN
-_C.DATASET.DebugSemanticKITTISCN = CN()
+_C.DATASET.SemanticKITTISCN = CN()
 _C.DATASET.SemanticKITTISCN.preprocess_dir = ''
 _C.DATASET.SemanticKITTISCN.semantic_kitti_dir = ''
 # _C.DATASET.SemanticKITTISCN.merge_classes = True
