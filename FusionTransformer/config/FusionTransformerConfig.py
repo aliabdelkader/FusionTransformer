@@ -102,7 +102,7 @@ _C.DATASET.DebugSemanticKITTISCN.preprocess_dir = ''
 _C.DATASET.DebugSemanticKITTISCN.semantic_kitti_dir = ''
 # 3D
 _C.DATASET.DebugSemanticKITTISCN.scale = 20
-_C.DATASET.DebugSemanticKITTISCN.full_sDebugcale = 4096
+_C.DATASET.DebugSemanticKITTISCN.full_scale = 4096
 # 2D
 _C.DATASET.DebugSemanticKITTISCN.image_normalizer = (IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD)
 _C.DATASET.DebugSemanticKITTISCN.image_width = 1226
