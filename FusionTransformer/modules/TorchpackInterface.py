@@ -29,7 +29,7 @@ def create_saver(callback_name: str = ""):
     return [WandbMaxSaver('MeanIoU/'+ callback_name)]
 
 
-def main(cfg = None, output_dir = None) -> None:
+def main(cfg = None, output_dir = None, run_name = "") -> None:
     dist.init()
 
     torch.backends.cudnn.benchmark = True
@@ -38,7 +38,7 @@ def main(cfg = None, output_dir = None) -> None:
     print("local rank", dist.local_rank())
     
     if dist.rank() == 0:
-        run = wandb.init(project='FusionTransformer', config=cfg, group=cfg["MODEL"]["TYPE"], sync_tensorboard=True)
+        run = wandb.init(project='FusionTransformer', name=run_name, config=cfg, group=cfg["MODEL"]["TYPE"], sync_tensorboard=True)
 
     set_run_dir(output_dir)
 
