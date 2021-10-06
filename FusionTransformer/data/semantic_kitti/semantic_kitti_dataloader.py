@@ -112,8 +112,8 @@ class SemanticKITTISCN(SemanticKITTIBase):
                  flip_y=0.0,  # 3D augmentation
                  rot_z=0.0,  # 3D augmentation
                  transl=False,  # 3D augmentation
-                 bottom_crop=tuple(),  # 2D augmentation (also effects 3D)
-                 fliplr=0.0,  # 2D augmentation
+                 bottom_crop=None,  # 2D augmentation (also effects 3D)
+                 fliplr=None,  # 2D augmentation
                  color_jitter=None,  # 2D augmentation
                  output_orig=False,
                  image_width=1226,
