@@ -146,6 +146,7 @@ class DebugSemanticKITTISCN(SemanticKITTIBase):
         self.image_width = image_width
         self.image_height = image_height
         self.data_paths = self.data_paths[:2]
+        print("data paths", self.data_paths)
         
     def __getitem__(self, index):
         data_path = str(self.data_paths[index])
