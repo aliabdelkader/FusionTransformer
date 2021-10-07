@@ -145,7 +145,7 @@ class DebugSemanticKITTISCN(SemanticKITTIBase):
         self.color_jitter = T.ColorJitter(*color_jitter) if color_jitter else None
         self.image_width = image_width
         self.image_height = image_height
-        self.data_paths = self.data_paths[:2]
+        self.data_paths = self.data_paths
         print("data paths", self.data_paths)
         
     def __getitem__(self, index):
@@ -211,7 +211,7 @@ class DebugSemanticKITTISCN(SemanticKITTIBase):
             image = (image - mean) / std
 
         out_dict['img'] = np.moveaxis(image, -1, 0) # shape C, H, W
-
+        out_dict['img'] = np.zeros_like(out_dict["img"])
         # 3D data augmentation and scaling from points to voxel indices
         # Kitti lidar coordinates: x (front), y (left), z (up)
         coords = augment_and_scale_3d(points, self.scale, self.full_scale, noisy_rot=self.noisy_rot,
@@ -234,6 +234,7 @@ class DebugSemanticKITTISCN(SemanticKITTIBase):
         #import pdb; pdb.set_trace();
         out_dict["coords"] = voxel_coords[sparse_unique_inds]
         out_dict['feats'] = voxel_feats[sparse_unique_inds]
+        out_dict['feats'] = np.zeros_like(out_dict["feats"])
         out_dict['seg_label'] = voxel_seg_label[sparse_unique_inds]
         out_dict['img_indices'] = voxel_img_indices[sparse_unique_inds]
         # out_dict["lidar"] = SparseTensor(coords=coords[inds], feats=feats[inds])
