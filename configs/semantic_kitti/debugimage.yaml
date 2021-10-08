@@ -40,7 +40,7 @@ TRAIN:
   #                 1.37436805, 1.4891881,  1.03083152, 2.25629999, 1.51838281, 2.51986332,
   #                 3.08564901]
   FusionTransformer:
-    lambda_xm: 0.1
+    lambda_xm: 0.0
 VAL:
   BATCH_SIZE: 10
   # PERIOD: 5
