@@ -123,6 +123,7 @@ class DebugSemanticKITTISCN(SemanticKITTIBase):
                          preprocess_dir,
                          debug=debug
                          )
+        print("*************** Debug Dataloader ****************************")
 
 
         self.semantic_kitti_dir = semantic_kitti_dir

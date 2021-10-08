@@ -16,7 +16,7 @@ DATASET:
   DebugSemanticKITTISCN:
     preprocess_dir: "/home/user/SemanticKitti/DebugDataset/preprocessed"
     semantic_kitti_dir: "/home/user/SemanticKitti/DebugDataset"
-    debug: True
+    debug: False
 DATALOADER:
   NUM_WORKERS: 0
 OPTIMIZER:
