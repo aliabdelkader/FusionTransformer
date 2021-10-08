@@ -72,7 +72,7 @@ def main():
     logger.info('Running with config:\n{}'.format(cfg))
 
     if args.use_torchpack:
-        TorchpackInterface.main(cfg=cfg, output_dir=output_dir)
+        TorchpackInterface.main(cfg=cfg, output_dir=output_dir, run_name=run_name)
     else:
         trainer = SemanticTrainer(cfg, output_dir, run_name)
         trainer.train()
