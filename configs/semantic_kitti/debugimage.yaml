@@ -2,6 +2,7 @@
 # RESUME_STATES: TRUE
 MODEL:
   TYPE: "ImageSeg"
+  SAVE: False
   DUAL_HEAD: False
   NUM_CLASSES: 20 
   late_feat_block_number: 11

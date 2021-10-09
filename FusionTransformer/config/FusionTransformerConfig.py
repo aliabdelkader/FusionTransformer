@@ -123,6 +123,7 @@ _C.DATASET.DebugSemanticKITTISCN.augmentation.color_jitter = None
 # ---------------------------------------------------------------------------- #
 _C.MODEL = CN()
 _C.MODEL.TYPE = ''
+_C.MODEL.SAVE = True
 _C.MODEL.CKPT_PATH = ''
 _C.MODEL.NUM_CLASSES = 20
 _C.MODEL.DUAL_HEAD = False

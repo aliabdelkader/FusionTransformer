@@ -80,21 +80,28 @@ def main(cfg = None, output_dir = None, run_name = "") -> None:
                                    seed=seed, 
                                    cfg=cfg)
     inference_callbacks = []
-    saver_callbacks = []
-    if cfg.MODEL.USE_FUSION == True:
+    if cfg.MODEL.USE_FUSION:
         inference_callbacks += create_callbacks(callback_name="val/image", num_classes=cfg["MODEL"]["NUM_CLASSES"], ignore_label= 0, output_tensor="img_seg")
-        saver_callbacks += create_saver(callback_name="val/image")
         inference_callbacks += create_callbacks(callback_name="val/lidar", num_classes=cfg["MODEL"]["NUM_CLASSES"], ignore_label= 0, output_tensor="lidar_seg")
-        saver_callbacks += create_saver(callback_name="val/lidar")
 
-    elif cfg.MODEL.USE_LIDAR == True:
+    elif cfg.MODEL.USE_LIDAR:
         inference_callbacks += create_callbacks(callback_name= "val/lidar", num_classes=cfg["MODEL"]["NUM_CLASSES"], ignore_label= 0, output_tensor="lidar_seg")
-        saver_callbacks += create_saver(callback_name="val/lidar")
     
-    elif cfg.MODEL.USE_IMAGE == True:
+    elif cfg.MODEL.USE_IMAGE:
         inference_callbacks += create_callbacks(callback_name= "val/image", num_classes=cfg["MODEL"]["NUM_CLASSES"], ignore_label= 0, output_tensor="img_seg")
-        saver_callbacks += create_saver(callback_name="val/image")
-
+    
+    saver_callbacks = []
+    if cfg.MODEL.SAVE:
+        if cfg.MODEL.USE_FUSION:
+            saver_callbacks += create_saver(callback_name="val/image")
+            saver_callbacks += create_saver(callback_name="val/lidar")
+            
+        elif cfg.MODEL.USE_LIDAR:
+            saver_callbacks += create_saver(callback_name="val/lidar")
+        
+        elif cfg.MODEL.USE_IMAGE:
+            saver_callbacks += create_saver(callback_name="val/image")
+        
     trainer.train(
         dataflow=dataflow['train'],
         num_epochs=cfg.SCHEDULER.MAX_EPOCH,
