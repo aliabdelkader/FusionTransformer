@@ -128,9 +128,10 @@ class SemanticTorchpackTrainer(Trainer):
             loss_2d.backward()
         
         targets = feed_dict["seg_label"]
-        self.summary.add_scalar("learning rate", self.scheduler.get_last_lr()[0])
-        self.summary.add_weights_histogram()
-        self.summary.add_grads_histogram()
+        if self.scheduler is not None:
+            self.summary.add_scalar("learning rate", self.scheduler.get_last_lr()[0])
+        # self.summary.add_weights_histogram()
+        # self.summary.add_grads_histogram()
         self.optimizer.step()
         # self.scheduler.step()
 
@@ -224,13 +225,15 @@ class SemanticTorchpackTrainer(Trainer):
         state_dict = {}
         state_dict['model'] = self.model.state_dict()
         state_dict['optimizer'] = self.optimizer.state_dict()
-        state_dict['scheduler'] = self.scheduler.state_dict()
+        if self.scheduler is not None:
+            state_dict['scheduler'] = self.scheduler.state_dict()
         return state_dict
 
     def _load_state_dict(self, state_dict: Dict[str, Any]) -> None:
         self.model.load_state_dict(state_dict['model'])
         self.optimizer.load_state_dict(state_dict['optimizer'])
-        self.scheduler.load_state_dict(state_dict['scheduler'])
+        if self.scheduler is not None:
+            self.scheduler.load_state_dict(state_dict['scheduler'])
 
     def _load_previous_checkpoint(self, checkpoint_path: str) -> None:
         pass
