@@ -132,7 +132,7 @@ class SemanticTorchpackTrainer(Trainer):
         self.summary.add_weights_histogram()
         self.summary.add_grads_histogram()
         self.optimizer.step()
-        self.scheduler.step()
+        # self.scheduler.step()
 
         return preds, targets
 
@@ -212,6 +212,8 @@ class SemanticTorchpackTrainer(Trainer):
         return outputs
 
     def _after_epoch(self) -> None:
+        if self.scheduler is not None:
+            self.scheduler.step()
         self.model.eval()
     
     def _trigger_epoch(self) -> None:

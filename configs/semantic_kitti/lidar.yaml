@@ -22,10 +22,10 @@ OPTIMIZER:
   BASE_LR: 3e-4
   WEIGHT_DECAY: 0.0005
 SCHEDULER:
-  TYPE: "StepLR"
-  StepLR:
-    gamma: 0.1
-    step_size: 10
+  TYPE: ""
+  # StepLR:
+  #   gamma: 0.1
+  #   step_size: 10
   MAX_EPOCH: 100
 TRAIN:
   BATCH_SIZE: 10
