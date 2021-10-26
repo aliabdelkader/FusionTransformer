@@ -14,7 +14,7 @@ DATASET:
   VAL: ("val",)
   TEST: ("test",)
   SemanticKITTISCN:
-    preprocess_dir: "/home/user/SemanticKitti/preprocessed"
+    preprocess_dir: "/home/user/FusionTransformer/preprocessed"
     semantic_kitti_dir: "/home/user/SemanticKitti"
 DATALOADER:
   NUM_WORKERS: 1

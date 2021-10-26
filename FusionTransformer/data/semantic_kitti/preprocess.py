@@ -162,7 +162,7 @@ def preprocess(split_name, root_dir, out_dir, img_width, img_height):
             }
             save_dir = osp.join(out_dir, str(seq))
             os.makedirs(save_dir, exist_ok=True)
-            save_path = osp.join(save_dir, 'scan_data_{}.pkl'.format(i))
+            save_path = osp.join(save_dir, '{}.pkl'.format(i))
             with open(save_path, 'wb') as f:
                 pickle.dump(scan_data, f)
                 print('Wrote preprocessed data to ' + save_path)
@@ -186,7 +186,7 @@ def calculate_min_img_shape(root_dir):
     return min_width, min_height
 if __name__ == '__main__':
     root_dir = '/home/user/SemanticKitti'
-    out_dir = '/home/user/SemanticKitti/preprocessed'
+    out_dir = '/home/user/FusionTransformer/preprocessed'
     min_width, min_height = calculate_min_img_shape(root_dir)
     preprocess('val', root_dir, out_dir, min_width, min_height)
     preprocess('train', root_dir, out_dir, min_width, min_height)

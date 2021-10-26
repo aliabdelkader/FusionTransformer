@@ -18,16 +18,20 @@ RUN apt-get update && apt-get install -y \
     unzip \
     openmpi-bin \
     libopenmpi-dev
-    
-ENV HOME=/home/user
 
+RUN chmod -R  a+rwX /opt/conda
+RUN useradd -ms /bin/bash user
+#RUN useradd -rm -d /home/user -s /bin/bash -g root -G sudo -u 1001 user
+USER user    
+ENV HOME=/home/user
+ENV PATH="${PATH}:/user/.local/bin"
 # Create a working directory
 WORKDIR ${HOME}
-RUN chmod 777 ${HOME}
+#RUN chmod 777 ${HOME}
 
 RUN wget https://github.com/mit-han-lab/torchsparse/archive/refs/tags/v1.1.0.zip && unzip v1.1.0.zip
  
-COPY ./ ${HOME}/FusionTransformer
+COPY --chown=user:user ./ ${HOME}/FusionTransformer
 WORKDIR ${HOME}/FusionTransformer
 RUN python -m pip install --no-cache-dir -e .
 
