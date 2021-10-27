@@ -20,8 +20,9 @@ RUN apt-get update && apt-get install -y \
     libopenmpi-dev
 
 RUN chmod -R  a+rwX /opt/conda
-RUN useradd -ms /bin/bash user
-#RUN useradd -rm -d /home/user -s /bin/bash -g root -G sudo -u 1001 user
+#RUN useradd -ms /bin/bash user
+RUN useradd -ms /bin/bash -u 1003 user
+
 USER user    
 ENV HOME=/home/user
 ENV PATH="${PATH}:/user/.local/bin"
