@@ -118,7 +118,7 @@ class DummyDataset(Dataset):
 
         data_dict['seg_label'] = label[keep_idx].astype(np.int16)
         data_dict['points'] = points[keep_idx]
-        data_dict['feats'] = intensity[keep_idx]
+        data_dict['feats'] = scan[keep_idx]
 
         data_dict['points_img'] = img_points[keep_idx_img_pts]
         data_dict['image_size'] = np.array(image_size)
@@ -186,7 +186,7 @@ def calculate_min_img_shape(root_dir):
     return min_width, min_height
 if __name__ == '__main__':
     root_dir = '/home/user/SemanticKitti'
-    out_dir = '/home/user/FusionTransformer/preprocessed'
+    out_dir = '/home/user/SemanticKitti/preprocessed'
     min_width, min_height = calculate_min_img_shape(root_dir)
     preprocess('val', root_dir, out_dir, min_width, min_height)
     preprocess('train', root_dir, out_dir, min_width, min_height)

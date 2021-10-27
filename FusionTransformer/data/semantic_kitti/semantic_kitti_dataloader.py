@@ -153,7 +153,7 @@ class SemanticKITTISCN(SemanticKITTIBase):
             data_dict = pickle.load(data_file)
 
         points = data_dict['points'].copy()
-        feats = data_dict['feats'].copy()
+        feats = data_dict['feats'].copy().reshape(-1,1)
         seg_label = data_dict['seg_labels'].astype(np.int64)
 
         if self.map_label is not None:
