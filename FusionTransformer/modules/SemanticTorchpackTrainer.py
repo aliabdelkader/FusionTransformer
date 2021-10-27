@@ -130,8 +130,8 @@ class SemanticTorchpackTrainer(Trainer):
         targets = feed_dict["seg_label"]
         if self.scheduler is not None:
             self.summary.add_scalar("learning rate", self.scheduler.get_last_lr()[0])
-        self.summary.add_weights_histogram()
-        self.summary.add_grads_histogram()
+        #self.summary.add_weights_histogram()
+        #self.summary.add_grads_histogram()
         self.optimizer.step()
         # self.scheduler.step()
 
