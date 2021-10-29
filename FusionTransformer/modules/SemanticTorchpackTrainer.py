@@ -28,7 +28,8 @@ class SemanticTorchpackTrainer(Trainer):
         if cfg.TRAIN.CLASS_WEIGHTS:
             self.class_weights = torch.tensor(cfg.TRAIN.CLASS_WEIGHTS).cuda()
         else:
-            self.class_weights = None
+            self.class_weights = torch.ones(cfg.MODEL.NUM_CLASSES).cuda()
+            self.class_weights[0] = 0 #ignore zero class
     
     def before_train(self) -> None:
         # overide the default summary object in the trainer
