@@ -212,6 +212,7 @@ class DebugSemanticKITTISCN(SemanticKITTIBase):
             image = (image - mean) / std
 
         out_dict['img'] = np.moveaxis(image, -1, 0) # shape C, H, W
+
         # 3D data augmentation and scaling from points to voxel indices
         # Kitti lidar coordinates: x (front), y (left), z (up)
         coords = augment_and_scale_3d(points, self.scale, self.full_scale, noisy_rot=self.noisy_rot,

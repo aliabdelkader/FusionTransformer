@@ -15,19 +15,19 @@ DATASET:
   VAL: ("val",)
   TEST: ("test",)
   DebugSemanticKITTISCN:
-    preprocess_dir: "/home/user/SemanticKitti/DebugDataset/preprocessed"
-    semantic_kitti_dir: "/home/user/SemanticKitti/DebugDataset"
+    preprocess_dir: "/home/user/SemanticKitti/preprocessed"
+    semantic_kitti_dir: "/home/user/SemanticKitti"
     debug: True
 DATALOADER:
   NUM_WORKERS: 0
 OPTIMIZER:
   TYPE: "Adam"
-  BASE_LR: 3e-4
+  BASE_LR: 1e-4
   WEIGHT_DECAY: 0.0000
 SCHEDULER:
-  TYPE: "MultiStepLR"
-  MultiStepLR:
-    gamma: 0.1
+  # TYPE: "MultiStepLR"
+  # MultiStepLR:
+  #   gamma: 0.1
   MAX_EPOCH: 100
 TRAIN:
   BATCH_SIZE: 10
