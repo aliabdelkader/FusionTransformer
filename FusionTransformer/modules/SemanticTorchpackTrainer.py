@@ -140,7 +140,7 @@ class SemanticTorchpackTrainer(Trainer):
 
     def eval_step(self, preds, feed_dict):
         outputs = {}
-
+        targets = self.prepare_targets_for_eval(feed_dict=feed_dict)
         loss_3d, loss_2d = self.calc_loss(preds, feed_dict)
 
         # if loss_3d is not None:
@@ -169,8 +169,13 @@ class SemanticTorchpackTrainer(Trainer):
 
         elif self.cfg.MODEL.USE_IMAGE:
             outputs['img_seg'] = self.prepare_outputs_for_eval(feed_dict=feed_dict, preds=preds['img_seg_logit'].argmax(1))
+            loss_org = F.cross_entropy(outputs['img_seg'], targets.long(), weight=self.class_weights)
+            if loss_org is not None:
+                if 'eval/loss_org' in self.loss:
+                    self.loss['eval/loss_org'].append(loss_org.item())
+                else:
+                    self.loss['eval/loss_org'] = [loss_org.item()]
 
-        targets = self.prepare_targets_for_eval(feed_dict=feed_dict)
         return outputs, targets
 
     
