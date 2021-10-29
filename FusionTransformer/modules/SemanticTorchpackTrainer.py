@@ -169,7 +169,7 @@ class SemanticTorchpackTrainer(Trainer):
 
         elif self.cfg.MODEL.USE_IMAGE:
             outputs['img_seg'] = self.prepare_outputs_for_eval(feed_dict=feed_dict, preds=preds['img_seg_logit'].argmax(1))
-            loss_org = F.cross_entropy(outputs['img_seg'], targets.long(), weight=self.class_weights)
+            loss_org = F.cross_entropy(preds['img_seg_logit'], targets.long(), weight=self.class_weights)
             if loss_org is not None:
                 if 'eval/loss_org' in self.loss:
                     self.loss['eval/loss_org'].append(loss_org.item())
