@@ -9,14 +9,15 @@ class BilinearModule(nn.Module):
         super(BilinearModule, self).__init__()
 
         self.stem = nn.Sequential(
-            nn.Conv2d(in_channels=in_features, out_channels=out_features, kernel_size=(1,1), groups=in_features),
+            nn.Conv2d(in_channels=in_features, out_channels=out_features, kernel_size=(1,1)),
             nn.ReLU(True),
             nn.BatchNorm2d(out_features)
         )
     
     def forward(self, x, interpolation_output_size):
-        x = torch.nn.functional.interpolate(x, size=interpolation_output_size, mode='bilinear')
         x = self.stem(x)
+        x = torch.nn.functional.interpolate(x, size=interpolation_output_size, mode='bilinear')
+
         return x
 
 
@@ -35,7 +36,8 @@ class Net2DBillinear(nn.Module):
         # number of features channels output from  vision transformer
         self.hidden_channels = 768
 
-        self.sample_down = BilinearModule(in_features=3, out_features=3)
+        # self.sample_down = lambda x: 
+        #BilinearModule(in_features=3, out_features=self.feat_channels)
 
         # create vision transformer
         self.backbone = timm.create_model("image_2d_distilled_transformer", pretrained=True, remove_tokens_outputs=True)
@@ -112,7 +114,9 @@ class Net2DBillinear(nn.Module):
     def forward(self, img, img_indices):
 
         # 2D network
-        x = self.sample_down(img, (384, 384))
+        # x = self.sample_down(img, (384, 384))
+        x = torch.nn.functional.interpolate(img, size=(384, 384), mode='bilinear')
+
 
         # run vision transformer
         backbone_output = self.backbone.forward_blocks(x)
