@@ -5,7 +5,7 @@ import timm
 from typing import Dict
 
 class BilinearModule(nn.Module):
-    def __init__(self, in_features, out_features):
+    def __init__(self, in_features, out_features, interpolation_output_size):
         super(BilinearModule, self).__init__()
 
         self.stem = nn.Sequential(
@@ -13,10 +13,11 @@ class BilinearModule(nn.Module):
             nn.ReLU(True),
             nn.BatchNorm2d(out_features)
         )
+        self.up = nn.Upsample(interpolation_output_size)
     
-    def forward(self, x, interpolation_output_size):
-
+    def forward(self, x):
         x = self.stem(x)
+        x = self.up(x)
 
         return x
 
@@ -36,8 +37,7 @@ class Net2DBillinear(nn.Module):
         # number of features channels output from  vision transformer
         self.hidden_channels = 768
 
-        # self.sample_down = lambda x: 
-        #BilinearModule(in_features=3, out_features=self.feat_channels)
+        self.sample_down = BilinearModule(in_features=3, out_features=self.feat_channels, interpolation_output_size=(384, 384))
 
         # create vision transformer
         self.backbone = timm.create_model("image_2d_distilled_transformer", pretrained=True, remove_tokens_outputs=True)
@@ -58,10 +58,10 @@ class Net2DBillinear(nn.Module):
         
         if self.middle_feat_block_number:
             # self.up[self.middle_feat_block_number] = ScaleUpModule(input_features=self.hidden_channels, output_features=self.feat_channels, kernel_size=16, stride=16)
-            self.up[self.middle_feat_block_number] = BilinearModule(in_features=self.hidden_channels, out_features=self.feat_channels)
+            self.up[self.middle_feat_block_number] = BilinearModule(in_features=self.hidden_channels, out_features=self.feat_channels, interpolation_output_size=(370, 1226))
 
         # self.up[self.late_feat_block_number] = ScaleUpModule(input_features=self.hidden_channels, output_features=self.feat_channels, kernel_size=16, stride=16)
-        self.up[self.late_feat_block_number] = BilinearModule(in_features=self.hidden_channels, out_features=self.feat_channels)
+        self.up[self.late_feat_block_number] = BilinearModule(in_features=self.hidden_channels, out_features=self.feat_channels, interpolation_output_size=(370, 1226))
 
 
         # segmentation head
@@ -97,7 +97,7 @@ class Net2DBillinear(nn.Module):
         # reshape so that deconvolution can be performed
         x = x.transpose(1, 2).reshape(B, EMBED_DIM, 384//16, 384//16)
         
-        x = self.up[block_id](x, (H, W)) # shape B, C, H, W
+        x = self.up[block_id](x) # shape B, C, H, W
         x = torch.nn.functional.interpolate(x, size=(H, W), mode='bilinear').contiguous()
 
         # # 2D-3D feature lifting
@@ -115,8 +115,8 @@ class Net2DBillinear(nn.Module):
     def forward(self, img, img_indices):
 
         # 2D network
-        # x = self.sample_down(img, (384, 384))
-        x = torch.nn.functional.interpolate(img, size=(384, 384), mode='bilinear').contiguous()
+        x = self.sample_down(img)
+        # x = torch.nn.functional.interpolate(img, size=(384, 384), mode='bilinear').contiguous()
 
 
         # run vision transformer
