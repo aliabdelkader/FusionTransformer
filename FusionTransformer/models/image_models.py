@@ -9,14 +9,14 @@ class BilinearModule(nn.Module):
         super(BilinearModule, self).__init__()
 
         self.stem = nn.Sequential(
-            nn.Conv2d(in_channels=in_features, out_channels=out_features, kernel_size=(1,1)),
+            nn.Conv2d(in_channels=in_features, out_channels=out_features, kernel_size=1),
             nn.ReLU(True),
             nn.BatchNorm2d(out_features)
         )
     
     def forward(self, x, interpolation_output_size):
         x = self.stem(x)
-        x = torch.nn.functional.interpolate(x, size=interpolation_output_size, mode='bilinear')
+        x = torch.nn.functional.interpolate(x, size=interpolation_output_size, mode='bilinear').contiguous()
 
         return x
 
@@ -115,7 +115,7 @@ class Net2DBillinear(nn.Module):
 
         # 2D network
         # x = self.sample_down(img, (384, 384))
-        x = torch.nn.functional.interpolate(img, size=(384, 384), mode='bilinear')
+        x = torch.nn.functional.interpolate(img, size=(384, 384), mode='bilinear').contiguous()
 
 
         # run vision transformer
