@@ -6,6 +6,8 @@ from typing import Dict
 
 class BilinearModule(nn.Module):
     def __init__(self, in_features, out_features):
+        super(BilinearModule, self).__init__()
+
         self.stem = nn.Sequential(
             nn.Conv2d(in_channels=in_features, out_channels=out_features, kernel_size=(1,1)),
             nn.ReLU(True),
