@@ -15,8 +15,9 @@ class BilinearModule(nn.Module):
         )
     
     def forward(self, x, interpolation_output_size):
-        x = self.stem(x)
         x = torch.nn.functional.interpolate(x, size=interpolation_output_size, mode='bilinear').contiguous()
+
+        x = self.stem(x)
 
         return x
 
