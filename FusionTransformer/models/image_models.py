@@ -6,11 +6,11 @@ from typing import Dict
 
 class BilinearModule(nn.Module):
     def __init__(self, in_features, out_features):
-        self.stem = nn.Sequential([
+        self.stem = nn.Sequential(
             nn.Conv2d(in_channels=in_features, out_channels=out_features, kernel_size=(1,1)),
             nn.ReLU(True),
             nn.BatchNorm2d(out_features)
-        ])
+        )
     
     def forward(self, x, interpolation_output_size):
         x = torch.nn.functional.interpolate(x, size=interpolation_output_size, mode='bilinear')
