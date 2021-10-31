@@ -9,7 +9,7 @@ class BilinearModule(nn.Module):
         super(BilinearModule, self).__init__()
 
         self.stem = nn.Sequential(
-            nn.Conv2d(in_channels=in_features, out_channels=out_features, kernel_size=(1,1)),
+            nn.Conv2d(in_channels=in_features, out_channels=out_features, kernel_size=(1,1), groups=in_features),
             nn.ReLU(True),
             nn.BatchNorm2d(out_features)
         )
