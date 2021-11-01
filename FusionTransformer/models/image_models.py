@@ -37,7 +37,7 @@ class Net2DBillinear(nn.Module):
         # number of features channels output from  vision transformer
         self.hidden_channels = 768
 
-        self.sample_down = BilinearModule(in_features=3, out_features=self.feat_channels, interpolation_output_size=(384, 384))
+        self.sample_down = BilinearModule(in_features=3, out_features=3, interpolation_output_size=(384, 384))
 
         # create vision transformer
         self.backbone = timm.create_model("image_2d_distilled_transformer", pretrained=True, remove_tokens_outputs=True)
