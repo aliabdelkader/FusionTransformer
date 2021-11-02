@@ -17,7 +17,7 @@ from FusionTransformer.modules.TorchpackCallbacks import MeanIoU, iouEval, accEv
 from FusionTransformer.common.utils.torch_util import set_random_seed
 
 import wandb
-
+import os
 def create_callbacks(callback_name: str = "", num_classes: int = 1, ignore_label: int = 0, output_tensor: str = ""):
     return [
         MeanIoU(name='MeanIoU/'+ callback_name, num_classes=num_classes, ignore_label=ignore_label, output_tensor=output_tensor),
@@ -30,6 +30,10 @@ def create_saver(callback_name: str = ""):
 
 
 def main(cfg = None, output_dir = None, run_name = "") -> None:
+    os.environ[
+        "TORCH_DISTRIBUTED_DEBUG"
+    ] = "DETAIL"  # set to DETAIL for runtime logging
+    
     dist.init()
 
     torch.backends.cudnn.benchmark = True
