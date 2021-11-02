@@ -98,7 +98,6 @@ class Net2DBillinear(nn.Module):
         x = x.transpose(1, 2).reshape(B, EMBED_DIM, 384//16, 384//16)
         
         x = self.up[block_id](x) # shape B, C, H, W
-        print(x.shape)
         # x = torch.nn.functional.interpolate(x, size=(H, W), mode='bilinear').contiguous()
 
         # # 2D-3D feature lifting
