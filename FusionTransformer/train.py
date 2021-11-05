@@ -4,7 +4,6 @@ import os.path as osp
 import argparse
 import logging
 import time
-import socket
 import warnings
 import torch
 
@@ -56,13 +55,13 @@ def main():
         output_dir = output_dir.replace('@', config_path.replace('configs/', ''))
         if osp.isdir(output_dir):
             warnings.warn('Output directory exists.')
-        os.makedirs(output_dir, exist_ok=True)
-        print("output dir",  output_dir)
 
     # run name
-    timestamp = time.strftime('%m-%d_%H-%M-%S')
-    hostname = socket.gethostname()
-    run_name = '{:s}.{:s}'.format(timestamp, hostname)
+    timestamp = time.strftime('MONTH_%m_DAY_%d_HOUR_%H_MIN_%M_SEC_%S')
+    run_name = '{:s}'.format(timestamp)
+    output_dir = os.path.join(output_dir, run_name)
+    os.makedirs(output_dir, exist_ok=True)
+    print("output dir",  output_dir)
 
     logger = setup_logger('FusionTransformer', output_dir, comment='{}.train.{:s}'.format(cfg["MODEL"]["TYPE"], run_name))
     logger.info('{:d} GPUs available'.format(torch.cuda.device_count()))
@@ -72,7 +71,7 @@ def main():
     logger.info('Running with config:\n{}'.format(cfg))
 
     if args.use_torchpack:
-        TorchpackInterface.main(cfg=cfg, output_dir=output_dir)
+        TorchpackInterface.main(cfg=cfg, output_dir=output_dir, run_name=run_name)
     else:
         trainer = SemanticTrainer(cfg, output_dir, run_name)
         trainer.train()

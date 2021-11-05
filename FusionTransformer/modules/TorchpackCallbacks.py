@@ -7,11 +7,14 @@ import wandb
 
 from torchpack import distributed as dist
 from torchpack.callbacks.callback import Callback
+from torchpack.callbacks.writers import TFEventWriter
+from torchpack.train.summary import Summary
+from typing import List, Optional, Union
 from torchpack.callbacks import MaxSaver
 from torchpack.utils.logging import logger
 from torchpack.utils import io
 
-__all__ = ['MeanIoU', 'iouEval', 'accEval']
+__all__ = ['MeanIoU', 'iouEval', 'accEval', 'TFEventWriterExtended', 'SummaryExtended']
 
 class MeanIoU(Callback):
     """
@@ -225,3 +228,40 @@ class WandbMaxSaver(MaxSaver):
         if self.best is not None:
             self.trainer.summary.add_scalar(self.scalar + '/' + self.extreme,
                                             self.best[1])
+
+class TFEventWriterExtended(TFEventWriter):
+    """
+    Write summaries to TensorFlow event file per epoch
+    """
+    WANDB_MAX_HIST_BIN = 512
+    def _add_scalar(self, name: str, scalar: Union[int, float]) -> None:
+        self.writer.add_scalar(name, scalar, self.trainer.epoch_num)
+
+    def _add_image(self, name: str, tensor: np.ndarray) -> None:
+        self.writer.add_image(name, tensor, self.trainer.epoch_num)
+    
+    def add_weights_histogram(self) -> None:
+        if self.enabled:
+            for name, weight in self.trainer.model.named_parameters():
+                if weight is not None:
+                    self.writer.add_histogram(f"{name}/weight", weight, self.trainer.global_step, max_bins=self.WANDB_MAX_HIST_BIN)
+    
+    def add_grads_histogram(self) -> None:
+        if self.enabled:
+            for name, weight in self.trainer.model.named_parameters():
+                if weight.grad is not None:
+                    self.writer.add_histogram(f'{name}/grad',weight.grad, self.trainer.global_step, max_bins=self.WANDB_MAX_HIST_BIN)
+
+    def _after_train(self) -> None:
+        self.writer.close()
+
+class SummaryExtended(Summary):
+    def add_weights_histogram(self):
+        for writer in self.writers:
+            if isinstance(writer, TFEventWriterExtended):
+                writer.add_weights_histogram()
+
+    def add_grads_histogram(self):
+        for writer in self.writers:
+            if isinstance(writer, TFEventWriterExtended):
+                writer.add_grads_histogram()

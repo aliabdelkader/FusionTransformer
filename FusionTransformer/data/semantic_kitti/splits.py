@@ -41,15 +41,18 @@ class regular(object):
 
 class debug(object):
     train = [
-        '08',
+        '07',
+        '01',
     ]
 
     val = [
         '08',
+        #  '01'
     ]
 
     test = [
-        '08'
+        '08',
+        # '01'
 
     ]
 

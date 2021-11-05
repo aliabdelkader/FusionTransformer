@@ -7,16 +7,17 @@ from torchpack import distributed as dist
 from torchpack.callbacks import InferenceRunner
 from torchpack.environ import set_run_dir
 from torchpack.utils.config import configs
-
+from torchpack.callbacks import (ConsoleWriter, EstimatedTimeLeft,
+                         JSONLWriter, MetaInfoSaver, ProgressBar)
 from FusionTransformer.data.build import build_dataloader
 from FusionTransformer.models.build import build_model
 from FusionTransformer.common.solver.build import build_optimizer, build_scheduler
 from FusionTransformer.modules.SemanticTorchpackTrainer import SemanticTorchpackTrainer
-from FusionTransformer.modules.TorchpackCallbacks import MeanIoU, iouEval, accEval, WandbMaxSaver
+from FusionTransformer.modules.TorchpackCallbacks import MeanIoU, iouEval, accEval, WandbMaxSaver, TFEventWriterExtended
 from FusionTransformer.common.utils.torch_util import set_random_seed
 
 import wandb
-
+import os
 def create_callbacks(callback_name: str = "", num_classes: int = 1, ignore_label: int = 0, output_tensor: str = ""):
     return [
         MeanIoU(name='MeanIoU/'+ callback_name, num_classes=num_classes, ignore_label=ignore_label, output_tensor=output_tensor),
@@ -28,7 +29,11 @@ def create_saver(callback_name: str = ""):
     return [WandbMaxSaver('MeanIoU/'+ callback_name)]
 
 
-def main(cfg = None, output_dir = None) -> None:
+def main(cfg = None, output_dir = None, run_name = "") -> None:
+    os.environ[
+        "TORCH_DISTRIBUTED_DEBUG"
+    ] = "DETAIL"  # set to DETAIL for runtime logging
+    
     dist.init()
 
     torch.backends.cudnn.benchmark = True
@@ -37,7 +42,7 @@ def main(cfg = None, output_dir = None) -> None:
     print("local rank", dist.local_rank())
     
     if dist.rank() == 0:
-        run = wandb.init(project='FusionTransformer', config=cfg, group=cfg["MODEL"]["TYPE"], sync_tensorboard=True)
+        run = wandb.init(project='FusionTransformer', name=run_name, config=cfg, group=cfg["MODEL"]["TYPE"], sync_tensorboard=True)
 
     set_run_dir(output_dir)
 
@@ -79,28 +84,39 @@ def main(cfg = None, output_dir = None) -> None:
                                    seed=seed, 
                                    cfg=cfg)
     inference_callbacks = []
-    saver_callbacks = []
-    if cfg.MODEL.USE_FUSION == True:
+    if cfg.MODEL.USE_FUSION:
         inference_callbacks += create_callbacks(callback_name="val/image", num_classes=cfg["MODEL"]["NUM_CLASSES"], ignore_label= 0, output_tensor="img_seg")
-        saver_callbacks += create_saver(callback_name="val/image")
         inference_callbacks += create_callbacks(callback_name="val/lidar", num_classes=cfg["MODEL"]["NUM_CLASSES"], ignore_label= 0, output_tensor="lidar_seg")
-        saver_callbacks += create_saver(callback_name="val/lidar")
 
-    elif cfg.MODEL.USE_LIDAR == True:
+    elif cfg.MODEL.USE_LIDAR:
         inference_callbacks += create_callbacks(callback_name= "val/lidar", num_classes=cfg["MODEL"]["NUM_CLASSES"], ignore_label= 0, output_tensor="lidar_seg")
-        saver_callbacks += create_saver(callback_name="val/lidar")
     
-    elif cfg.MODEL.USE_IMAGE == True:
+    elif cfg.MODEL.USE_IMAGE:
         inference_callbacks += create_callbacks(callback_name= "val/image", num_classes=cfg["MODEL"]["NUM_CLASSES"], ignore_label= 0, output_tensor="img_seg")
-        saver_callbacks += create_saver(callback_name="val/image")
-
-    trainer.train_with_defaults(
+    
+    saver_callbacks = []
+    if cfg.MODEL.SAVE:
+        if cfg.MODEL.USE_FUSION:
+            saver_callbacks += create_saver(callback_name="val/image")
+            saver_callbacks += create_saver(callback_name="val/lidar")
+            
+        elif cfg.MODEL.USE_LIDAR:
+            saver_callbacks += create_saver(callback_name="val/lidar")
+        
+        elif cfg.MODEL.USE_IMAGE:
+            saver_callbacks += create_saver(callback_name="val/image")
+        
+    trainer.train(
         dataflow=dataflow['train'],
         num_epochs=cfg.SCHEDULER.MAX_EPOCH,
         callbacks=[
-            InferenceRunner(
-                dataflow['val'],
-                callbacks=inference_callbacks)
+            InferenceRunner(dataflow['val'], callbacks=inference_callbacks),
+            MetaInfoSaver(),
+            ConsoleWriter(),
+            TFEventWriterExtended(),
+            JSONLWriter(),
+            ProgressBar(),
+            EstimatedTimeLeft()
         ] + saver_callbacks
     )
 

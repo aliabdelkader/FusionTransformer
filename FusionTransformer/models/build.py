@@ -2,7 +2,7 @@ from FusionTransformer.models.late_fusion import LateFusionTransformer
 from FusionTransformer.models.middle_fusion import MiddleFusionTransformer
 from FusionTransformer.models.early_fusion import EarlyFusionTransformer
 from FusionTransformer.models.lidar_model import LidarSeg
-from FusionTransformer.models.image_models import ImageSeg
+from FusionTransformer.models.image_models import ImageSeg, ImageSegBilinear
 from FusionTransformer.models.metric import SegIoU
 
 
@@ -59,6 +59,12 @@ def build_image_model(cfg):
     model = ImageSeg(num_classes=cfg.MODEL.NUM_CLASSES, dual_head=cfg.MODEL.DUAL_HEAD, backbone_2d_kwargs=cfg.MODEL)
     return model, train_2d_metric
 
+def build_image_bilinear_model(cfg):
+    train_2d_metric = SegIoU(num_classes=cfg.MODEL.NUM_CLASSES, name='seg_iou_2d')
+    model = ImageSegBilinear(num_classes=cfg.MODEL.NUM_CLASSES, dual_head=cfg.MODEL.DUAL_HEAD, backbone_2d_kwargs=cfg.MODEL)
+    return model, train_2d_metric
+
+
 def build_model(cfg):
     
     if cfg.MODEL.USE_FUSION:
@@ -78,3 +84,6 @@ def build_model(cfg):
     elif cfg.MODEL.USE_IMAGE:
         if cfg.MODEL.TYPE == "ImageSeg":
             return build_image_model(cfg)
+            
+        elif cfg.MODEL.TYPE == "ImageSegBilinear":
+            return build_image_bilinear_model(cfg)

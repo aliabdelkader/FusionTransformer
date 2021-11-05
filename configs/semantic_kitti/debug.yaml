@@ -1,5 +1,5 @@
-AUTO_RESUME: TRUE
-RESUME_STATES: TRUE
+# AUTO_RESUME: TRUE
+# RESUME_STATES: TRUE
 MODEL:
   TYPE: "MiddleFusionTransformer"
   DUAL_HEAD: True
@@ -10,38 +10,39 @@ MODEL:
   USE_LIDAR: True
   USE_FUSION: True
 DATASET:
-  TYPE: "SemanticKITTISCN"
+  TYPE: "DebugSemanticKITTISCN"
   TRAIN: ("train",)
   VAL: ("val",)
   TEST: ("test",)
-  SemanticKITTISCN:
-    preprocess_dir: "/home/user/SemanticKitti/preprocessed"
-    semantic_kitti_dir: "/home/user/SemanticKitti"
+  DebugSemanticKITTISCN:
+    preprocess_dir: "/home/user/SemanticKitti/DebugDataset/preprocessed"
+    semantic_kitti_dir: "/home/user/SemanticKitti/DebugDataset"
     debug: True
 DATALOADER:
   NUM_WORKERS: 0
 OPTIMIZER:
   TYPE: "Adam"
-  BASE_LR: 0.001
-  WEIGHT_DECAY: 0.0005
+  BASE_LR: 3e-4
+  WEIGHT_DECAY: 0.0000
 SCHEDULER:
   TYPE: "MultiStepLR"
   MultiStepLR:
     gamma: 0.1
-  MAX_EPOCH: 1
+  MAX_EPOCH: 100
 TRAIN:
   BATCH_SIZE: 10
-  SUMMARY_PERIOD: 2
-  CHECKPOINT_PERIOD: 5
+  CLASS_WEIGHTS: None
+  # SUMMARY_PERIOD: 2
+  # CHECKPOINT_PERIOD: 5
   # CLASS_WEIGHTS: [1.89090012, 2.0585112, 3.1970535, 3.1111633, 1., 2.93751704, 1.92053733,
   #                 1.47886874, 1.04654198, 1.78266561]
-  CLASS_WEIGHTS: [0., 1.58003993, 3.69774469, 3.2460013,  2.65342029, 2.61079801, 3.27744058,
-                  3.48282471, 3.45874555, 1.,         2.07298878, 1.26831551, 2.65889542,
-                  1.37436805, 1.4891881,  1.03083152, 2.25629999, 1.51838281, 2.51986332,
-                  3.08564901]
+  # CLASS_WEIGHTS: [0., 1.58003993, 3.69774469, 3.2460013,  2.65342029, 2.61079801, 3.27744058,
+  #                 3.48282471, 3.45874555, 1.,         2.07298878, 1.26831551, 2.65889542,
+  #                 1.37436805, 1.4891881,  1.03083152, 2.25629999, 1.51838281, 2.51986332,
+  #                 3.08564901]
   FusionTransformer:
     lambda_xm: 0.1
 VAL:
   BATCH_SIZE: 10
-  PERIOD: 5
+  # PERIOD: 5
 OUTPUT_DIR: "/home/user/logs/@"  #  @ will be replaced with config path, e.g. nuscenes/usa_singapore/FusionTransformer

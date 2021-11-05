@@ -7,6 +7,7 @@ from torchpack.train import Trainer
 from torchpack.utils.typing import Optimizer, Scheduler
 import torch.nn.functional as F
 from FusionTransformer.data.utils.validate import map_sparse_to_org
+from FusionTransformer.modules.TorchpackCallbacks import SummaryExtended
 __all__ = ['SemanticTorchpackTrainer']
 
 
@@ -23,16 +24,28 @@ class SemanticTorchpackTrainer(Trainer):
         self.seed = seed
         self.epoch_num = 1
         self.cfg = cfg
+        self.loss = dict()
         if cfg.TRAIN.CLASS_WEIGHTS:
             self.class_weights = torch.tensor(cfg.TRAIN.CLASS_WEIGHTS).cuda()
         else:
-            self.class_weights = None
+            self.class_weights = torch.ones(cfg.MODEL.NUM_CLASSES).cuda()
+            self.class_weights[0] = 0 #ignore zero class
+    
+    def before_train(self) -> None:
+        # overide the default summary object in the trainer
+        self.summary = SummaryExtended()
+        self.summary.set_trainer(self)
+        return super().before_train()
 
     def _before_epoch(self) -> None:
         self.model.train()
         self.dataflow.sampler.set_epoch(self.epoch_num - 1)
-        self.dataflow.worker_init_fn = lambda worker_id: np.random.seed(
-            self.seed + (self.epoch_num - 1) * self.num_workers + worker_id)
+        # self.dataflow.worker_init_fn = lambda worker_id: np.random.seed(
+        #     self.seed + (self.epoch_num - 1) * self.num_workers + worker_id)
+
+        # init loss to zero
+        for k, v in self.loss.items():
+            self.loss[k] = []
 
     def _run_step(self, feed_dict: Dict[str, Any]) -> Dict[str, Any]:
 
@@ -98,31 +111,53 @@ class SemanticTorchpackTrainer(Trainer):
 
         self.optimizer.zero_grad()
         loss_3d, loss_2d = self.calc_loss(preds, feed_dict)
-
+        
         if loss_3d is not None:
-            self.summary.add_scalar('train/loss_3d', loss_3d.item())
+            if 'train/loss_3d' in self.loss:
+                self.loss['train/loss_3d'].append(loss_3d.item())
+            else:
+                self.loss['train/loss_3d'] = [loss_3d.item()]
+
             loss_3d.backward()
         
         if loss_2d is not None:
-            self.summary.add_scalar('train/loss_2d', loss_2d.item())
+            if 'train/loss_2d' in self.loss:
+                self.loss['train/loss_2d'].append(loss_2d.item())
+            else:
+                self.loss['train/loss_2d'] = [loss_2d.item()]
+            #self.summary.add_scalar('train/loss_2d', loss_2d.item())
             loss_2d.backward()
         
         targets = feed_dict["seg_label"]
+        if self.scheduler is not None:
+            self.summary.add_scalar("learning rate", self.scheduler.get_last_lr()[0])
+        #self.summary.add_weights_histogram()
+        #self.summary.add_grads_histogram()
         self.optimizer.step()
-        self.scheduler.step()
+        # self.scheduler.step()
 
         return preds, targets
 
     def eval_step(self, preds, feed_dict):
         outputs = {}
-
+        targets = self.prepare_targets_for_eval(feed_dict=feed_dict)
         loss_3d, loss_2d = self.calc_loss(preds, feed_dict)
 
+        # if loss_3d is not None:
+        #     self.summary.add_scalar('eval/loss_3d', loss_3d.item())
+
         if loss_3d is not None:
-            self.summary.add_scalar('eval/loss_3d', loss_3d.item())
-        
+            if 'eval/loss_3d' in self.loss:
+                self.loss['eval/loss_3d'].append(loss_3d.item())
+            else:
+                self.loss['eval/loss_3d'] = [loss_3d.item()]
+
         if loss_2d is not None:
-            self.summary.add_scalar('eval/loss_2d', loss_2d.item())
+            #self.summary.add_scalar('eval/loss_2d', loss_2d.item())
+            if 'eval/loss_2d' in self.loss:
+                self.loss['eval/loss_2d'].append(loss_2d.item())
+            else:
+                self.loss['eval/loss_2d'] = [loss_2d.item()]
 
         
         if self.cfg.MODEL.USE_FUSION:
@@ -134,8 +169,13 @@ class SemanticTorchpackTrainer(Trainer):
 
         elif self.cfg.MODEL.USE_IMAGE:
             outputs['img_seg'] = self.prepare_outputs_for_eval(feed_dict=feed_dict, preds=preds['img_seg_logit'].argmax(1))
+            # loss_org = F.cross_entropy(preds['img_seg_logit'], targets.long(), weight=self.class_weights)
+            # if loss_org is not None:
+            #     if 'eval/loss_org' in self.loss:
+            #         self.loss['eval/loss_org'].append(loss_org.item())
+            #     else:
+            #         self.loss['eval/loss_org'] = [loss_org.item()]
 
-        targets = self.prepare_targets_for_eval(feed_dict=feed_dict)
         return outputs, targets
 
     
@@ -179,19 +219,27 @@ class SemanticTorchpackTrainer(Trainer):
         return outputs
 
     def _after_epoch(self) -> None:
+        if self.scheduler is not None:
+            self.scheduler.step()
         self.model.eval()
+    
+    def _trigger_epoch(self) -> None:
+        for k, v in self.loss.items():
+             self.summary.add_scalar(k, np.mean(v))
 
     def _state_dict(self) -> Dict[str, Any]:
         state_dict = {}
         state_dict['model'] = self.model.state_dict()
         state_dict['optimizer'] = self.optimizer.state_dict()
-        state_dict['scheduler'] = self.scheduler.state_dict()
+        if self.scheduler is not None:
+            state_dict['scheduler'] = self.scheduler.state_dict()
         return state_dict
 
     def _load_state_dict(self, state_dict: Dict[str, Any]) -> None:
         self.model.load_state_dict(state_dict['model'])
         self.optimizer.load_state_dict(state_dict['optimizer'])
-        self.scheduler.load_state_dict(state_dict['scheduler'])
+        if self.scheduler is not None:
+            self.scheduler.load_state_dict(state_dict['scheduler'])
 
     def _load_previous_checkpoint(self, checkpoint_path: str) -> None:
         pass

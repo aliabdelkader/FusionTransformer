@@ -95,6 +95,7 @@ class DummyDataset(Dataset):
         scan = np.fromfile(data_dict['lidar_path'], dtype=np.float32)
         scan = scan.reshape((-1, 4))
         points = scan[:, :3]
+        intensity = scan[:, -1]
         label = np.fromfile(data_dict['label_path'], dtype=np.uint32)
         label = label.reshape((-1))
         label = label & 0xFFFF  # get lower half for semantics
@@ -161,7 +162,7 @@ def preprocess(split_name, root_dir, out_dir, img_width, img_height):
             }
             save_dir = osp.join(out_dir, str(seq))
             os.makedirs(save_dir, exist_ok=True)
-            save_path = osp.join(save_dir, 'scan_data_{}.pkl'.format(i))
+            save_path = osp.join(save_dir, '{}.pkl'.format(i))
             with open(save_path, 'wb') as f:
                 pickle.dump(scan_data, f)
                 print('Wrote preprocessed data to ' + save_path)

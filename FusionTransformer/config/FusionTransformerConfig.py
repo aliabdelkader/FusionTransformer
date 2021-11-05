@@ -93,13 +93,37 @@ _C.DATASET.SemanticKITTISCN.augmentation.rot_z = 0.0  # 2 * pi
 _C.DATASET.SemanticKITTISCN.augmentation.transl = False
 # 2D augmentation
 _C.DATASET.SemanticKITTISCN.augmentation.bottom_crop = None
-_C.DATASET.SemanticKITTISCN.augmentation.fliplr = 0.0
+_C.DATASET.SemanticKITTISCN.augmentation.fliplr = None
 _C.DATASET.SemanticKITTISCN.augmentation.color_jitter = None
+
+# DebugSemanticKITTISCN
+_C.DATASET.DebugSemanticKITTISCN = CN()
+_C.DATASET.DebugSemanticKITTISCN.preprocess_dir = ''
+_C.DATASET.DebugSemanticKITTISCN.semantic_kitti_dir = ''
+# 3D
+_C.DATASET.DebugSemanticKITTISCN.scale = 20
+_C.DATASET.DebugSemanticKITTISCN.full_scale = 4096
+# 2D
+_C.DATASET.DebugSemanticKITTISCN.image_normalizer = (IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD)
+_C.DATASET.DebugSemanticKITTISCN.image_width = 1226
+_C.DATASET.DebugSemanticKITTISCN.image_height = 370
+_C.DATASET.DebugSemanticKITTISCN.debug = False
+#Debug 3D augmentation
+_C.DATASET.DebugSemanticKITTISCN.augmentation = CN()
+_C.DATASET.DebugSemanticKITTISCN.augmentation.noisy_rot = 0.0
+_C.DATASET.DebugSemanticKITTISCN.augmentation.flip_y = 0.0
+_C.DATASET.DebugSemanticKITTISCN.augmentation.rot_z = 0.0  # 2 * pi
+_C.DATASET.DebugSemanticKITTISCN.augmentation.transl = False
+#Debug 2D augmentation
+_C.DATASET.DebugSemanticKITTISCN.augmentation.bottom_crop = None
+_C.DATASET.DebugSemanticKITTISCN.augmentation.fliplr = None
+_C.DATASET.DebugSemanticKITTISCN.augmentation.color_jitter = None
 # ---------------------------------------------------------------------------- #
 # Model 3D
 # ---------------------------------------------------------------------------- #
 _C.MODEL = CN()
 _C.MODEL.TYPE = ''
+_C.MODEL.SAVE = True
 _C.MODEL.CKPT_PATH = ''
 _C.MODEL.NUM_CLASSES = 20
 _C.MODEL.DUAL_HEAD = False

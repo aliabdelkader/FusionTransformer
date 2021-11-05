@@ -13,92 +13,91 @@ import yaml
 from os.path import dirname, realpath
 from pathlib import Path
 from FusionTransformer.data.semantic_kitti import splits
+from FusionTransformer.data.semantic_kitti.semantic_kitti_dataloader import SemanticKITTIBase, SemanticKITTISCN
+# class SemanticKITTIBase(Dataset):
+#     """SemanticKITTI dataset"""
 
-class SemanticKITTIBase(Dataset):
-    """SemanticKITTI dataset"""
+#     # # https://github.com/PRBonn/semantic-kitti-api/blob/master/config/semantic-kitti.yaml
+#     # id_to_class_name = {
+#     #     0: "unlabeled",
+#     #     1: "outlier",
+#     #     10: "car",
+#     #     11: "bicycle",
+#     #     13: "bus",
+#     #     15: "motorcycle",
+#     #     16: "on-rails",
+#     #     18: "truck",
+#     #     20: "other-vehicle",
+#     #     30: "person",
+#     #     31: "bicyclist",
+#     #     32: "motorcyclist",
+#     #     40: "road",
+#     #     44: "parking",
+#     #     48: "sidewalk",
+#     #     49: "other-ground",
+#     #     50: "building",
+#     #     51: "fence",
+#     #     52: "other-structure",
+#     #     60: "lane-marking",
+#     #     70: "vegetation",
+#     #     71: "trunk",
+#     #     72: "terrain",
+#     #     80: "pole",
+#     #     81: "traffic-sign",
+#     #     99: "other-object",
+#     #     252: "moving-car",
+#     #     253: "moving-bicyclist",
+#     #     254: "moving-person",
+#     #     255: "moving-motorcyclist",
+#     #     256: "moving-on-rails",
+#     #     257: "moving-bus",
+#     #     258: "moving-truck",
+#     #     259: "moving-other-vehicle",
+#     # }
 
-    # # https://github.com/PRBonn/semantic-kitti-api/blob/master/config/semantic-kitti.yaml
-    # id_to_class_name = {
-    #     0: "unlabeled",
-    #     1: "outlier",
-    #     10: "car",
-    #     11: "bicycle",
-    #     13: "bus",
-    #     15: "motorcycle",
-    #     16: "on-rails",
-    #     18: "truck",
-    #     20: "other-vehicle",
-    #     30: "person",
-    #     31: "bicyclist",
-    #     32: "motorcyclist",
-    #     40: "road",
-    #     44: "parking",
-    #     48: "sidewalk",
-    #     49: "other-ground",
-    #     50: "building",
-    #     51: "fence",
-    #     52: "other-structure",
-    #     60: "lane-marking",
-    #     70: "vegetation",
-    #     71: "trunk",
-    #     72: "terrain",
-    #     80: "pole",
-    #     81: "traffic-sign",
-    #     99: "other-object",
-    #     252: "moving-car",
-    #     253: "moving-bicyclist",
-    #     254: "moving-person",
-    #     255: "moving-motorcyclist",
-    #     256: "moving-on-rails",
-    #     257: "moving-bus",
-    #     258: "moving-truck",
-    #     259: "moving-other-vehicle",
-    # }
+#     # class_name_to_id = {v: k for k, v in id_to_class_name.items()}
 
-    # class_name_to_id = {v: k for k, v in id_to_class_name.items()}
+#     def __init__(self,
+#                  split,
+#                  preprocess_dir,
+#                  debug=False
+#                  ):
 
-    def __init__(self,
-                 split,
-                 preprocess_dir,
-                 debug=False
-                 ):
+#         self.split = split
+#         self.preprocess_dir = preprocess_dir
 
-        self.split = split
-        self.preprocess_dir = preprocess_dir
+#         print("Initialize SemanticKITTI dataloader")
 
-        print("Initialize SemanticKITTI dataloader")
-
-        assert isinstance(split, tuple)
-        print('Load', split)
+#         assert isinstance(split, tuple)
+#         print('Load', split)
         
-        self.data_paths = []
-        if debug:
-            split_sequences = getattr(splits.debug, split[0])
-        else:
-            split_sequences = getattr(splits.regular, split[0])
+#         self.data_paths = []
+#         if debug:
+#             split_sequences = getattr(splits.debug, split[0])
+#         else:
+#             split_sequences = getattr(splits.regular, split[0])
 
-        for seq in split_sequences:
-            split_path = Path(self.preprocess_dir) / seq
-            print(split_path)
-            self.data_paths.extend(sorted(list(split_path.rglob("*.pkl"))))
-        # for curr_split in split:
-        #     with open(osp.join(self.preprocess_dir, curr_split + '.pkl'), 'rb') as f:
-        #         self.data.extend(pickle.load(f))
+#         for seq in split_sequences:
+#             split_path = Path(self.preprocess_dir) / seq
+#             self.data_paths.extend(sorted(list(split_path.rglob("*.pkl"))))
+#         # for curr_split in split:
+#         #     with open(osp.join(self.preprocess_dir, curr_split + '.pkl'), 'rb') as f:
+#         #         self.data.extend(pickle.load(f))
 
-        self.semantic_kitti_config_dict = yaml.safe_load(open(dirname(realpath(__file__)) + "/semantic_kitti_label.yaml", 'r'))
-        self.class_names = [self.semantic_kitti_config_dict["labels"][k] for k in self.semantic_kitti_config_dict["learning_map_inv"].values()]
-        self.class_labels = list (self.semantic_kitti_config_dict["learning_map_inv"].copy().values())
-        self.map_label = np.vectorize(lambda org_label: self.semantic_kitti_config_dict["learning_map"][org_label])
-        self.map_inverse_label = np.vectorize(lambda learning_label: self.semantic_kitti_config_dict["learning_map_inv"][learning_label])
+#         self.semantic_kitti_config_dict = yaml.safe_load(open(dirname(realpath(__file__)) + "/semantic_kitti_label.yaml", 'r'))
+#         self.class_names = [self.semantic_kitti_config_dict["labels"][k] for k in self.semantic_kitti_config_dict["learning_map_inv"].values()]
+#         self.class_labels = list (self.semantic_kitti_config_dict["learning_map_inv"].copy().values())
+#         self.map_label = np.vectorize(lambda org_label: self.semantic_kitti_config_dict["learning_map"][org_label])
+#         self.map_inverse_label = np.vectorize(lambda learning_label: self.semantic_kitti_config_dict["learning_map_inv"][learning_label])
 
-    def __getitem__(self, index):
-        raise NotImplementedError
+#     def __getitem__(self, index):
+#         raise NotImplementedError
 
-    def __len__(self):
-        return len(self.data_paths)
+#     def __len__(self):
+#         return len(self.data_paths)
 
 
-class SemanticKITTISCN(SemanticKITTIBase):
+class DebugSemanticKITTISCN(SemanticKITTIBase):
     def __init__(self,
                  split,
                  preprocess_dir,
@@ -124,6 +123,7 @@ class SemanticKITTISCN(SemanticKITTIBase):
                          preprocess_dir,
                          debug=debug
                          )
+        print("*************** Debug Dataloader ****************************")
 
 
         self.semantic_kitti_dir = semantic_kitti_dir
@@ -146,7 +146,9 @@ class SemanticKITTISCN(SemanticKITTIBase):
         self.color_jitter = T.ColorJitter(*color_jitter) if color_jitter else None
         self.image_width = image_width
         self.image_height = image_height
-
+        self.data_paths = self.data_paths
+        print("data paths", self.data_paths)
+        
     def __getitem__(self, index):
         data_path = str(self.data_paths[index])
         with open(data_path, 'rb') as data_file:

@@ -2,9 +2,11 @@ import torch
 from torch.utils.data.dataloader import DataLoader
 from yacs.config import CfgNode as CN
 
-from FusionTransformer.common.utils.torch_util import worker_init_fn
+from FusionTransformer.common.utils.torch_util import worker_init_fn, dist_worker_init_fn
 from FusionTransformer.data.nuscenes.nuscenes_dataloader import NuScenesSCN
 from FusionTransformer.data.semantic_kitti.semantic_kitti_dataloader import SemanticKITTISCN
+from FusionTransformer.data.semantic_kitti.debug_semantic_kitti_dataloader   import DebugSemanticKITTISCN
+
 from FusionTransformer.data.collate import get_collate_scn
 
 def build_dataloader(cfg, mode='train', start_iteration=0, halve_batch_size=False, use_distributed=False,  seed=0):
@@ -32,7 +34,13 @@ def build_dataloader(cfg, mode='train', start_iteration=0, halve_batch_size=Fals
         dataset = SemanticKITTISCN(split=split,
                                 output_orig=not is_train,
                                 **dataset_kwargs,
-                                **augmentation)        
+                                **augmentation)
+
+    elif dataset_cfg.TYPE == 'DebugSemanticKITTISCN':
+        dataset = DebugSemanticKITTISCN(split=split,
+                                output_orig=not is_train,
+                                **dataset_kwargs,
+                                **augmentation)         
     else:
         raise ValueError('Unsupported type of dataset: {}.'.format(dataset_cfg.TYPE))
 
@@ -53,6 +61,7 @@ def build_dataloader(cfg, mode='train', start_iteration=0, halve_batch_size=Fals
             batch_size=batch_size,
             sampler=sampler,
             num_workers=cfg.DATALOADER.NUM_WORKERS,
+            worker_init_fn=dist_worker_init_fn,
             pin_memory=True,
             collate_fn=collate_fn)
     
