@@ -1,7 +1,7 @@
 # AUTO_RESUME: TRUE
 # RESUME_STATES: TRUE
 MODEL:
-  TYPE: "ImageSeg"
+  TYPE: "ImageSegBilinear"
   SAVE: False
   DUAL_HEAD: False
   NUM_CLASSES: 20 
@@ -10,11 +10,11 @@ MODEL:
   USE_LIDAR: False
   USE_FUSION: False
 DATASET:
-  TYPE: "DebugSemanticKITTISCN"
+  TYPE: "SemanticKITTISCN"
   TRAIN: ("train",)
   VAL: ("val",)
   TEST: ("test",)
-  DebugSemanticKITTISCN:
+  SemanticKITTISCN:
     preprocess_dir: "/home/user/SemanticKitti/preprocessed"
     semantic_kitti_dir: "/home/user/SemanticKitti"
     debug: True
