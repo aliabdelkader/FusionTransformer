@@ -92,6 +92,7 @@ _C.TRAIN.MAX_TO_KEEP = 100
 # Regex patterns of modules and/or parameters to freeze
 _C.TRAIN.FROZEN_PATTERNS = ()
 
+_C.TRAIN.LOG_HISTOGRAM = False
 # ---------------------------------------------------------------------------- #
 # Specific validation options
 # ---------------------------------------------------------------------------- #

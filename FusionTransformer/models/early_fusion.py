@@ -2,7 +2,7 @@ import torch.nn as nn
 import torchsparse
 from torchsparse.point_tensor import PointTensor
 from FusionTransformer.models.utils import point_to_voxel, voxel_to_point, initial_voxelize
-from FusionTransformer.models.image_models import Net2DSeg
+from FusionTransformer.models.image_models import Net2DSeg, Net2DBillinear
 from FusionTransformer.models.spvcnn import SPVCNN
 
 
@@ -91,7 +91,7 @@ class EarlyFusionTransformer(nn.Module):
         super(EarlyFusionTransformer, self).__init__()
         self.dual_head = dual_head
         self.lidar_backbone = Net3DSeg(num_classes=num_class, dual_head=dual_head, backbone_3d_kwargs=backbone_3d_kwargs)
-        self.image_backbone = Net2DSeg(
+        self.image_backbone = Net2DBillinear(
                  num_classes=num_class,
                  dual_head=dual_head,
                  backbone_2d_kwargs=backbone_2d_kwargs)
