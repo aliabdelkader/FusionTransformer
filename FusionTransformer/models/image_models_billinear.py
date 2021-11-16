@@ -49,7 +49,7 @@ class Net2DBillinear(nn.Module):
                 if 'backbone' in k:
                     new_state_dict[k.replace('backbone.', '')] = v.to(self.backbone_device)
             self.backbone.load_state_dict(new_state_dict)
-            for k, v in pretrained_weights.items():
+            for k, v in new_state_dict.items():
                 assert torch.equal(self.backbone.state_dict()[k], v)
         else:
             # create vision transformer
