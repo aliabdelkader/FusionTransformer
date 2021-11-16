@@ -8,15 +8,15 @@ class BilinearModule(nn.Module):
     def __init__(self, in_features, out_features, interpolation_output_size):
         super(BilinearModule, self).__init__()
 
-        # self.stem = nn.Sequential(
-        #     nn.Conv2d(in_channels=in_features, out_channels=out_features, kernel_size=1),
-        #     nn.ReLU(True),
-        #     nn.BatchNorm2d(out_features)
-        # )
+        self.stem = nn.Sequential(
+            nn.Conv2d(in_channels=in_features, out_channels=out_features, kernel_size=1),
+            nn.ReLU(True),
+            nn.BatchNorm2d(out_features)
+        )
         self.up = nn.Upsample(interpolation_output_size)
     
     def forward(self, x):
-        # x = self.stem(x)
+        x = self.stem(x)
         x = self.up(x)
 
         return x
