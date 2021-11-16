@@ -78,12 +78,12 @@ class Net2DBillinear(nn.Module):
 
 
         # segmentation head
-        self.linear = nn.Linear(self.hidden_channels, num_classes)
+        self.linear = nn.Linear(self.feat_channels, num_classes)
 
         # 2nd segmentation head
         self.dual_head = dual_head
         if dual_head:
-            self.linear2 = nn.Linear(self.hidden_channels, num_classes)
+            self.linear2 = nn.Linear(self.feat_channels, num_classes)
 
     def get_img_feats(self, img_indices, block_id: str, image_shape: tuple, backbone_output: Dict):
         """
