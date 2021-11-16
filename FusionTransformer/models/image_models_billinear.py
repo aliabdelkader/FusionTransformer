@@ -47,7 +47,7 @@ class Net2DBillinear(nn.Module):
             new_state_dict = OrderedDict()
             for k, v in pretrained_weights.items():
                 if 'backbone' in k:
-                    new_state_dict[k.replace('backbone', '')] = v.to(self.backbone_device)
+                    new_state_dict[k.replace('backbone.', '')] = v.to(self.backbone_device)
             self.backbone.load_state_dict(new_state_dict)
             for k, v in pretrained_weights.items():
                 assert torch.equal(self.backbone.state_dict()[k], v)
