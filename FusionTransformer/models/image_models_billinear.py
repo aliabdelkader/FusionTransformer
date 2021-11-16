@@ -3,6 +3,7 @@ import torch.nn as nn
 from FusionTransformer.models.transformers import SpatialTransformer, ScaleUpModule, image_2d_distilled_transformer
 import timm
 from typing import Dict
+from collections import OrderedDict
 
 class BilinearModule(nn.Module):
     def __init__(self, in_features, out_features, interpolation_output_size):
@@ -41,12 +42,12 @@ class Net2DBillinear(nn.Module):
         if backbone_2d_kwargs.get('IMAGE_PRETRAINED_PATH', '') != '':
             self.backbone = timm.create_model("image_2d_distilled_transformer", pretrained=False, remove_tokens_outputs=True)
             self.backbone.reset_classifier(0, '')
+            self.backbone_device = next(iter(self.backbone.state_dict().values())).device()
             pretrained_weights = torch.load(backbone_2d_kwargs['IMAGE_PRETRAINED_PATH'])['state_dict']
-            from collections import OrderedDict
             new_state_dict = OrderedDict()
             for k, v in pretrained_weights.items():
                 if 'backbone' in k:
-                    new_state_dict[k.replace('backbone', '')] = v.to(self.backbone.device())
+                    new_state_dict[k.replace('backbone', '')] = v.to(self.backbone_device)
             self.backbone.load_state_dict(new_state_dict)
             for k, v in pretrained_weights.items():
                 assert torch.equal(self.backbone.state_dict()[k], v)
