@@ -42,7 +42,14 @@ class Net2DBillinear(nn.Module):
             self.backbone = timm.create_model("image_2d_distilled_transformer", pretrained=False, remove_tokens_outputs=True)
             self.backbone.reset_classifier(0, '')
             pretrained_weights = torch.load(backbone_2d_kwargs['IMAGE_PRETRAINED_PATH'])['state_dict']
-            self.backbone.load_state_dict(pretrained_weights, strict=False)
+            from collections import OrderedDict
+            new_state_dict = OrderedDict()
+            for k, v in pretrained_weights.items():
+                if 'backbone' in k:
+                    new_state_dict[k.replace('backbone', '')] = v.to(self.backbone.device())
+            self.backbone.load_state_dict(new_state_dict)
+            for k, v in pretrained_weights.items():
+                assert torch.equal(self.backbone.state_dict()[k], v)
         else:
             # create vision transformer
             self.backbone = timm.create_model("image_2d_distilled_transformer", pretrained=True, remove_tokens_outputs=True)
