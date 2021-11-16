@@ -130,6 +130,8 @@ _C.MODEL.DUAL_HEAD = False
 _C.MODEL.USE_IMAGE = False
 _C.MODEL.USE_LIDAR = False
 _C.MODEL.USE_FUSION = False 
+_C.MODEL.IMAGE_PRETRAINED_PATH = ''
+
 # ----------------------------------------------------------------------------- #
 # SCN options
 # ----------------------------------------------------------------------------- #

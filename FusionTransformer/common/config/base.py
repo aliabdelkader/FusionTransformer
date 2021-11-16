@@ -25,6 +25,7 @@ _C.RESUME_PATH = ''
 _C.MODEL = CN()
 _C.MODEL.TYPE = ''
 _C.MODEL.SAVE = True
+_C.MODEL.IMAGE_PRETRAINED_PATH = ''
 
 # ---------------------------------------------------------------------------- #
 # DataLoader
