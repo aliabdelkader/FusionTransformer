@@ -42,7 +42,7 @@ class Net2DBillinear(nn.Module):
             self.backbone = timm.create_model("image_2d_distilled_transformer", pretrained=False, remove_tokens_outputs=True)
             self.backbone.reset_classifier(0, '')
             pretrained_weights = torch.load(backbone_2d_kwargs['IMAGE_PRETRAINED_PATH'])['state_dict']
-            self.backbone.load_state_dict(pretrained_weights)
+            self.backbone.load_state_dict(pretrained_weights, strict=False)
         else:
             # create vision transformer
             self.backbone = timm.create_model("image_2d_distilled_transformer", pretrained=True, remove_tokens_outputs=True)
