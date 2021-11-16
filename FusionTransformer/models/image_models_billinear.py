@@ -42,7 +42,7 @@ class Net2DBillinear(nn.Module):
         if backbone_2d_kwargs.get('IMAGE_PRETRAINED_PATH', '') != '':
             self.backbone = timm.create_model("image_2d_distilled_transformer", pretrained=False, remove_tokens_outputs=True)
             self.backbone.reset_classifier(0, '')
-            self.backbone_device = next(iter(self.backbone.state_dict().values())).device()
+            self.backbone_device = next(iter(self.backbone.state_dict().values())).device
             pretrained_weights = torch.load(backbone_2d_kwargs['IMAGE_PRETRAINED_PATH'])['state_dict']
             new_state_dict = OrderedDict()
             for k, v in pretrained_weights.items():
