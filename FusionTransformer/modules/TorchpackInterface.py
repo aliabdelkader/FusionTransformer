@@ -86,14 +86,14 @@ def main(cfg = None, output_dir = None, run_name = "") -> None:
                                    cfg=cfg)
     inference_callbacks = []
     if cfg.MODEL.USE_FUSION:
-        inference_callbacks += create_callbacks(callback_name="val/image", num_classes=cfg["MODEL"]["NUM_CLASSES"], ignore_label= 0, output_tensor="img_seg")
-        inference_callbacks += create_callbacks(callback_name="val/lidar", num_classes=cfg["MODEL"]["NUM_CLASSES"], ignore_label= 0, output_tensor="lidar_seg")
+        inference_callbacks += create_callbacks(callback_name="val/image", num_classes=cfg["MODEL"]["NUM_CLASSES"], ignore_label=0, output_tensor="img_seg")
+        inference_callbacks += create_callbacks(callback_name="val/lidar", num_classes=cfg["MODEL"]["NUM_CLASSES"], ignore_label=0, output_tensor="lidar_seg")
 
     elif cfg.MODEL.USE_LIDAR:
-        inference_callbacks += create_callbacks(callback_name= "val/lidar", num_classes=cfg["MODEL"]["NUM_CLASSES"], ignore_label= 0, output_tensor="lidar_seg")
+        inference_callbacks += create_callbacks(callback_name= "val/lidar", num_classes=cfg["MODEL"]["NUM_CLASSES"], ignore_label=0, output_tensor="lidar_seg")
     
     elif cfg.MODEL.USE_IMAGE:
-        inference_callbacks += create_callbacks(callback_name= "val/image", num_classes=cfg["MODEL"]["NUM_CLASSES"], ignore_label= 0, output_tensor="img_seg")
+        inference_callbacks += create_callbacks(callback_name= "val/image", num_classes=cfg["MODEL"]["NUM_CLASSES"], ignore_label=0, output_tensor="img_seg")
     
     saver_callbacks = []
     if cfg.MODEL.SAVE:
@@ -112,7 +112,7 @@ def main(cfg = None, output_dir = None, run_name = "") -> None:
         num_epochs=cfg.SCHEDULER.MAX_EPOCH,
         callbacks=[
             InferenceRunner(dataflow['val'], callbacks=inference_callbacks),
-            InferenceRunner(dataflow['test'], callbacks=[MeanIoU(name='MeanIoU/test/lidar', num_classes=cfg["MODEL"]["NUM_CLASSES"], ignore_label= 0, output_tensor="lidar_seg")]),
+            InferenceRunner(dataflow['test'], callbacks=[MeanIoU(name='MeanIoU/test/lidar', num_classes=cfg["MODEL"]["NUM_CLASSES"], ignore_label=0, output_tensor="lidar_seg")]),
             MetaInfoSaver(),
             ConsoleWriter(),
             TFEventWriterExtended(),
