@@ -8,7 +8,7 @@ from torchpack.callbacks import InferenceRunner
 from torchpack.environ import set_run_dir
 from torchpack.utils.config import configs
 from torchpack.callbacks import (ConsoleWriter, EstimatedTimeLeft,
-                         JSONLWriter, MetaInfoSaver, ProgressBar)
+                         JSONLWriter, MetaInfoSaver, ProgressBar, SaverRestore)
 from FusionTransformer.data.build import build_dataloader
 from FusionTransformer.models.build import build_model
 from FusionTransformer.common.solver.build import build_optimizer, build_scheduler
@@ -21,7 +21,7 @@ import os
 def create_callbacks(callback_name: str = "", num_classes: int = 1, ignore_label: int = 0, output_tensor: str = ""):
     return [
         MeanIoU(name='MeanIoU/'+ callback_name, num_classes=num_classes, ignore_label=ignore_label, output_tensor=output_tensor),
-        iouEval(name='iouEval/'+ callback_name, n_classes=num_classes, ignore=ignore_label, output_tensor=output_tensor),
+        # iouEval(name='iouEval/'+ callback_name, n_classes=num_classes, ignore=ignore_label, output_tensor=output_tensor),
         accEval(name='accEval/'+ callback_name, n_classes=num_classes, ignore=ignore_label, output_tensor=output_tensor),
     ]
 
@@ -59,6 +59,7 @@ def main(cfg = None, output_dir = None, run_name = "") -> None:
     dataflow = {}
     dataflow["train"] = build_dataloader(cfg, mode='train', use_distributed=True)
     dataflow["val"] = build_dataloader(cfg, mode='val', use_distributed=True)
+    dataflow["test"] = build_dataloader(cfg, mode='test', use_distributed=True)
 
 
     model = build_model(cfg)[0]
@@ -117,7 +118,9 @@ def main(cfg = None, output_dir = None, run_name = "") -> None:
             JSONLWriter(),
             ProgressBar(),
             EstimatedTimeLeft()
-        ] + saver_callbacks
+        ] + saver_callbacks + [
+            InferenceRunner(dataflow['test'], callbacks=[SaverRestore(),  MeanIoU(name='MeanIoU/test', num_classes=cfg["MODEL"]["NUM_CLASSES"], ignore_label= 0, output_tensor="lidar_seg")]
+        )]
     )
 
     dist.barrier()
