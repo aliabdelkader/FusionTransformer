@@ -112,15 +112,14 @@ def main(cfg = None, output_dir = None, run_name = "") -> None:
         num_epochs=cfg.SCHEDULER.MAX_EPOCH,
         callbacks=[
             InferenceRunner(dataflow['val'], callbacks=inference_callbacks),
+            InferenceRunner(dataflow['test'], callbacks=[MeanIoU(name='MeanIoU/test/lidar', num_classes=cfg["MODEL"]["NUM_CLASSES"], ignore_label= 0, output_tensor="lidar_seg")]),
             MetaInfoSaver(),
             ConsoleWriter(),
             TFEventWriterExtended(),
             JSONLWriter(),
             ProgressBar(),
             EstimatedTimeLeft()
-        ] + saver_callbacks + [
-            InferenceRunner(dataflow['test'], callbacks=[SaverRestore(),  MeanIoU(name='MeanIoU/test', num_classes=cfg["MODEL"]["NUM_CLASSES"], ignore_label= 0, output_tensor="lidar_seg")]
-        )]
+        ] + saver_callbacks
     )
 
     dist.barrier()
