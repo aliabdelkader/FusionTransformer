@@ -1,14 +1,14 @@
 # AUTO_RESUME: TRUE
 # RESUME_STATES: TRUE
 MODEL:
-  TYPE: "MiddleFusionTransformer"
-  DUAL_HEAD: True
+  TYPE: "ImageSegBilinear"
+  DUAL_HEAD: False
   NUM_CLASSES: 20 
-  middle_feat_block_number: 5
   late_feat_block_number: 11
   USE_IMAGE: True
-  USE_LIDAR: True
-  USE_FUSION: True
+  USE_LIDAR: False
+  USE_FUSION: False
+  IMAGE_PRETRAINED_PATH: "/home/user/logs/SimCLR/lightning_logs/version_54/checkpoints/epoch=15-step=8463.ckpt"
 DATASET:
   TYPE: "SemanticKITTISCN"
   TRAIN: ("train",)
@@ -24,9 +24,10 @@ OPTIMIZER:
   BASE_LR: 1e-4
   WEIGHT_DECAY: 0.0005
 SCHEDULER:
-  # TYPE: "MultiStepLR"
-  # MultiStepLR:
+  TYPE: ""
+  # StepLR:
   #   gamma: 0.1
+  #   step_size: 10
   MAX_EPOCH: 100
 TRAIN:
   BATCH_SIZE: 10
@@ -39,7 +40,7 @@ TRAIN:
   #                 1.37436805, 1.4891881,  1.03083152, 2.25629999, 1.51838281, 2.51986332,
   #                 3.08564901]
   FusionTransformer:
-    lambda_xm: 0.1
+    lambda_xm: 0.0
 VAL:
   BATCH_SIZE: 10
   # PERIOD: 5

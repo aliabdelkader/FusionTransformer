@@ -25,6 +25,7 @@ _C.RESUME_PATH = ''
 _C.MODEL = CN()
 _C.MODEL.TYPE = ''
 _C.MODEL.SAVE = True
+_C.MODEL.IMAGE_PRETRAINED_PATH = ''
 
 # ---------------------------------------------------------------------------- #
 # DataLoader
@@ -92,6 +93,7 @@ _C.TRAIN.MAX_TO_KEEP = 100
 # Regex patterns of modules and/or parameters to freeze
 _C.TRAIN.FROZEN_PATTERNS = ()
 
+_C.TRAIN.LOG_HISTOGRAM = False
 # ---------------------------------------------------------------------------- #
 # Specific validation options
 # ---------------------------------------------------------------------------- #
