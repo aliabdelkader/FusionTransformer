@@ -1,6 +1,6 @@
 import torch.nn as nn
 from FusionTransformer.models.spvcnn import SPVCNN
-from FusionTransformer.models.image_models import Net2DSeg
+from FusionTransformer.models.image_models import Net2DSeg, Net2DBillinear
 
 class Net3DSeg(nn.Module):
     def __init__(self,
@@ -39,7 +39,7 @@ class LateFusionTransformer(nn.Module):
         super(LateFusionTransformer, self).__init__()
         self.dual_head = dual_head
         self.lidar_backbone = Net3DSeg(num_classes=num_class, dual_head=dual_head, backbone_3d_kwargs=backbone_3d_kwargs)
-        self.image_backbone = Net2DSeg(
+        self.image_backbone = Net2DBillinear(
                  num_classes=num_class,
                  dual_head=dual_head,
                  backbone_2d_kwargs=backbone_2d_kwargs)
