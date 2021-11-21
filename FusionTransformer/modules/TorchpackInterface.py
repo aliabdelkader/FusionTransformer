@@ -18,6 +18,7 @@ from FusionTransformer.common.utils.torch_util import set_random_seed
 
 import wandb
 import os
+import tqdm
 def create_callbacks(callback_name: str = "", num_classes: int = 1, ignore_label: int = 0, output_tensor: str = ""):
     return [
         MeanIoU(name='MeanIoU/'+ callback_name, num_classes=num_classes, ignore_label=ignore_label, output_tensor=output_tensor),
@@ -124,6 +125,86 @@ def main(cfg = None, output_dir = None, run_name = "") -> None:
             EstimatedTimeLeft()
         ] + saver_callbacks
     )
+
+    dist.barrier()
+    if dist.rank() == 0:
+        wandb.finish()
+
+
+def test(cfg = None, output_dir = None, run_name = "") -> None:
+    os.environ[
+        "TORCH_DISTRIBUTED_DEBUG"
+    ] = "DETAIL"  # set to DETAIL for runtime logging
+    
+    dist.init()
+
+    torch.backends.cudnn.benchmark = True
+    torch.cuda.set_device(dist.local_rank())
+    print("world size", dist.size())
+    print("local rank", dist.local_rank())
+    
+    if dist.rank() == 0:
+        run = wandb.init(project='FusionTransformer', name=run_name, config=cfg, group=cfg["MODEL"]["TYPE"], sync_tensorboard=True)
+
+    set_run_dir(output_dir)
+
+    configs.update(cfg)
+
+    seed = cfg.RNG_SEED + dist.rank() * cfg.DATALOADER.NUM_WORKERS * cfg.SCHEDULER.MAX_EPOCH
+    print(seed)
+    set_random_seed(seed)
+    # random.seed(seed)
+    # np.random.seed(seed)
+    # torch.manual_seed(seed)
+    
+
+    dataflow = {}
+    dataflow["test"] = build_dataloader(cfg, mode='test', use_distributed=True)
+
+
+    model = build_model(cfg)[0]
+    dist.barrier()
+    if dist.rank() == 0:
+        wandb.watch(model)
+
+    model = torch.nn.parallel.DistributedDataParallel(
+        model.cuda(),
+        device_ids=[dist.local_rank()],
+        find_unused_parameters=True)
+
+    criterion =  nn.CrossEntropyLoss(ignore_index=0)
+    optimizer = build_optimizer(cfg, model)
+    # build lr scheduler
+    scheduler = build_scheduler(cfg, optimizer)
+
+    trainer = SemanticTorchpackTrainer(model=model,
+                                   criterion=criterion,
+                                   optimizer=optimizer,
+                                   scheduler=scheduler,
+                                   num_workers=cfg.DATALOADER.NUM_WORKERS,
+                                   seed=seed, 
+                                   cfg=cfg)
+    inference_callbacks = []
+    if cfg.MODEL.USE_FUSION:
+        test_inference_callbacks = [SaverRestore(), MeanIoU(name='MeanIoU/test/lidar', num_classes=cfg["MODEL"]["NUM_CLASSES"], ignore_label=0, output_tensor="lidar_seg")]
+
+    elif cfg.MODEL.USE_LIDAR:
+        test_inference_callbacks = [SaverRestore(), MeanIoU(name='MeanIoU/test/lidar', num_classes=cfg["MODEL"]["NUM_CLASSES"], ignore_label=0, output_tensor="lidar_seg")]
+    
+    elif cfg.MODEL.USE_IMAGE:
+        test_inference_callbacks = [SaverRestore(), MeanIoU(name='MeanIoU/test/lidar', num_classes=cfg["MODEL"]["NUM_CLASSES"], ignore_label=0, output_tensor="img_seg")]
+
+    trainer.before_train()
+    trainer.before_epoch()
+
+    model.eval()
+
+    for feed_dict in tqdm(dataflow['test'], desc='eval'):
+        output_dict = trainer.run_step(feed_dict)
+        trainer.after_step(output_dict)
+
+    trainer.after_epoch()    
+
 
     dist.barrier()
     if dist.rank() == 0:
