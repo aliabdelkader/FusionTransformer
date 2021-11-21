@@ -4,6 +4,7 @@ import numpy as np
 import torch
 import os
 import wandb
+import glob
 
 from torchpack import distributed as dist
 from torchpack.callbacks.callback import Callback
@@ -265,3 +266,20 @@ class SummaryExtended(Summary):
         for writer in self.writers:
             if isinstance(writer, TFEventWriterExtended):
                 writer.add_grads_histogram()
+
+class SaverRestoreIOU(Callback):
+    def _before_train(self) -> None:
+        checkpoints = glob.glob(os.path.join(self.load_dir, 'max-MeanIoU-*.pt'))
+        if not checkpoints:
+            logger.warning(f'No checkpoints found: "{self.load_dir}".')
+            return
+
+        load_path = max(checkpoints, key=os.path.getmtime)
+        try:
+            state_dict = io.load(load_path, map_location='cpu')
+            self.trainer.load_state_dict(state_dict)
+        except OSError:
+            logger.exception(
+                f'Error occurred when loading checkpoint "{load_path}".')
+        else:
+            logger.info(f'Checkpoint loaded: "{load_path}".')
