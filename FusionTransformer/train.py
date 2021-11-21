@@ -31,19 +31,16 @@ def parse_args():
         '--use_torchpack',
         help='use torchpack for training',
         default=False,
-        nargs=argparse.REMAINDER,
     )
     parser.add_argument(
         '--use_torchpack_test',
         help='use torchpack for testing',
         default=False,
-        nargs=argparse.REMAINDER,
     )
     parser.add_argument(
         '--run_name',
         help='set name for the run',
         default=None,
-        nargs=argparse.REMAINDER,
     )
  
     args = parser.parse_args()
