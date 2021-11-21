@@ -13,6 +13,7 @@ from FusionTransformer.data.build import build_dataloader
 from FusionTransformer.models.build import build_model
 from FusionTransformer.common.solver.build import build_optimizer, build_scheduler
 from FusionTransformer.modules.SemanticTorchpackTrainer import SemanticTorchpackTrainer
+from torchpack.callbacks import Callbacks
 from FusionTransformer.modules.TorchpackCallbacks import MeanIoU, iouEval, accEval, WandbMaxSaver, TFEventWriterExtended
 from FusionTransformer.common.utils.torch_util import set_random_seed
 
@@ -193,6 +194,11 @@ def test(cfg = None, output_dir = None, run_name = "") -> None:
     
     elif cfg.MODEL.USE_IMAGE:
         test_inference_callbacks = [SaverRestore(), MeanIoU(name='MeanIoU/test/lidar', num_classes=cfg["MODEL"]["NUM_CLASSES"], ignore_label=0, output_tensor="img_seg")]
+
+    callbacks = Callbacks(test_inference_callbacks)
+    callbacks._set_trainer(trainer)
+    trainer.callbacks = callbacks
+    trainer.dataflow = dataflow['test']
 
     trainer.before_train()
     trainer.before_epoch()
