@@ -9,6 +9,7 @@ import glob
 from torchpack import distributed as dist
 from torchpack.callbacks.callback import Callback
 from torchpack.callbacks.writers import TFEventWriter
+from torchpack.callbacks.checkpoint import SaverRestore
 from torchpack.train.summary import Summary
 from typing import List, Optional, Union
 from torchpack.callbacks import MaxSaver
@@ -267,7 +268,7 @@ class SummaryExtended(Summary):
             if isinstance(writer, TFEventWriterExtended):
                 writer.add_grads_histogram()
 
-class SaverRestoreIOU(Callback):
+class SaverRestoreIOU(SaverRestore):
     def _before_train(self) -> None:
         checkpoints = glob.glob(os.path.join(self.load_dir, 'max-MeanIoU-*.pt'))
         if not checkpoints:
