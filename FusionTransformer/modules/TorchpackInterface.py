@@ -19,7 +19,7 @@ from FusionTransformer.common.utils.torch_util import set_random_seed
 
 import wandb
 import os
-import tqdm
+from tqdm import tqdm
 def create_callbacks(callback_name: str = "", num_classes: int = 1, ignore_label: int = 0, output_tensor: str = ""):
     return [
         MeanIoU(name='MeanIoU/'+ callback_name, num_classes=num_classes, ignore_label=ignore_label, output_tensor=output_tensor),
