@@ -99,7 +99,7 @@ class MeanIoU(Callback):
         miou = np.mean(ious)
 
         print("MeanIoU: ", ious, len(ious), miou)
-        self.print_table(ious)
+        print(self.print_table(ious))
 
         if hasattr(self, 'trainer') and hasattr(self.trainer, 'summary'):
             self.trainer.summary.add_scalar(self.name, miou)
