@@ -117,8 +117,7 @@ class MeanIoU(Callback):
             table.append([class_name,
                           ious[ind],
                           ])
-        print(tabulate(table, headers=header, tablefmt='psql', floatfmt='.2f'))
-        print(tabulate(table, headers=header, tablefmt='csv', floatfmt='.5f', numalign=None, stralign=None))
+        print(tabulate(table, headers=header, tablefmt='psql', floatfmt='.3f'))
 
 
 class InternalEval(Callback):
