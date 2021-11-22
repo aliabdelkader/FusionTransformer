@@ -100,7 +100,7 @@ class MeanIoU(Callback):
         miou = np.mean(ious)
 
         print("MeanIoU: ", ious, len(ious), miou)
-        print(self.print_table(ious))
+        self.print_table(ious)
 
         if hasattr(self, 'trainer') and hasattr(self.trainer, 'summary'):
             self.trainer.summary.add_scalar(self.name, miou)
@@ -112,11 +112,13 @@ class MeanIoU(Callback):
         from tabulate import tabulate
         header = ['Class', 'IOU']
         table = []
+        table.append(["MIoU", np.mean(ious)])
         for ind, class_name in enumerate(self.class_names):
             table.append([class_name,
                           ious[ind],
                           ])
-        return tabulate(table, headers=header, tablefmt='psql', floatfmt='.2f')
+        print(tabulate(table, headers=header, tablefmt='psql', floatfmt='.2f'))
+        print(tabulate(table, headers=header, tablefmt='csv', floatfmt='.5f', numalign=None, stralign=None))
 
 
 class InternalEval(Callback):
