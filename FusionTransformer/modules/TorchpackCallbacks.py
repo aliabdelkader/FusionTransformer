@@ -38,27 +38,28 @@ class MeanIoU(Callback):
         self.name = name
         self.output_tensor = output_tensor
         self.target_tensor = target_tensor
-        self.class_names = ["unlabeled",
-                            "car",
-                            "bicycle",
-                            "motorcycle",
-                            "truck",
-                            "other-vehicle,"
-                            "person",
-                            "bicyclist",
-                            "motorcyclist",
-                            "road",
-                            "parking",
-                            "sidewalk",
-                            "other-ground",
-                            "building",
-                            "fence",
-                            "vegetation",
-                            "trunk",
-                            "terrain",
-                            "pole",
-                            "traffic-sign",
-                            ]
+        self.class_names = [
+            "unlabeled",
+            "car",
+            "bicycle",
+            "motorcycle",
+            "truck",
+            "other-vehicle",
+            "person",
+            "bicyclist",
+            "motorcyclist",
+            "road",
+            "parking",
+            "sidewalk",
+            "other-ground",
+            "building",
+            "fence",
+            "vegetation",
+            "trunk",
+            "terrain",
+            "pole",
+            "traffic-sign"
+        ]
 
     def _before_epoch(self) -> None:
         self.total_seen = np.zeros(self.num_classes)
