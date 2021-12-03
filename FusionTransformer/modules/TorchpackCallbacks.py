@@ -369,10 +369,12 @@ class SavePredictions(Callback):
 
         seq, filename  = output_dict["seq"][0], output_dict["filename"][0]
         path = Path(self.output_path) / seq / filename
+        path.parent.mkdir(parents=True, exist_ok=True)
         outputs_cpu = outputs.clone().detach().cpu().numpy()
         np.save(str(path), outputs_cpu)
 
         if self.save_targets:
             path = Path(self.save_targets_path) / seq / filename
+            path.parent.mkdir(parents=True, exist_ok=True)
             targets_cpu = targets.clone().detach().cpu().numpy()
             np.save(str(path), targets_cpu)
