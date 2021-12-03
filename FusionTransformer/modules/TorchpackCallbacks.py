@@ -364,7 +364,10 @@ class SavePredictions(Callback):
         outputs = outputs[targets != self.ignore_label]
         targets = targets[targets != self.ignore_label]
 
-        seq, filename  = output_dict["seq"], output_dict["filename"]
+        assert len(output_dict["seq"]) == 1, f"SavePredictions assumes batch size = 1, expected len(seq) = 1, obtained  {len(output_dict['seq'])}"
+        assert len(output_dict["filename"]) == 1, f"SavePredictions assumes batch size = 1, expected len(filenames) = 1, obtained  {len(output_dict['filename'])}"
+
+        seq, filename  = output_dict["seq"][0], output_dict["filename"][0]
         path = Path(self.output_path) / seq / filename
         outputs_cpu = outputs.clone().detach().cpu().numpy()
         np.save(str(path), outputs_cpu)
