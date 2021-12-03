@@ -14,7 +14,7 @@ from FusionTransformer.models.build import build_model
 from FusionTransformer.common.solver.build import build_optimizer, build_scheduler
 from FusionTransformer.modules.SemanticTorchpackTrainer import SemanticTorchpackTrainer
 from torchpack.callbacks import Callbacks
-from FusionTransformer.modules.TorchpackCallbacks import MeanIoU, iouEval, accEval, WandbMaxSaver, TFEventWriterExtended, SaverRestoreIOU
+from FusionTransformer.modules.TorchpackCallbacks import MeanIoU, iouEval, accEval, WandbMaxSaver, TFEventWriterExtended, SaverRestoreIOU, SavePredictions
 from FusionTransformer.common.utils.torch_util import set_random_seed
 
 import wandb
@@ -187,13 +187,15 @@ def test(cfg = None, output_dir = None, run_name = "") -> None:
                                    cfg=cfg)
     inference_callbacks = []
     if cfg.MODEL.USE_FUSION:
-        test_inference_callbacks = [SaverRestoreIOU(), MeanIoU(name='MeanIoU/test/lidar', num_classes=cfg["MODEL"]["NUM_CLASSES"], ignore_label=0, output_tensor="lidar_seg")]
+        test_inference_callbacks = [SaverRestoreIOU(), 
+                                    MeanIoU(name='MeanIoU/test/lidar', num_classes=cfg["MODEL"]["NUM_CLASSES"], ignore_label=0, output_tensor="lidar_seg"),
+                                    SavePredictions(ignore_label=0, output_tensor="lidar_seg", output_path=".")]
 
     elif cfg.MODEL.USE_LIDAR:
-        test_inference_callbacks = [SaverRestoreIOU(), MeanIoU(name='MeanIoU/test/lidar', num_classes=cfg["MODEL"]["NUM_CLASSES"], ignore_label=0, output_tensor="lidar_seg")]
+        test_inference_callbacks = [SaverRestoreIOU(), MeanIoU(name='MeanIoU/test/lidar', num_classes=cfg["MODEL"]["NUM_CLASSES"], ignore_label=0, output_tensor="lidar_seg"), SavePredictions(ignore_label=0, output_tensor="lidar_seg", output_path=".")]
     
     elif cfg.MODEL.USE_IMAGE:
-        test_inference_callbacks = [SaverRestoreIOU(), MeanIoU(name='MeanIoU/test/lidar', num_classes=cfg["MODEL"]["NUM_CLASSES"], ignore_label=0, output_tensor="img_seg")]
+        test_inference_callbacks = [SaverRestoreIOU(), MeanIoU(name='MeanIoU/test/lidar', num_classes=cfg["MODEL"]["NUM_CLASSES"], ignore_label=0, output_tensor="img_seg"), SavePredictions(ignore_label=0, output_tensor="lidar_seg", output_path=".")]
 
     callbacks = Callbacks(test_inference_callbacks)
     callbacks._set_trainer(trainer)

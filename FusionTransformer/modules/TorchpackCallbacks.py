@@ -16,6 +16,7 @@ from typing import List, Optional, Union
 from torchpack.callbacks import MaxSaver
 from torchpack.utils.logging import logger
 from torchpack.utils import io
+from pathlib import Path
 
 __all__ = ['MeanIoU', 'iouEval', 'accEval',
            'TFEventWriterExtended', 'SummaryExtended']
@@ -332,3 +333,43 @@ class SaverRestoreIOU(SaverRestore):
                 f'Error occurred when loading checkpoint "{load_path}".')
         else:
             logger.info(f'Checkpoint loaded: "{load_path}".')
+
+
+
+class SavePredictions(Callback):
+    """
+    """
+
+    def __init__(self,
+                 ignore_label: int,
+                 *,
+                 output_tensor: str = 'outputs',
+                 target_tensor: str = 'targets',
+                 output_path: str = "predictions_dir",
+                 save_targets: bool = False,
+                 save_targets_path: str = "",
+                 name: str = 'predictions') -> None:
+        self.ignore_label = ignore_label
+        self.name = name
+        self.output_tensor = output_tensor
+        self.target_tensor = target_tensor
+        self.output_path = output_path
+        self.save_targets = save_targets
+        self.save_targets_path = save_targets_path
+
+
+    def _after_step(self, output_dict: Dict[str, Any]) -> None:
+        outputs = output_dict[self.output_tensor]
+        targets = output_dict[self.target_tensor]
+        outputs = outputs[targets != self.ignore_label]
+        targets = targets[targets != self.ignore_label]
+
+        seq, filename  = output_dict["seq"], output_dict["filename"]
+        path = Path(self.output_path) / seq / filename
+        outputs_cpu = outputs.clone().detach().cpu().numpy()
+        np.save(str(path), outputs_cpu)
+
+        if self.save_targets:
+            path = Path(self.save_targets_path) / seq / filename
+            targets_cpu = targets.clone().detach().cpu().numpy()
+            np.save(str(path), targets_cpu)

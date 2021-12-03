@@ -43,4 +43,7 @@ TRAIN:
 VAL:
   BATCH_SIZE: 10
   # PERIOD: 5
+  
+TEST:
+  BATCH_SIZE: 1
 OUTPUT_DIR: "/home/user/logs/@"  #  @ will be replaced with config path, e.g. nuscenes/usa_singapore/FusionTransformer

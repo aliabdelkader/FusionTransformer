@@ -239,6 +239,8 @@ class SemanticKITTISCN(SemanticKITTIBase):
         # out_dict['seg_label'] = SparseTensor(coords=coords[inds], feats=seg_label[inds])
         # out_dict['img_indices'] = img_indices[inds].tolist()#SparseTensor(coords=coords[inds], feats=img_indices[inds])
         # out_dict["inverse_map"] = SparseTensor(coords=coords[inds], feats=inverse_map) 
+        out_dict["filename"] = Path(data_path).stem
+        out_dict["seq"] = Path(data_path).parent.name
 
         if self.output_orig:
             out_dict.update({

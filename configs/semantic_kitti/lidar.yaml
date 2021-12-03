@@ -41,5 +41,8 @@ TRAIN:
     lambda_xm: 0.0
 VAL:
   BATCH_SIZE: 10
+
+TEST:
+  BATCH_SIZE: 1
   # PERIOD: 5
 OUTPUT_DIR: "/home/user/logs/@"  #  @ will be replaced with config path, e.g. nuscenes/usa_singapore/FusionTransformer

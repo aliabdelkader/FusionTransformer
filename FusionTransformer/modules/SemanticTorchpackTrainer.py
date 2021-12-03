@@ -65,7 +65,7 @@ class SemanticTorchpackTrainer(Trainer):
         else:
             outputs, targets = self.eval_step(preds=scores, feed_dict=feed_dict)
         
-        return {'targets': targets, **outputs}
+        return {'targets': targets,  **outputs, "filename": feed_dict["filename"], "seq": feed_dict["seq"]}
     
     def calc_loss(self, preds, feed_dict):
 
