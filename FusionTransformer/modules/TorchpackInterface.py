@@ -208,13 +208,14 @@ def test(cfg=None, output_dir=None, run_name="") -> None:
 
     elif cfg.MODEL.USE_LIDAR:
         test_inference_callbacks = [SaverRestoreIOU(), MeanIoU(name='MeanIoU/test/lidar', num_classes=cfg["MODEL"]["NUM_CLASSES"],
-                                                               ignore_label=0, output_tensor="lidar_seg"), 
-                                                               SavePredictions(ignore_label=0, output_tensor="lidar_seg", output_path=f"{get_run_dir()}/predictions")]
+                                                               ignore_label=0, output_tensor="lidar_seg"),
+                                    SavePredictions(ignore_label=0, output_tensor="lidar_seg", output_path=f"{get_run_dir()}/predictions",  save_targets=True,
+                                                    save_targets_path=f"{get_run_dir()}/targets")]
 
     elif cfg.MODEL.USE_IMAGE:
         test_inference_callbacks = [SaverRestoreIOU(), MeanIoU(name='MeanIoU/test/lidar', num_classes=cfg["MODEL"]["NUM_CLASSES"],
-                                                               ignore_label=0, output_tensor="img_seg"), 
-                                                               SavePredictions(ignore_label=0, output_tensor="img_seg", output_path=f"{get_run_dir()}/predictions")]
+                                                               ignore_label=0, output_tensor="img_seg"),
+                                    SavePredictions(ignore_label=0, output_tensor="img_seg", output_path=f"{get_run_dir()}/predictions")]
 
     callbacks = Callbacks(test_inference_callbacks)
     callbacks._set_trainer(trainer)
