@@ -17,6 +17,7 @@ def collate_scn_base(input_dict_list, output_orig, output_image=True):
     labels=[]
     seq = []
     filename = []
+    voxel_coords = []
 
 
     if output_image:
@@ -34,6 +35,7 @@ def collate_scn_base(input_dict_list, output_orig, output_image=True):
     #     pseudo_label_3d = []
 
     for idx, input_dict in enumerate(input_dict_list):
+        voxel_coords.append(input_dict['voxel_coords'])
         coords = torch.from_numpy(input_dict['coords'])
         # add batch idx to coordinates
         batch_idxs = torch.LongTensor(coords.shape[0], 1).fill_(idx)
@@ -77,6 +79,7 @@ def collate_scn_base(input_dict_list, output_orig, output_image=True):
     
     out_dict["seq"] = seq
     out_dict["filename"] = filename
+    out_dict['voxel_coords'] = voxel_coords
     # if output_pselab:
     #     out_dict['pseudo_label_2d'] = torch.cat(pseudo_label_2d, 0)
     #     out_dict['pseudo_label_3d'] = torch.cat(pseudo_label_3d, 0) if pseudo_label_3d else pseudo_label_3d

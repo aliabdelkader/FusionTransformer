@@ -210,7 +210,7 @@ def test(cfg=None, output_dir=None, run_name="") -> None:
         test_inference_callbacks = [SaverRestoreIOU(), MeanIoU(name='MeanIoU/test/lidar', num_classes=cfg["MODEL"]["NUM_CLASSES"],
                                                                ignore_label=0, output_tensor="lidar_seg"),
                                     SavePredictions(ignore_label=0, output_tensor="lidar_seg", output_path=f"{get_run_dir()}/predictions",  save_targets=True,
-                                                    save_targets_path=f"{get_run_dir()}/targets")]
+                                                    save_targets_path=f"{get_run_dir()}/targets", save_coords=True, save_coords_path=f"{get_run_dir()}/voxel_coords")]
 
     elif cfg.MODEL.USE_IMAGE:
         test_inference_callbacks = [SaverRestoreIOU(), MeanIoU(name='MeanIoU/test/lidar', num_classes=cfg["MODEL"]["NUM_CLASSES"],

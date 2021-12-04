@@ -348,6 +348,8 @@ class SavePredictions(Callback):
                  output_path: str = "predictions_dir",
                  save_targets: bool = False,
                  save_targets_path: str = "",
+                 save_coords: bool = False,
+                 save_coords_path: str = "",
                  name: str = 'predictions') -> None:
         self.ignore_label = ignore_label
         self.name = name
@@ -356,7 +358,8 @@ class SavePredictions(Callback):
         self.output_path = output_path
         self.save_targets = save_targets
         self.save_targets_path = save_targets_path
-
+        self.save_coords = save_coords
+        self.save_coords_path = save_coords_path
 
     def _after_step(self, output_dict: Dict[str, Any]) -> None:
         outputs = output_dict[self.output_tensor]
@@ -378,3 +381,8 @@ class SavePredictions(Callback):
             path.parent.mkdir(parents=True, exist_ok=True)
             targets_cpu = targets.clone().detach().cpu().numpy()
             np.save(str(path), targets_cpu)
+        
+        if self.save_coords:
+            path = Path(self.save_coords_path) / seq / filename
+            path.parent.mkdir(parents=True, exist_ok=True)
+            np.save(str(path), output_dict["voxel_coords"])
