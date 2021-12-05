@@ -375,14 +375,14 @@ class SavePredictions(Callback):
         path.parent.mkdir(parents=True, exist_ok=True)
         outputs_cpu = outputs.clone().detach().cpu().numpy()
         np.save(str(path), outputs_cpu)
-
+        targets_cpu = targets.clone().detach().cpu().numpy()
         if self.save_targets:
             path = Path(self.save_targets_path) / seq / filename
             path.parent.mkdir(parents=True, exist_ok=True)
-            targets_cpu = targets.clone().detach().cpu().numpy()
+            
             np.save(str(path), targets_cpu)
         
         if self.save_coords:
             path = Path(self.save_coords_path) / seq / filename
             path.parent.mkdir(parents=True, exist_ok=True)
-            np.save(str(path), output_dict["voxel_coords"][targets != self.ignore_label])
+            np.save(str(path), output_dict["voxel_coords"][0][targets_cpu != self.ignore_label])
