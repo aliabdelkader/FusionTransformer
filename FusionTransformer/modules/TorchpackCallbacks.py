@@ -365,6 +365,7 @@ class SavePredictions(Callback):
         outputs = output_dict[self.output_tensor]
         targets = output_dict[self.target_tensor]
         outputs = outputs[targets != self.ignore_label]
+        voxel_coords = output_dict["voxel_coords"][0][targets != self.ignore_label]
         targets = targets[targets != self.ignore_label]
 
         assert len(output_dict["seq"]) == 1, f"SavePredictions assumes batch size = 1, expected len(seq) = 1, obtained  {len(output_dict['seq'])}"
@@ -385,4 +386,4 @@ class SavePredictions(Callback):
         if self.save_coords:
             path = Path(self.save_coords_path) / seq / filename
             path.parent.mkdir(parents=True, exist_ok=True)
-            np.save(str(path), output_dict["voxel_coords"][0][targets_cpu != self.ignore_label])
+            np.save(str(path), voxel_coords)
