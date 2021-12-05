@@ -385,4 +385,4 @@ class SavePredictions(Callback):
         if self.save_coords:
             path = Path(self.save_coords_path) / seq / filename
             path.parent.mkdir(parents=True, exist_ok=True)
-            np.save(str(path), output_dict["voxel_coords"])
+            np.save(str(path), output_dict["voxel_coords"][targets != self.ignore_label])
