@@ -1,3 +1,4 @@
+from os import name
 import os.path as osp
 import pickle
 from PIL import Image
@@ -13,6 +14,7 @@ import yaml
 from os.path import dirname, realpath
 from pathlib import Path
 from FusionTransformer.data.semantic_kitti import splits
+from FusionTransformer.data.semantic_kitti.splits import kfolds
 
 class SemanticKITTIBase(Dataset):
     """SemanticKITTI dataset"""
@@ -60,7 +62,9 @@ class SemanticKITTIBase(Dataset):
     def __init__(self,
                  split,
                  preprocess_dir,
-                 debug=False
+                 debug=False,
+                 use_kfolds=False,
+                 fold=None
                  ):
 
         self.split = split
@@ -72,7 +76,10 @@ class SemanticKITTIBase(Dataset):
         print('Load', split)
         
         self.data_paths = []
-        if debug:
+        if use_kfolds:
+            split_sequences = kfolds().get_seqs(fold=fold, name=split[0])
+
+        elif debug:
             split_sequences = getattr(splits.debug, split[0])
         else:
             split_sequences = getattr(splits.regular, split[0])
@@ -103,6 +110,8 @@ class SemanticKITTISCN(SemanticKITTIBase):
                  split,
                  preprocess_dir,
                  semantic_kitti_dir='',
+                 use_kfolds=False,
+                 fold=None,
                 #  pselab_paths=None,
                 #  merge_classes=False,
                  scale=20,
@@ -123,6 +132,8 @@ class SemanticKITTISCN(SemanticKITTIBase):
         super().__init__(split,
                          preprocess_dir,
                          debug=debug
+                         use_kfolds=use_kfolds,
+                         fold=fold
                          )
 
 

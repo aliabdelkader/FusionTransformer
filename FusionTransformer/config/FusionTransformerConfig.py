@@ -76,6 +76,7 @@ _C.DATASET.TEST = tuple()
 _C.DATASET.SemanticKITTISCN = CN()
 _C.DATASET.SemanticKITTISCN.preprocess_dir = ''
 _C.DATASET.SemanticKITTISCN.semantic_kitti_dir = ''
+
 # _C.DATASET.SemanticKITTISCN.merge_classes = True
 # 3D
 _C.DATASET.SemanticKITTISCN.scale = 20

@@ -12,7 +12,7 @@ from torchsparse.utils import sparse_quantize
 import yaml
 from os.path import dirname, realpath
 from pathlib import Path
-from FusionTransformer.data.semantic_kitti import splits
+from FusionTransformer.data.semantic_kitti.splits import kfolds
 from FusionTransformer.data.semantic_kitti.semantic_kitti_dataloader import SemanticKITTIBase, SemanticKITTISCN
 # class SemanticKITTIBase(Dataset):
 #     """SemanticKITTI dataset"""
@@ -102,6 +102,8 @@ class DebugSemanticKITTISCN(SemanticKITTIBase):
                  split,
                  preprocess_dir,
                  semantic_kitti_dir='',
+                 use_kfolds=False,
+                 fold=None,
                 #  pselab_paths=None,
                 #  merge_classes=False,
                  scale=20,
@@ -121,7 +123,9 @@ class DebugSemanticKITTISCN(SemanticKITTIBase):
                  ):
         super().__init__(split,
                          preprocess_dir,
-                         debug=debug
+                         debug=debug,
+                        use_kfolds=False,
+                        fold=None
                          )
         print("*************** Debug Dataloader ****************************")
 

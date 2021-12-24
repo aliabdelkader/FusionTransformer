@@ -10,7 +10,7 @@ from FusionTransformer.data.semantic_kitti.debug_semantic_kitti_dataloader impor
 from FusionTransformer.data.collate import get_collate_scn
 
 
-def build_dataloader(cfg, mode='train', start_iteration=0, halve_batch_size=False, use_distributed=False,  seed=0):
+def build_dataloader(cfg, mode='train', start_iteration=0, halve_batch_size=False, use_distributed=False,  seed=0, use_kfold=False, fold=None):
 
     assert mode in ['train', 'val', 'test']
     dataset_cfg = cfg.get('DATASET')
@@ -34,21 +34,26 @@ def build_dataloader(cfg, mode='train', start_iteration=0, halve_batch_size=Fals
     # Note that the build_dataloader fn is called twice for train and val.
     dataset_kwargs = CN(dataset_cfg.get(dataset_cfg.TYPE, dict()))
     augmentation = dataset_kwargs.pop('augmentation')
-    augmentation = augmentation if is_train else dict()
-    if dataset_cfg.TYPE == 'NuScenesSCN':
-        dataset = NuScenesSCN(split=split,
-                              output_orig=not is_train,
-                              **dataset_kwargs,
-                              **augmentation)
-    elif dataset_cfg.TYPE == 'SemanticKITTISCN':
+    # augmentation = augmentation if is_train else dict()
+    # if dataset_cfg.TYPE == 'NuScenesSCN':
+    #     dataset = NuScenesSCN(split=split,
+    #                           output_orig=not is_train,
+    #                           use_kfold=use_kfold
+    #                           **dataset_kwargs,
+    #                           **augmentation)
+    if dataset_cfg.TYPE == 'SemanticKITTISCN':
         dataset = SemanticKITTISCN(split=split,
                                    output_orig=not is_train,
+                                   use_kfold=use_kfold,
+                                   fold=fold,
                                    **dataset_kwargs,
                                    **augmentation)
 
     elif dataset_cfg.TYPE == 'DebugSemanticKITTISCN':
         dataset = DebugSemanticKITTISCN(split=split,
                                         output_orig=not is_train,
+                                        use_kfold=use_kfold,
+                                        fold=fold,
                                         **dataset_kwargs,
                                         **augmentation)
     else:

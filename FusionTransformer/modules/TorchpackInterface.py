@@ -34,8 +34,7 @@ def create_callbacks(callback_name: str = "", num_classes: int = 1, ignore_label
 
 def create_saver(callback_name: str = ""):
     return [WandbMaxSaver('MeanIoU/' + callback_name)]
-
-
+    
 def main(cfg=None, output_dir=None, run_name="") -> None:
     os.environ[
         "TORCH_DISTRIBUTED_DEBUG"
@@ -48,102 +47,105 @@ def main(cfg=None, output_dir=None, run_name="") -> None:
     print("world size", dist.size())
     print("local rank", dist.local_rank())
 
-    if dist.rank() == 0:
-        run = wandb.init(project='FusionTransformer', name=run_name,
-                         config=cfg, group=cfg["MODEL"]["TYPE"], sync_tensorboard=True)
+    def run(output_dir, run_name, use_kfold, fold):
+        dist.barrier()
+        if dist.rank() == 0:
+            run = wandb.init(project='FusionTransformer', name=run_name,
+                            config=cfg, group=cfg["MODEL"]["TYPE"], sync_tensorboard=True)
 
-    set_run_dir(output_dir)
+        set_run_dir(output_dir)
 
-    configs.update(cfg)
+        configs.update(cfg)
 
-    seed = cfg.RNG_SEED + dist.rank() * cfg.DATALOADER.NUM_WORKERS * \
-        cfg.SCHEDULER.MAX_EPOCH
-    print(seed)
-    set_random_seed(seed)
-    # random.seed(seed)
-    # np.random.seed(seed)
-    # torch.manual_seed(seed)
+        seed = cfg.RNG_SEED + dist.rank() * cfg.DATALOADER.NUM_WORKERS * \
+            cfg.SCHEDULER.MAX_EPOCH
+        print("seed", seed)
+        set_random_seed(seed)
+        # random.seed(seed)
+        # np.random.seed(seed)
+        # torch.manual_seed(seed)
 
-    dataflow = {}
-    dataflow["train"] = build_dataloader(
-        cfg, mode='train', use_distributed=True)
-    dataflow["val"] = build_dataloader(cfg, mode='val', use_distributed=True)
-    dataflow["test"] = build_dataloader(cfg, mode='test', use_distributed=True)
+        dataflow = {}
+        dataflow["train"] = build_dataloader(
+            cfg, mode='train', use_distributed=True, use_kfold=use_kfold, fold=fold)
+        dataflow["val"] = build_dataloader(cfg, mode='val', use_distributed=True, use_kfold=use_kfold, fold=fold)
 
-    model = build_model(cfg)[0]
-    dist.barrier()
-    if dist.rank() == 0:
-        wandb.watch(model)
+        model = build_model(cfg)[0]
+        dist.barrier()
+        if dist.rank() == 0:
+            wandb.watch(model)
 
-    model = torch.nn.parallel.DistributedDataParallel(
-        model.cuda(),
-        device_ids=[dist.local_rank()],
-        find_unused_parameters=True)
+        model = torch.nn.parallel.DistributedDataParallel(
+            model.cuda(),
+            device_ids=[dist.local_rank()],
+            find_unused_parameters=True)
 
-    criterion = nn.CrossEntropyLoss(ignore_index=0)
-    optimizer = build_optimizer(cfg, model)
-    # build lr scheduler
-    scheduler = build_scheduler(cfg, optimizer)
+        criterion = nn.CrossEntropyLoss(ignore_index=0)
+        optimizer = build_optimizer(cfg, model)
+        # build lr scheduler
+        scheduler = build_scheduler(cfg, optimizer)
 
-    trainer = SemanticTorchpackTrainer(model=model,
-                                       criterion=criterion,
-                                       optimizer=optimizer,
-                                       scheduler=scheduler,
-                                       num_workers=cfg.DATALOADER.NUM_WORKERS,
-                                       seed=seed,
-                                       cfg=cfg)
-    inference_callbacks = []
-    if cfg.MODEL.USE_FUSION:
-        inference_callbacks += create_callbacks(callback_name="val/image",
-                                                num_classes=cfg["MODEL"]["NUM_CLASSES"], ignore_label=0, output_tensor="img_seg")
-        inference_callbacks += create_callbacks(callback_name="val/lidar",
-                                                num_classes=cfg["MODEL"]["NUM_CLASSES"], ignore_label=0, output_tensor="lidar_seg")
-        test_inference_callbacks = [MeanIoU(
-            name='MeanIoU/test/lidar', num_classes=cfg["MODEL"]["NUM_CLASSES"], ignore_label=0, output_tensor="lidar_seg")]
-
-    elif cfg.MODEL.USE_LIDAR:
-        inference_callbacks += create_callbacks(callback_name="val/lidar",
-                                                num_classes=cfg["MODEL"]["NUM_CLASSES"], ignore_label=0, output_tensor="lidar_seg")
-        test_inference_callbacks = [MeanIoU(
-            name='MeanIoU/test/lidar', num_classes=cfg["MODEL"]["NUM_CLASSES"], ignore_label=0, output_tensor="lidar_seg")]
-
-    elif cfg.MODEL.USE_IMAGE:
-        inference_callbacks += create_callbacks(callback_name="val/image",
-                                                num_classes=cfg["MODEL"]["NUM_CLASSES"], ignore_label=0, output_tensor="img_seg")
-        test_inference_callbacks = [MeanIoU(
-            name='MeanIoU/test/lidar', num_classes=cfg["MODEL"]["NUM_CLASSES"], ignore_label=0, output_tensor="img_seg")]
-
-    saver_callbacks = []
-    if cfg.MODEL.SAVE:
+        trainer = SemanticTorchpackTrainer(model=model,
+                                        criterion=criterion,
+                                        optimizer=optimizer,
+                                        scheduler=scheduler,
+                                        num_workers=cfg.DATALOADER.NUM_WORKERS,
+                                        seed=seed,
+                                        cfg=cfg)
+        inference_callbacks = []
         if cfg.MODEL.USE_FUSION:
-            saver_callbacks += create_saver(callback_name="val/image")
-            saver_callbacks += create_saver(callback_name="val/lidar")
+            inference_callbacks += create_callbacks(callback_name="val/image",
+                                                    num_classes=cfg["MODEL"]["NUM_CLASSES"], ignore_label=0, output_tensor="img_seg")
+            inference_callbacks += create_callbacks(callback_name="val/lidar",
+                                                    num_classes=cfg["MODEL"]["NUM_CLASSES"], ignore_label=0, output_tensor="lidar_seg")
 
         elif cfg.MODEL.USE_LIDAR:
-            saver_callbacks += create_saver(callback_name="val/lidar")
+            inference_callbacks += create_callbacks(callback_name="val/lidar",
+                                                    num_classes=cfg["MODEL"]["NUM_CLASSES"], ignore_label=0, output_tensor="lidar_seg")
 
         elif cfg.MODEL.USE_IMAGE:
-            saver_callbacks += create_saver(callback_name="val/image")
+            inference_callbacks += create_callbacks(callback_name="val/image",
+                                                    num_classes=cfg["MODEL"]["NUM_CLASSES"], ignore_label=0, output_tensor="img_seg")
 
-    trainer.train(
-        dataflow=dataflow['train'],
-        num_epochs=cfg.SCHEDULER.MAX_EPOCH,
-        callbacks=[
-            InferenceRunner(dataflow['val'], callbacks=inference_callbacks),
-            InferenceRunner(dataflow['test'],
-                            callbacks=test_inference_callbacks),
-            MetaInfoSaver(),
-            ConsoleWriter(),
-            TFEventWriterExtended(),
-            JSONLWriter(),
-            ProgressBar(),
-            EstimatedTimeLeft()
-        ] + saver_callbacks
-    )
+        saver_callbacks = []
+        if cfg.MODEL.SAVE:
+            if cfg.MODEL.USE_FUSION:
+                saver_callbacks += create_saver(callback_name="val/image")
+                saver_callbacks += create_saver(callback_name="val/lidar")
 
-    dist.barrier()
-    if dist.rank() == 0:
-        wandb.finish()
+            elif cfg.MODEL.USE_LIDAR:
+                saver_callbacks += create_saver(callback_name="val/lidar")
+
+            elif cfg.MODEL.USE_IMAGE:
+                saver_callbacks += create_saver(callback_name="val/image")
+
+        trainer.train(
+            dataflow=dataflow['train'],
+            num_epochs=cfg.SCHEDULER.MAX_EPOCH,
+            callbacks=[
+                InferenceRunner(dataflow['val'], callbacks=inference_callbacks),
+                MetaInfoSaver(),
+                ConsoleWriter(),
+                TFEventWriterExtended(),
+                JSONLWriter(),
+                ProgressBar(),
+                EstimatedTimeLeft()
+            ] + saver_callbacks
+        )
+
+        dist.barrier()
+        if dist.rank() == 0:
+            wandb.finish()
+
+        dist.barrier()
+
+    if cfg["USE_KFOLDS"]:
+        for fold in range(cfg["NUM_FOLDS"]):
+            output_dir = f"{output_dir}/fold_{fold}"
+            run_name = f"{run_name}/fold_{fold}"
+            run(output_dir=output_dir, run_name=run_name, use_kfold=True, fold=fold)
+    else:
+        run(output_dir=output_dir, run_name=run_name, use_kfold=False, fold=None)
 
 
 def test(cfg=None, output_dir=None, run_name="") -> None:
