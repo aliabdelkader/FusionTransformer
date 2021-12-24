@@ -1,5 +1,5 @@
-AUTO_RESUME: TRUE
-RESUME_STATES: TRUE
+# AUTO_RESUME: TRUE
+# RESUME_STATES: TRUE
 MODEL:
   TYPE: "LateFusionTransformer"
   DUAL_HEAD: True
@@ -20,12 +20,12 @@ DATALOADER:
   NUM_WORKERS: 0
 OPTIMIZER:
   TYPE: "Adam"
-  BASE_LR: 0.001
+  BASE_LR: 1e-4
   WEIGHT_DECAY: 0.0005
 SCHEDULER:
-  TYPE: "MultiStepLR"
-  MultiStepLR:
-    gamma: 0.1
+  # TYPE: "MultiStepLR"
+  # MultiStepLR:
+  #   gamma: 0.1
   MAX_EPOCH: 100
 TRAIN:
   BATCH_SIZE: 10
@@ -42,4 +42,6 @@ TRAIN:
 VAL:
   BATCH_SIZE: 10
   # PERIOD: 5
+TEST:
+  BATCH_SIZE: 1
 OUTPUT_DIR: "/home/user/logs/@"  #  @ will be replaced with config path, e.g. nuscenes/usa_singapore/FusionTransformer

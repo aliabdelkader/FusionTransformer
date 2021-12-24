@@ -31,8 +31,18 @@ def parse_args():
         '--use_torchpack',
         help='use torchpack for training',
         default=False,
-        nargs=argparse.REMAINDER,
     )
+    parser.add_argument(
+        '--use_torchpack_test',
+        help='use torchpack for testing',
+        default=False,
+    )
+    parser.add_argument(
+        '--run_name',
+        help='set name for the run',
+        default=None,
+    )
+ 
     args = parser.parse_args()
     return args
 
@@ -56,9 +66,13 @@ def main():
         if osp.isdir(output_dir):
             warnings.warn('Output directory exists.')
 
-    # run name
-    timestamp = time.strftime('MONTH_%m_DAY_%d_HOUR_%H_MIN_%M_SEC_%S')
-    run_name = '{:s}'.format(timestamp)
+    if args.run_name is None:
+        # run name
+        timestamp = time.strftime('MONTH_%m_DAY_%d_HOUR_%H_MIN_%M_SEC_%S')
+        run_name = '{:s}'.format(timestamp)
+    else:
+        run_name = args.run_name
+
     output_dir = os.path.join(output_dir, run_name)
     os.makedirs(output_dir, exist_ok=True)
     print("output dir",  output_dir)
@@ -72,6 +86,9 @@ def main():
 
     if args.use_torchpack:
         TorchpackInterface.main(cfg=cfg, output_dir=output_dir, run_name=run_name)
+    elif args.use_torchpack_test:
+        TorchpackInterface.test(cfg=cfg, output_dir=output_dir, run_name=run_name)
+
     else:
         trainer = SemanticTrainer(cfg, output_dir, run_name)
         trainer.train()

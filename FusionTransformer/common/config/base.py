@@ -108,6 +108,8 @@ _C.VAL.LOG_PERIOD = 20
 # The metric for best validation performance
 _C.VAL.METRIC = ''
 
+_C.TEST = CN()
+_C.TEST.BATCH_SIZE = 1
 # ---------------------------------------------------------------------------- #
 # Misc options
 # ---------------------------------------------------------------------------- #

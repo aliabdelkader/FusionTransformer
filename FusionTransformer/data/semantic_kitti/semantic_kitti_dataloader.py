@@ -231,6 +231,7 @@ class SemanticKITTISCN(SemanticKITTIBase):
         sparse_unique_inds, _, sparse_inverse_map = sparse_quantize(voxel_coords, voxel_feats, voxel_seg_label, return_index=True, return_invs=True)
         # print(type(inverse_map),"inverse map: ", inverse_map.shape, " coords: ", coords.shape, " inds ", inds.shape)
         #import pdb; pdb.set_trace();
+        out_dict["voxel_coords"] = voxel_coords 
         out_dict["coords"] = voxel_coords[sparse_unique_inds]
         out_dict['feats'] = voxel_feats[sparse_unique_inds]
         out_dict['seg_label'] = voxel_seg_label[sparse_unique_inds]
@@ -239,6 +240,8 @@ class SemanticKITTISCN(SemanticKITTIBase):
         # out_dict['seg_label'] = SparseTensor(coords=coords[inds], feats=seg_label[inds])
         # out_dict['img_indices'] = img_indices[inds].tolist()#SparseTensor(coords=coords[inds], feats=img_indices[inds])
         # out_dict["inverse_map"] = SparseTensor(coords=coords[inds], feats=inverse_map) 
+        out_dict["filename"] = Path(data_path).stem
+        out_dict["seq"] = Path(data_path).parent.name
 
         if self.output_orig:
             out_dict.update({
