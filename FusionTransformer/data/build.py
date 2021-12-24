@@ -10,7 +10,7 @@ from FusionTransformer.data.semantic_kitti.debug_semantic_kitti_dataloader impor
 from FusionTransformer.data.collate import get_collate_scn
 
 
-def build_dataloader(cfg, mode='train', start_iteration=0, halve_batch_size=False, use_distributed=False,  seed=0, use_kfold=False, fold=None):
+def build_dataloader(cfg, mode='train', start_iteration=0, halve_batch_size=False, use_distributed=False,  seed=0, use_kfolds=False, fold=None):
 
     assert mode in ['train', 'val', 'test']
     dataset_cfg = cfg.get('DATASET')
@@ -38,13 +38,13 @@ def build_dataloader(cfg, mode='train', start_iteration=0, halve_batch_size=Fals
     # if dataset_cfg.TYPE == 'NuScenesSCN':
     #     dataset = NuScenesSCN(split=split,
     #                           output_orig=not is_train,
-    #                           use_kfold=use_kfold
+    #                           use_kfolds=use_kfold
     #                           **dataset_kwargs,
     #                           **augmentation)
     if dataset_cfg.TYPE == 'SemanticKITTISCN':
         dataset = SemanticKITTISCN(split=split,
                                    output_orig=not is_train,
-                                   use_kfold=use_kfold,
+                                   use_kfolds=use_kfold,
                                    fold=fold,
                                    **dataset_kwargs,
                                    **augmentation)
@@ -52,7 +52,7 @@ def build_dataloader(cfg, mode='train', start_iteration=0, halve_batch_size=Fals
     elif dataset_cfg.TYPE == 'DebugSemanticKITTISCN':
         dataset = DebugSemanticKITTISCN(split=split,
                                         output_orig=not is_train,
-                                        use_kfold=use_kfold,
+                                        use_kfolds=use_kfold,
                                         fold=fold,
                                         **dataset_kwargs,
                                         **augmentation)

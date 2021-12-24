@@ -47,7 +47,7 @@ def main(cfg=None, output_dir=None, run_name="") -> None:
     print("world size", dist.size())
     print("local rank", dist.local_rank())
 
-    def run(output_dir, run_name, use_kfold, fold):
+    def run(output_dir, run_name, use_kfolds, fold):
         dist.barrier()
         if dist.rank() == 0:
             run = wandb.init(project='FusionTransformer', name=run_name,
@@ -67,8 +67,8 @@ def main(cfg=None, output_dir=None, run_name="") -> None:
 
         dataflow = {}
         dataflow["train"] = build_dataloader(
-            cfg, mode='train', use_distributed=True, use_kfold=use_kfold, fold=fold)
-        dataflow["val"] = build_dataloader(cfg, mode='val', use_distributed=True, use_kfold=use_kfold, fold=fold)
+            cfg, mode='train', use_distributed=True, use_kfolds=use_kfold, fold=fold)
+        dataflow["val"] = build_dataloader(cfg, mode='val', use_distributed=True, use_kfolds=use_kfold, fold=fold)
 
         model = build_model(cfg)[0]
         dist.barrier()
@@ -143,9 +143,9 @@ def main(cfg=None, output_dir=None, run_name="") -> None:
         for fold in range(cfg["NUM_FOLDS"]):
             output_dir = f"{output_dir}/fold_{fold}"
             run_name = f"{run_name}/fold_{fold}"
-            run(output_dir=output_dir, run_name=run_name, use_kfold=True, fold=fold)
+            run(output_dir=output_dir, run_name=run_name, use_kfolds=True, fold=fold)
     else:
-        run(output_dir=output_dir, run_name=run_name, use_kfold=False, fold=None)
+        run(output_dir=output_dir, run_name=run_name, use_kfolds=False, fold=None)
 
 
 def test(cfg=None, output_dir=None, run_name="") -> None:
