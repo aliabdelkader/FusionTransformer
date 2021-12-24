@@ -131,7 +131,7 @@ class SemanticKITTISCN(SemanticKITTIBase):
                  ):
         super().__init__(split,
                          preprocess_dir,
-                         debug=debug
+                         debug=debug,
                          use_kfolds=use_kfolds,
                          fold=fold
                          )
