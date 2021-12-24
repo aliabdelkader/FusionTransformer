@@ -67,8 +67,8 @@ def main(cfg=None, output_dir=None, run_name="") -> None:
 
         dataflow = {}
         dataflow["train"] = build_dataloader(
-            cfg, mode='train', use_distributed=True, use_kfolds=use_kfold, fold=fold)
-        dataflow["val"] = build_dataloader(cfg, mode='val', use_distributed=True, use_kfolds=use_kfold, fold=fold)
+            cfg, mode='train', use_distributed=True, use_kfolds=use_kfolds, fold=fold)
+        dataflow["val"] = build_dataloader(cfg, mode='val', use_distributed=True, use_kfolds=use_kfolds, fold=fold)
 
         model = build_model(cfg)[0]
         dist.barrier()
