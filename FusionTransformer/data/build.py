@@ -44,7 +44,7 @@ def build_dataloader(cfg, mode='train', start_iteration=0, halve_batch_size=Fals
     if dataset_cfg.TYPE == 'SemanticKITTISCN':
         dataset = SemanticKITTISCN(split=split,
                                    output_orig=not is_train,
-                                   use_kfolds=use_kfold,
+                                   use_kfolds=use_kfolds,
                                    fold=fold,
                                    **dataset_kwargs,
                                    **augmentation)
@@ -52,7 +52,7 @@ def build_dataloader(cfg, mode='train', start_iteration=0, halve_batch_size=Fals
     elif dataset_cfg.TYPE == 'DebugSemanticKITTISCN':
         dataset = DebugSemanticKITTISCN(split=split,
                                         output_orig=not is_train,
-                                        use_kfolds=use_kfold,
+                                        use_kfolds=use_kfolds,
                                         fold=fold,
                                         **dataset_kwargs,
                                         **augmentation)
