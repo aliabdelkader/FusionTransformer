@@ -1,5 +1,6 @@
 # AUTO_RESUME: TRUE
 # RESUME_STATES: TRUE
+USE_KFOLDS: TRUE
 MODEL:
   TYPE: "MiddleFusionTransformer"
   DUAL_HEAD: True
