@@ -27,7 +27,7 @@ SCHEDULER:
   # TYPE: "MultiStepLR"
   # MultiStepLR:
   #   gamma: 0.1
-  MAX_EPOCH: 100
+  MAX_EPOCH: 50
 TRAIN:
   BATCH_SIZE: 10
   # SUMMARY_PERIOD: 2

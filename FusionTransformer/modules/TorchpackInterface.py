@@ -141,9 +141,9 @@ def main(cfg=None, output_dir=None, run_name="") -> None:
 
     if cfg["USE_KFOLDS"]:
         for fold in range(cfg["NUM_FOLDS"]):
-            output_dir = f"{output_dir}/fold_{fold}"
-            run_name = f"{run_name}/fold_{fold}"
-            run(output_dir=output_dir, run_name=run_name, use_kfolds=True, fold=fold)
+            current_output_dir = f"{output_dir}/fold_{fold}"
+            current_run_name = f"{run_name}/fold_{fold}"
+            run(output_dir=current_output_dir, run_name=current_run_name, use_kfolds=True, fold=fold)
     else:
         run(output_dir=output_dir, run_name=run_name, use_kfolds=False, fold=None)
 
