@@ -35,5 +35,5 @@ RUN wget https://github.com/mit-han-lab/torchsparse/archive/refs/tags/v1.1.0.zip
 COPY --chown=user:user ./ ${HOME}/FusionTransformer
 WORKDIR ${HOME}/FusionTransformer
 ENV SETUPTOOLS_USE_DISTUTILS=stdlib
-RUN python -m pip install --no-cache-dir -e .
+RUN python -m pip install -r requirements.txt
 
