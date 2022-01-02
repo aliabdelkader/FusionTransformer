@@ -139,11 +139,21 @@ def main(cfg=None, output_dir=None, run_name="") -> None:
 
         dist.barrier()
 
+
     if cfg["USE_KFOLDS"]:
-        for fold in range(cfg["NUM_FOLDS"]):
+
+        def run_fold(fold):
             current_output_dir = f"{output_dir}/fold_{fold}"
             current_run_name = f"{run_name}/fold_{fold}"
             run(output_dir=current_output_dir, run_name=current_run_name, use_kfolds=True, fold=fold)
+
+        if cfg["RUN_SPECIFIC_FOLD"]:
+            run_fold(cfg["FOLD_TO_RUN"])
+
+        else:
+            for fold in range(cfg["NUM_FOLDS"]):
+                run_fold(fold)
+
     else:
         run(output_dir=output_dir, run_name=run_name, use_kfolds=False, fold=None)
 
