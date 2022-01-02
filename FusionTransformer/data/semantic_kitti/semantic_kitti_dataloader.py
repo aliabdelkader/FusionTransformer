@@ -87,7 +87,9 @@ class SemanticKITTIBase(Dataset):
         for seq in split_sequences:
             split_path = Path(self.preprocess_dir) / seq
             print(split_path)
-            self.data_paths.extend(sorted(list(split_path.rglob("*.pkl"))))
+            seq_data_paths = sorted(list(split_path.rglob("*.pkl")))
+            assert len(seq_data_paths) > 0, f"not data files found in {split_path}"
+            self.data_paths.extend(seq_data_paths)
         # for curr_split in split:
         #     with open(osp.join(self.preprocess_dir, curr_split + '.pkl'), 'rb') as f:
         #         self.data.extend(pickle.load(f))
