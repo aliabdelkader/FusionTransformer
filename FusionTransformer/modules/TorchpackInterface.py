@@ -187,7 +187,10 @@ def test(cfg=None, output_dir=None, run_name="") -> None:
     # torch.manual_seed(seed)
 
     dataflow = {}
-    dataflow["test"] = build_dataloader(cfg, mode='test', use_distributed=True)
+    # dataflow["test"] = build_dataloader(cfg, mode='test', use_distributed=True)
+    dataflow["val"] = build_dataloader(
+        cfg, mode='val', use_distributed=True, use_kfolds=True, fold=cfg["FOLD_TO_RUN"]
+    )
 
     model = build_model(cfg)[0]
     dist.barrier()
@@ -221,8 +224,8 @@ def test(cfg=None, output_dir=None, run_name="") -> None:
     elif cfg.MODEL.USE_LIDAR:
         test_inference_callbacks = [SaverRestoreIOU(), MeanIoU(name='MeanIoU/test/lidar', num_classes=cfg["MODEL"]["NUM_CLASSES"],
                                                                ignore_label=0, output_tensor="lidar_seg"),
-                                    SavePredictions(ignore_label=0, output_tensor="lidar_seg", output_path=f"{get_run_dir()}/predictions",  save_targets=True,
-                                                    save_targets_path=f"{get_run_dir()}/targets", save_coords=True, save_coords_path=f"{get_run_dir()}/voxel_coords")]
+                                    SavePredictions(ignore_label=0, output_tensor="lidar_seg", output_path=f"{get_run_dir()}/predictions",  save_targets=False,
+                                                    save_targets_path=f"{get_run_dir()}/targets", save_coords=False, save_coords_path=f"{get_run_dir()}/voxel_coords")]
 
     elif cfg.MODEL.USE_IMAGE:
         test_inference_callbacks = [SaverRestoreIOU(), MeanIoU(name='MeanIoU/test/lidar', num_classes=cfg["MODEL"]["NUM_CLASSES"],
@@ -232,14 +235,14 @@ def test(cfg=None, output_dir=None, run_name="") -> None:
     callbacks = Callbacks(test_inference_callbacks)
     callbacks._set_trainer(trainer)
     trainer.callbacks = callbacks
-    trainer.dataflow = dataflow['test']
+    trainer.dataflow = dataflow['val']
 
     trainer.before_train()
     trainer.before_epoch()
 
     model.eval()
 
-    for feed_dict in tqdm(dataflow['test'], desc='eval'):
+    for feed_dict in tqdm(dataflow['val'], desc='eval'):
         output_dict = trainer.run_step(feed_dict)
         trainer.after_step(output_dict)
 
