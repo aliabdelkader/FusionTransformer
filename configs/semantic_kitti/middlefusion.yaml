@@ -44,7 +44,7 @@ TRAIN:
   FusionTransformer:
     lambda_xm: 0.1
 VAL:
-  BATCH_SIZE: 10
+  BATCH_SIZE: 1
   # PERIOD: 5
 TEST:
   BATCH_SIZE: 1
