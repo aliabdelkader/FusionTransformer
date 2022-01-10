@@ -158,7 +158,7 @@ def main(cfg=None, output_dir=None, run_name="") -> None:
         run(output_dir=output_dir, run_name=run_name, use_kfolds=False, fold=None)
 
 
-def test(cfg=None, output_dir=None, run_name="") -> None:
+def test(cfg=None, output_dir=None, run_name="", fold=0) -> None:
     os.environ[
         "TORCH_DISTRIBUTED_DEBUG"
     ] = "DETAIL"  # set to DETAIL for runtime logging
@@ -189,7 +189,7 @@ def test(cfg=None, output_dir=None, run_name="") -> None:
     dataflow = {}
     # dataflow["test"] = build_dataloader(cfg, mode='test', use_distributed=True)
     dataflow["val"] = build_dataloader(
-        cfg, mode='val', use_distributed=True, use_kfolds=True, fold=cfg["FOLD_TO_RUN"]
+        cfg, mode='val', use_distributed=True, use_kfolds=True, fold=fold
     )
 
     model = build_model(cfg)[0]

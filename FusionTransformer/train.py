@@ -42,6 +42,11 @@ def parse_args():
         help='set name for the run',
         default=None,
     )
+    parser.add_argument(
+        '--fold',
+        help='fold to run',
+        default=None,
+    )
  
     args = parser.parse_args()
     return args
@@ -87,7 +92,7 @@ def main():
     if args.use_torchpack:
         TorchpackInterface.main(cfg=cfg, output_dir=output_dir, run_name=run_name)
     elif args.use_torchpack_test:
-        TorchpackInterface.test(cfg=cfg, output_dir=output_dir, run_name=run_name)
+        TorchpackInterface.test(cfg=cfg, output_dir=output_dir, run_name=run_name, fold=args.fold)
 
     else:
         trainer = SemanticTrainer(cfg, output_dir, run_name)
