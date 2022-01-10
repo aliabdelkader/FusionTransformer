@@ -189,7 +189,7 @@ def test(cfg=None, output_dir=None, run_name="", fold=0) -> None:
     dataflow = {}
     # dataflow["test"] = build_dataloader(cfg, mode='test', use_distributed=True)
     dataflow["val"] = build_dataloader(
-        cfg, mode='val', use_distributed=True, use_kfolds=True, fold=fold
+        cfg, mode='val', use_distributed=True, use_kfolds=True, fold=int(fold)
     )
 
     model = build_model(cfg)[0]
