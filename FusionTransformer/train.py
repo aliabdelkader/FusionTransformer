@@ -82,12 +82,12 @@ def main():
     os.makedirs(output_dir, exist_ok=True)
     print("output dir",  output_dir)
 
-    logger = setup_logger('FusionTransformer', output_dir, comment='{}.train.{:s}'.format(cfg["MODEL"]["TYPE"], run_name))
-    logger.info('{:d} GPUs available'.format(torch.cuda.device_count()))
-    logger.info(args)
+    # logger = setup_logger('FusionTransformer', output_dir, comment='{}.train.{:s}'.format(cfg["MODEL"]["TYPE"], run_name))
+    # logger.info('{:d} GPUs available'.format(torch.cuda.device_count()))
+    # logger.info(args)
 
-    logger.info('Loaded configuration file {:s}'.format(args.config_file))
-    logger.info('Running with config:\n{}'.format(cfg))
+    # logger.info('Loaded configuration file {:s}'.format(args.config_file))
+    # logger.info('Running with config:\n{}'.format(cfg))
 
     if args.use_torchpack:
         TorchpackInterface.main(cfg=cfg, output_dir=output_dir, run_name=run_name)
